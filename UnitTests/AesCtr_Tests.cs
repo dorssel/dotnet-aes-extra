@@ -113,6 +113,35 @@ sealed class AesCtr_Tests
     }
 
     [TestMethod]
+    public void KeySize_AllValid()
+    {
+        using var aes = AesCtr.Create();
+        foreach (var legalKeySize in aes.LegalKeySizes)
+        {
+            for (var keySize = legalKeySize.MinSize; keySize <= legalKeySize.MaxSize; keySize += Math.Max(legalKeySize.SkipSize, 1))
+            {
+                aes.KeySize = keySize;
+                Assert.AreEqual(keySize, aes.KeySize);
+                Assert.AreEqual(keySize, aes.Key.Length * 8);
+            }
+        }
+    }
+
+    [TestMethod]
+    public void BlockSize_AllValid()
+    {
+        using var aes = AesCtr.Create();
+        foreach (var legalBlockSize in aes.LegalBlockSizes)
+        {
+            for (var blockSize = legalBlockSize.MinSize; blockSize <= legalBlockSize.MaxSize; blockSize += Math.Max(legalBlockSize.SkipSize, 1))
+            {
+                aes.BlockSize = blockSize;
+                Assert.AreEqual(blockSize, aes.BlockSize);
+            }
+        }
+    }
+
+    [TestMethod]
     [DataRow(128)]
     [DataRow(192)]
     [DataRow(256)]

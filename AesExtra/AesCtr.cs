@@ -6,10 +6,10 @@ namespace Dorssel.Security.Cryptography;
 public sealed class AesCtr
     : Aes
 {
-    const int BLOCKSIZE = 16; // bytes
+    internal const int FixedBlockSize = 16; // bytes
     const CipherMode FixedCipherMode = CipherMode.ECB;
     const PaddingMode FixedPaddingMode = PaddingMode.None;
-    const int FixedFeedbackSize = BLOCKSIZE * 8; // bits
+    const int FixedFeedbackSize = FixedBlockSize * 8; // bits
 
     public static new Aes Create() => new AesCtr();
 
@@ -27,9 +27,6 @@ public sealed class AesCtr
         Mode = FixedCipherMode;
         Padding = FixedPaddingMode;
         FeedbackSize = FixedFeedbackSize;
-
-        AesEcb.Mode = CipherMode.ECB;
-        AesEcb.Padding = PaddingMode.None;
     }
 
     /// <summary>
@@ -106,7 +103,7 @@ public sealed class AesCtr
     {
         // ECB.Encrypt === ECB.Decrypt; the transform is entirely symmetric.
         // ECB does not use an IV; the IV we received is actually the initial counter for AES-CTR.
-        return new AesCtrTransform(rgbIV ?? new byte[BLOCKSIZE], AesEcb.CreateEncryptor(rgbKey, new byte[BLOCKSIZE]));
+        return new AesCtrTransform(rgbIV ?? new byte[FixedBlockSize], AesEcb.CreateEncryptor(rgbKey, new byte[FixedBlockSize]));
     }
 
     public override ICryptoTransform CreateDecryptor(byte[] rgbKey, byte[]? rgbIV) => CreateTransform(rgbKey, rgbIV);

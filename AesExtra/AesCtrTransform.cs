@@ -6,7 +6,7 @@ namespace Dorssel.Security.Cryptography;
 sealed class AesCtrTransform
     : ICryptoTransform
 {
-    const int BLOCKSIZE = 16; // bytes
+    const int BLOCKSIZE = AesCtr.FixedBlockSize; // bytes
 
     readonly ICryptoTransform AesEcbTransform;
     readonly byte[] Counter;
@@ -26,7 +26,7 @@ sealed class AesCtrTransform
 
         if (initialCounter.Length != BLOCKSIZE)
         {
-            throw new ArgumentException("Specified initialization vector (IV) does not match the block size for this algorithm.", nameof(initialCounter));
+            throw new ArgumentException("Specified initial counter (IV) does not match the block size for this algorithm.", nameof(initialCounter));
         }
         Counter = initialCounter;
     }
@@ -34,7 +34,7 @@ sealed class AesCtrTransform
     #region IDisposable
     bool IsDisposed;
 
-    void IDisposable.Dispose()
+    public void Dispose()
     {
         if (!IsDisposed)
         {
