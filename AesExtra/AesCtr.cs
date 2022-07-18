@@ -3,7 +3,7 @@ using System.Security.Cryptography;
 
 namespace Dorssel.Security.Cryptography;
 
-public class AesCtr
+public sealed class AesCtr
     : Aes
 {
     const int BLOCKSIZE = 16; // bytes
@@ -19,7 +19,7 @@ public class AesCtr
         return algorithmName == nameof(AesCtr) ? Create() : null;
     }
 
-    protected AesCtr()
+    AesCtr()
     {
         ModeValue = CipherMode.ECB;
         PaddingValue = PaddingMode.None;
@@ -51,10 +51,10 @@ public class AesCtr
 
     public override CipherMode Mode
     { 
-        get => CipherMode.ECB;
+        get => ModeValue;
         set
         {
-            if (value != CipherMode.ECB)
+            if (value != ModeValue)
             {
                 throw new CryptographicException("Specified cipher mode is not valid for this algorithm.");
             }
@@ -63,10 +63,10 @@ public class AesCtr
 
     public override PaddingMode Padding
     {
-        get => PaddingMode.None;
+        get => PaddingValue;
         set
         {
-            if (value != PaddingMode.None)
+            if (value != PaddingValue)
             {
                 throw new CryptographicException("Specified padding mode is not valid for this algorithm.");
             }
@@ -75,10 +75,10 @@ public class AesCtr
 
     public override int FeedbackSize
     {
-        get => BLOCKSIZE * 8; // bits
+        get => FeedbackSizeValue;
         set
         {
-            if (value != BLOCKSIZE)
+            if (value != FeedbackSizeValue)
             {
                 throw new CryptographicException("Specified feedback size is not valid for this algorithm.");
             }

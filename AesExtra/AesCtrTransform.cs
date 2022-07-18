@@ -55,7 +55,7 @@ sealed class AesCtrTransform
 
     void IncrementCounter()
     {
-        for (var i = 7; i >= 0; --i)
+        for (var i = Counter.Length - 1; i >= 0; --i)
         {
             if (++Counter[i] != 0)
             {
