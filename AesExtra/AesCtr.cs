@@ -27,7 +27,15 @@ public sealed class AesCtr
         Mode = FixedCipherMode;
         Padding = FixedPaddingMode;
         FeedbackSize = FixedFeedbackSize;
+
+        AesEcb.Mode = CipherMode.ECB;
+        AesEcb.Padding = PaddingMode.None;
     }
+
+    /// <summary>
+    /// The aggregated underlying AES-ECB implementation.
+    /// </summary>
+    readonly Aes AesEcb = Aes.Create();
 
     #region IDisposable
     bool IsDisposed;
@@ -38,6 +46,7 @@ public sealed class AesCtr
         {
             if (disposing)
             {
+                AesEcb.Dispose();
             }
             IsDisposed = true;
         }
@@ -45,63 +54,59 @@ public sealed class AesCtr
     }
     #endregion
 
-    void ThrowIfDisposed()
-    {
-        if (IsDisposed)
-        {
-            throw new ObjectDisposedException(nameof(AesCtr));
-        }
-    }
-
     public override CipherMode Mode
     { 
-        get => base.Mode;
+        get => AesEcb.Mode;
         set
         {
             if (value != FixedCipherMode)
             {
                 throw new CryptographicException("Specified cipher mode is not valid for this algorithm.");
             }
-            base.Mode = value;
+            // Just in case there are side-effects of setting to the current value.
+            AesEcb.Mode = value;
         }
     }
 
     public override PaddingMode Padding
     {
-        get => base.Padding;
+        get => AesEcb.Padding;
         set
         {
             if (value != FixedPaddingMode)
             {
                 throw new CryptographicException("Specified padding mode is not valid for this algorithm.");
             }
-            base.Padding = value;
+            // Just in case there are side-effects of setting to the current value.
+            AesEcb.Padding = value;
         }
     }
 
     public override int FeedbackSize
     {
-        get => base.FeedbackSize;
+        get => AesEcb.FeedbackSize;
         set
         {
             if (value != FixedFeedbackSize)
             {
                 throw new CryptographicException("Specified feedback size is not valid for this algorithm.");
             }
-            base.FeedbackSize= value;
+            AesEcb.FeedbackSize= value;
         }
     }
 
+    public override byte[] IV { get => AesEcb.IV; set => AesEcb.IV = value; }
+    public override byte[] Key { get => AesEcb.Key; set => AesEcb.Key = value; }
+    public override int BlockSize { get => AesEcb.BlockSize; set => AesEcb.BlockSize = value; }
+    public override int KeySize { get => AesEcb.KeySize; set => AesEcb.KeySize = value; }
+    public override KeySizes[] LegalBlockSizes => AesEcb.LegalBlockSizes;
+    public override KeySizes[] LegalKeySizes => base.LegalKeySizes;
+
     ICryptoTransform CreateTransform(byte[] rgbKey, byte[]? rgbIV)
     {
-        ThrowIfDisposed();
-
-        using var aes = Aes.Create();
-        aes.Mode = CipherMode.ECB;
-        aes.Padding = PaddingMode.None;
         // ECB.Encrypt === ECB.Decrypt; the transform is entirely symmetric.
         // ECB does not use an IV; the IV we received is actually the initial counter for AES-CTR.
-        return new AesCtrTransform(rgbIV ?? new byte[BLOCKSIZE], aes.CreateEncryptor(rgbKey, new byte[BLOCKSIZE]));
+        return new AesCtrTransform(rgbIV ?? new byte[BLOCKSIZE], AesEcb.CreateEncryptor(rgbKey, new byte[BLOCKSIZE]));
     }
 
     public override ICryptoTransform CreateDecryptor(byte[] rgbKey, byte[]? rgbIV) => CreateTransform(rgbKey, rgbIV);
@@ -110,17 +115,11 @@ public sealed class AesCtr
 
     public override void GenerateIV()
     {
-        ThrowIfDisposed();
-        IVValue = new byte[BLOCKSIZE];
-        using var rng = RandomNumberGenerator.Create();
-        rng.GetBytes(IVValue);
+        AesEcb.GenerateIV();
     }
 
     public override void GenerateKey()
     {
-        ThrowIfDisposed();
-        KeyValue = new byte[KeySizeValue / 8];
-        using var rng = RandomNumberGenerator.Create();
-        rng.GetBytes(KeyValue);
+        AesEcb.GenerateKey();
     }
 }

@@ -13,7 +13,7 @@ sealed class AesCtrTransform_Tests
         using var aes = Aes.Create();
         aes.Mode = CipherMode.ECB;
         aes.Padding = PaddingMode.None;
-        AesEcbTransform = aes.CreateEncryptor();
+        AesEcbTransform = aes.CreateEncryptor(new byte[128 / 8], new byte[BLOCKSIZE]);
     }
 
     [TestMethod]

@@ -125,17 +125,6 @@ sealed class AesCtr_Tests
     }
 
     [TestMethod]
-    public void GenerateIV_AfterDisposeFails()
-    {
-        var aes = AesCtr.Create();
-        aes.Dispose();
-        Assert.ThrowsException<ObjectDisposedException>(() =>
-        {
-            aes.GenerateIV();
-        });
-    }
-
-    [TestMethod]
     [DataRow(128)]
     [DataRow(192)]
     [DataRow(256)]
@@ -148,17 +137,6 @@ sealed class AesCtr_Tests
     }
 
     [TestMethod]
-    public void GenerateKey_AfterDisposeFails()
-    {
-        var aes = AesCtr.Create();
-        aes.Dispose();
-        Assert.ThrowsException<ObjectDisposedException>(() =>
-        {
-            aes.GenerateKey();
-        });
-    }
-
-    [TestMethod]
     public void CreateEncryptor()
     {
         using var aes = AesCtr.Create();
@@ -166,31 +144,9 @@ sealed class AesCtr_Tests
     }
 
     [TestMethod]
-    public void CreateEncryptor_AfterDisposeFails()
-    {
-        var aes = AesCtr.Create();
-        aes.Dispose();
-        Assert.ThrowsException<ObjectDisposedException>(() =>
-        {
-            using var _ = aes.CreateEncryptor();
-        });
-    }
-
-    [TestMethod]
     public void CreateDecryptor()
     {
         using var aes = AesCtr.Create();
         using var _ = aes.CreateDecryptor();
-    }
-
-    [TestMethod]
-    public void CreateDecryptor_AfterDisposeFails()
-    {
-        var aes = AesCtr.Create();
-        aes.Dispose();
-        Assert.ThrowsException<ObjectDisposedException>(() =>
-        {
-            using var _ = aes.CreateDecryptor();
-        });
     }
 }
