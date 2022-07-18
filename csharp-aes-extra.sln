@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.2.32630.192
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AesExtra", "AesExtra\AesExtra.csproj", "{EBE1ED5A-582F-492D-9EB8-C84BE1DED4BF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AesExtra", "AesExtra\AesExtra.csproj", "{EBE1ED5A-582F-492D-9EB8-C84BE1DED4BF}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{37BF567B-24E6-4C24-93E3-C3AF475648D3}"
 	ProjectSection(SolutionItems) = preProject
@@ -14,9 +14,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		Directory.Packages.props = Directory.Packages.props
 		GitVersion.yml = GitVersion.yml
 		global.json = global.json
-		NetStandard.props = NetStandard.props
 		nuget.config = nuget.config
 	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnitTests", "UnitTests\UnitTests.csproj", "{1C01A078-D5F8-4551-88CD-916B02060EFF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -28,6 +29,10 @@ Global
 		{EBE1ED5A-582F-492D-9EB8-C84BE1DED4BF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EBE1ED5A-582F-492D-9EB8-C84BE1DED4BF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EBE1ED5A-582F-492D-9EB8-C84BE1DED4BF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1C01A078-D5F8-4551-88CD-916B02060EFF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1C01A078-D5F8-4551-88CD-916B02060EFF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1C01A078-D5F8-4551-88CD-916B02060EFF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1C01A078-D5F8-4551-88CD-916B02060EFF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
