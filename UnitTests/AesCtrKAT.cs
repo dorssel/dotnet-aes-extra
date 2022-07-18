@@ -5,7 +5,7 @@ public class AesCtrKAT
 {
     [TestMethod]
     [TestCategory("NIST")]
-    [NistAesCtrSampleDataSource(true)]
+    [NistAesCtrSampleDataSource]
     public void NistEncrypt(NistAesCtrSampleTestVector testVector)
     {
         _ = testVector ?? throw new ArgumentNullException(nameof(testVector));
