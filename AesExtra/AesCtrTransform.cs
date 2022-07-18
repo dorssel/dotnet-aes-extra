@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Buffers.Binary;
 using System.Security.Cryptography;
 
 namespace Dorssel.Security.Cryptography;
@@ -56,12 +55,12 @@ sealed class AesCtrTransform
 
     void IncrementCounter()
     {
-        var counterLow = BinaryPrimitives.ReadUInt64BigEndian(Counter.AsSpan(8));
-        BinaryPrimitives.WriteUInt64BigEndian(Counter.AsSpan(8), ++counterLow);
-        if (counterLow == 0)
+        for (var i = 7; i >= 0; --i)
         {
-            var counterHigh = BinaryPrimitives.ReadUInt64BigEndian(Counter.AsSpan());
-            BinaryPrimitives.WriteUInt64BigEndian(Counter.AsSpan(), ++counterHigh);
+            if (++Counter[i] != 0)
+            {
+                break;
+            }
         }
     }
 
@@ -76,12 +75,12 @@ sealed class AesCtrTransform
 
     readonly byte[] XorBlock = new byte[BLOCKSIZE];
 
-    void TransformBlock(ReadOnlySpan<byte> inputBlock, Span<byte> outputBlock)
+    void TransformBlock(byte[] inputBlockBase, int inputBlockOffset, byte[] outputBlockBase, int outputBlockOffset)
     {
         CIPH_K(Counter, XorBlock);
         for (var i = 0; i < BLOCKSIZE; ++i)
         {
-            outputBlock[i] = (byte)(inputBlock[i] ^ XorBlock[i]);
+            outputBlockBase[outputBlockOffset + i] = (byte)(inputBlockBase[inputBlockOffset + i] ^ XorBlock[i]);
         }
         IncrementCounter();
     }
@@ -110,7 +109,7 @@ sealed class AesCtrTransform
 
         for (var i = 0; i < inputCount / BLOCKSIZE; ++i)
         {
-            TransformBlock(inputBuffer.AsSpan(inputOffset + i * BLOCKSIZE, BLOCKSIZE), outputBuffer.AsSpan(outputOffset + i * BLOCKSIZE, BLOCKSIZE));
+            TransformBlock(inputBuffer, inputOffset + i * BLOCKSIZE, outputBuffer, outputOffset + i * BLOCKSIZE);
         }
         return inputCount;
     }
@@ -135,11 +134,12 @@ sealed class AesCtrTransform
         }
 
         var inputBlock = new byte[BLOCKSIZE];
-        inputBuffer.AsSpan(inputOffset, inputCount).CopyTo(inputBlock);
+        Array.Copy(inputBuffer, inputOffset, inputBlock, 0, inputCount);
         var outputBlock = new byte[BLOCKSIZE];
-        TransformBlock(inputBlock, outputBlock);
+        TransformBlock(inputBlock, 0, outputBlock, 0);
         HasProcessedFinal = true;
-        return outputBlock.AsSpan(0, inputCount).ToArray();
+        Array.Resize(ref outputBlock, inputCount);
+        return outputBlock;
     }
     #endregion
 }

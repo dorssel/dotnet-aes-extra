@@ -22,7 +22,9 @@ public class AesCmac
     public AesCmac()
     {
         var randomKey = new byte[32];
-        RandomNumberGenerator.Fill(randomKey);
+        using var rng = RandomNumberGenerator.Create();
+        rng.GetBytes(randomKey);
+        Key = randomKey;
     }
 
     public override byte[] Key
@@ -93,7 +95,7 @@ public class AesCmac
     const int Rb = 0b10000111;
 
     // See: NIST SP 800-38B, Section 4.2
-    static byte[] LeftShiftOne(ReadOnlySpan<byte> X)
+    static byte[] LeftShiftOne(byte[] X)
     {
         var result = new byte[X.Length];
         var carry = false;
@@ -110,7 +112,7 @@ public class AesCmac
     }
 
     // See: NIST SP 800-38B, Section 4.2.2
-    byte[] CIPH_K(ReadOnlySpan<byte> X)
+    byte[] CIPH_K(byte[] X)
     {
         _ = AesEcb.KeySize;
         // return AesEcb.EncryptEcb(new byte[BLOCKSIZE], PaddingMode.None);
@@ -118,7 +120,7 @@ public class AesCmac
     }
 
     // See: NIST SP 800-38B, Section 6.1
-    (byte[] K1, byte[] K2) SUBK(ReadOnlySpan<byte> K)
+    (byte[] K1, byte[] K2) SUBK(byte[] K)
     {
         AesEcb.Key = Key;
 
@@ -146,7 +148,10 @@ public class AesCmac
         HasProcessedFinal = false;
 
         // See: NIST SP 800-38B, Section 6.2, Step 5
-        C.AsSpan().Fill(0);
+        for (var i = 0; i < C.Length; ++i)
+        {
+            C[i] = 0;
+        }
     }
 
     void EnsureProcessing()
@@ -163,7 +168,7 @@ public class AesCmac
     int PartialLength;
 
     // See: NIST SP 800-38B, Section 4.2.2
-    static byte[] Xor(ReadOnlySpan<byte> X, ReadOnlySpan<byte> Y)
+    static byte[] Xor(byte[] X, byte[] Y)
     {
         if (X.Length != Y.Length)
         {
@@ -178,7 +183,7 @@ public class AesCmac
     }
 
     // See: NIST SP 800-38B, Section 6.2, Step 6
-    void AddBlock(ReadOnlySpan<byte> block)
+    void AddBlock(byte[] block)
     {
         C = CIPH_K(Xor(C, block));
     }
@@ -214,7 +219,7 @@ public class AesCmac
         {
             // We've got a non-empty && non-full Partial block already -> append to that first.
             var count = Math.Min(cbSize, BLOCKSIZE - PartialLength);
-            array.AsSpan(ibStart, count).CopyTo(Partial.AsSpan(PartialLength));
+            Array.Copy(array, ibStart, Partial, PartialLength, count);
             PartialLength += count;
             if (count == cbSize)
             {
@@ -240,13 +245,14 @@ public class AesCmac
         for (int i = 0, nonFinalBlockCount = (cbSize - 1) / BLOCKSIZE; i < nonFinalBlockCount; i++)
         {
             // See: NIST SP 800-38B, Section 6.2, Steps 3 and 6
-            AddBlock(array.AsSpan(ibStart, BLOCKSIZE));
+            Array.Copy(array, ibStart, Partial, 0, BLOCKSIZE);
+            AddBlock(Partial);
             ibStart += BLOCKSIZE;
             cbSize -= BLOCKSIZE;
         }
 
         // Save what we have left (we always have some, by construction).
-        array.AsSpan(ibStart, cbSize).CopyTo(Partial);
+        Array.Copy(array, ibStart, Partial, 0, cbSize);
         PartialLength = cbSize;
     }
 

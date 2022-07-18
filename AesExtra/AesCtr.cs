@@ -101,13 +101,15 @@ public class AesCtr
     {
         ThrowIfDisposed();
         IVValue = new byte[BLOCKSIZE];
-        RandomNumberGenerator.Fill(IVValue);
+        using var rng = RandomNumberGenerator.Create();
+        rng.GetBytes(IVValue);
     }
 
     public override void GenerateKey()
     {
         ThrowIfDisposed();
         KeyValue = new byte[KeySizeValue / 8];
-        RandomNumberGenerator.Fill(KeyValue);
+        using var rng = RandomNumberGenerator.Create();
+        rng.GetBytes(KeyValue);
     }
 }
