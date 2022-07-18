@@ -1,25 +1,85 @@
 ﻿namespace UnitTests;
 
 [TestClass]
-public class AesCtrKAT
+sealed class AesCtrKAT
 {
     [TestMethod]
     [TestCategory("NIST")]
     [NistAesCtrSampleDataSource]
-    public void NistEncrypt(NistAesCtrSampleTestVector testVector)
+    public void Encrypt_Write(NistAesCtrSampleTestVector testVector)
     {
         _ = testVector ?? throw new ArgumentNullException(nameof(testVector));
 
         using var aes = AesCtr.Create();
         aes.Key = testVector.Key.ToArray();
         aes.IV = testVector.InitialCounter.ToArray();
-        using var memoryStream = new MemoryStream();
+        using var plaintextStream = new MemoryStream(testVector.Plaintext.ToArray());
+        using var ciphertextStream = new MemoryStream();
         {
-#pragma warning disable CA5401
-            using var stream = new CryptoStream(memoryStream, aes.CreateEncryptor(), CryptoStreamMode.Write);
-#pragma warning restore CA5401
-            stream.Write(testVector.Plaintext.Span);
+            using var encryptor = aes.CreateEncryptor();
+            using var encryptorStream = new CryptoStream(ciphertextStream, encryptor, CryptoStreamMode.Write);
+            plaintextStream.CopyTo(encryptorStream);
         }
-        Assert.IsTrue(Enumerable.SequenceEqual(testVector.Ciphertext.ToArray(), memoryStream.ToArray()));
+        Assert.IsTrue(Enumerable.SequenceEqual(testVector.Ciphertext.ToArray(), ciphertextStream.ToArray()));
+    }
+
+    [TestMethod]
+    [TestCategory("NIST")]
+    [NistAesCtrSampleDataSource]
+    public void Encrypt_Read(NistAesCtrSampleTestVector testVector)
+    {
+        _ = testVector ?? throw new ArgumentNullException(nameof(testVector));
+
+        using var aes = AesCtr.Create();
+        aes.Key = testVector.Key.ToArray();
+        aes.IV = testVector.InitialCounter.ToArray();
+        using var plaintextStream = new MemoryStream(testVector.Plaintext.ToArray());
+        using var ciphertextStream = new MemoryStream();
+        {
+            using var encryptor = aes.CreateEncryptor();
+            using var encryptorStream = new CryptoStream(plaintextStream, encryptor, CryptoStreamMode.Read);
+            encryptorStream.CopyTo(ciphertextStream);
+        }
+        Assert.IsTrue(Enumerable.SequenceEqual(testVector.Ciphertext.ToArray(), ciphertextStream.ToArray()));
+    }
+
+    [TestMethod]
+    [TestCategory("NIST")]
+    [NistAesCtrSampleDataSource]
+    public void Decrypt_Write(NistAesCtrSampleTestVector testVector)
+    {
+        _ = testVector ?? throw new ArgumentNullException(nameof(testVector));
+
+        using var aes = AesCtr.Create();
+        aes.Key = testVector.Key.ToArray();
+        aes.IV = testVector.InitialCounter.ToArray();
+        using var ciphertextStream = new MemoryStream(testVector.Ciphertext.ToArray());
+        using var plaintextStream = new MemoryStream();
+        {
+            using var decryptor = aes.CreateDecryptor();
+            using var decryptorStream = new CryptoStream(plaintextStream, decryptor, CryptoStreamMode.Write);
+            ciphertextStream.CopyTo(decryptorStream);
+        }
+        Assert.IsTrue(Enumerable.SequenceEqual(testVector.Plaintext.ToArray(), plaintextStream.ToArray()));
+    }
+
+    [TestMethod]
+    [TestCategory("NIST")]
+    [NistAesCtrSampleDataSource]
+    public void Decrypt_Read(NistAesCtrSampleTestVector testVector)
+    {
+        _ = testVector ?? throw new ArgumentNullException(nameof(testVector));
+
+        using var aes = AesCtr.Create();
+        aes.Key = testVector.Key.ToArray();
+        aes.IV = testVector.InitialCounter.ToArray();
+        using var ciphertextStream = new MemoryStream(testVector.Ciphertext.ToArray());
+        using var plaintextStream = new MemoryStream();
+        {
+            using var decryptor = aes.CreateDecryptor();
+            using var decryptorStream = new CryptoStream(ciphertextStream, decryptor, CryptoStreamMode.Read);
+            decryptorStream.CopyTo(plaintextStream);
+        }
+        Assert.IsTrue(Enumerable.SequenceEqual(testVector.Plaintext.ToArray(), plaintextStream.ToArray()));
     }
 }

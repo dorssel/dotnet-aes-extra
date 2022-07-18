@@ -1,7 +1,7 @@
 ﻿namespace UnitTests;
 
 [TestClass]
-public class AesCtrTests
+sealed class AesCtrTests
 {
     [TestMethod]
     public void Create()
@@ -11,14 +11,14 @@ public class AesCtrTests
     }
 
     [TestMethod]
-    public void CreateByName()
+    public void Create_Name()
     {
         using var aes = AesCtr.Create("AesCtr");
         Assert.IsNotNull(aes);
     }
 
     [TestMethod]
-    public void CreateByNullNameFails()
+    public void Create_NullNameFails()
     {
         Assert.ThrowsException<ArgumentNullException>(() =>
         {
@@ -27,7 +27,7 @@ public class AesCtrTests
     }
 
     [TestMethod]
-    public void CreateByOtherNameFails()
+    public void Create_OtherNameReturnsNull()
     {
         using var aes = AesCtr.Create("SomeOtherName");
         Assert.IsNull(aes);
@@ -41,7 +41,7 @@ public class AesCtrTests
     }
 
     [TestMethod]
-    public void DisposeTwice()
+    public void Dispose_Double()
     {
         var aes = AesCtr.Create();
         aes.Dispose();
@@ -49,20 +49,37 @@ public class AesCtrTests
     }
 
     [TestMethod]
-    public void ModeCannotChange()
+    public void Mode_SetUnchanged()
     {
         using var aes = AesCtr.Create();
-        var mode = aes.Mode;
-        Assert.AreEqual(CipherMode.ECB, mode);
+        Assert.AreEqual(CipherMode.ECB, aes.Mode);
+        aes.Mode = CipherMode.ECB;
+        Assert.AreEqual(CipherMode.ECB, aes.Mode);
+    }
+
+    [TestMethod]
+    public void Mode_CannotChange()
+    {
+        using var aes = AesCtr.Create();
+        Assert.AreEqual(CipherMode.ECB, aes.Mode);
         Assert.ThrowsException<CryptographicException>(() =>
         {
             aes.Mode = CipherMode.CBC;
         });
-        Assert.AreEqual(CipherMode.ECB, mode);
+        Assert.AreEqual(CipherMode.ECB, aes.Mode);
     }
 
     [TestMethod]
-    public void PaddingCannotChange()
+    public void Padding_SetUnchanged()
+    {
+        using var aes = AesCtr.Create();
+        Assert.AreEqual(PaddingMode.None, aes.Padding);
+        aes.Padding = PaddingMode.None;
+        Assert.AreEqual(PaddingMode.None, aes.Padding);
+    }
+
+    [TestMethod]
+    public void Padding_CannotChange()
     {
         using var aes = AesCtr.Create();
         var padding = aes.Padding;
@@ -75,23 +92,31 @@ public class AesCtrTests
     }
 
     [TestMethod]
-    public void FeedbackSizeCannotChange()
+    public void FeedbackSize_SetUnchanged()
     {
         using var aes = AesCtr.Create();
-        var feedbackSize = aes.FeedbackSize;
-        Assert.AreEqual(aes.BlockSize, feedbackSize);
+        Assert.AreEqual(aes.BlockSize, aes.FeedbackSize);
+        aes.FeedbackSize = aes.BlockSize;
+        Assert.AreEqual(aes.BlockSize, aes.FeedbackSize);
+    }
+
+    [TestMethod]
+    public void FeedbackSize_CannotChange()
+    {
+        using var aes = AesCtr.Create();
+        Assert.AreEqual(aes.BlockSize, aes.FeedbackSize);
         Assert.ThrowsException<CryptographicException>(() =>
         {
             aes.FeedbackSize = 8;
         });
-        Assert.AreEqual(aes.BlockSize, feedbackSize);
+        Assert.AreEqual(aes.BlockSize, aes.FeedbackSize);
     }
 
     [TestMethod]
     [DataRow(128)]
     [DataRow(192)]
     [DataRow(256)]
-    public void GenerateIVHasCorrectLength(int keySize)
+    public void GenerateIV_HasCorrectLength(int keySize)
     {
         using var aes = AesCtr.Create();
         aes.KeySize = keySize;
@@ -100,7 +125,7 @@ public class AesCtrTests
     }
 
     [TestMethod]
-    public void GenerateIVAfterDisposeFails()
+    public void GenerateIV_AfterDisposeFails()
     {
         var aes = AesCtr.Create();
         aes.Dispose();
@@ -114,7 +139,7 @@ public class AesCtrTests
     [DataRow(128)]
     [DataRow(192)]
     [DataRow(256)]
-    public void GenerateKeyHasCorrectLength(int keySize)
+    public void GenerateKey_HasCorrectLength(int keySize)
     {
         using var aes = AesCtr.Create();
         aes.KeySize = keySize;
@@ -123,7 +148,7 @@ public class AesCtrTests
     }
 
     [TestMethod]
-    public void GenerateKeyAfterDisposeFails()
+    public void GenerateKey_AfterDisposeFails()
     {
         var aes = AesCtr.Create();
         aes.Dispose();
@@ -137,17 +162,17 @@ public class AesCtrTests
     public void CreateEncryptor()
     {
         using var aes = AesCtr.Create();
-        aes.CreateEncryptor();
+        using var _ = aes.CreateEncryptor();
     }
 
     [TestMethod]
-    public void CreateEncryptorAfterDisposeFails()
+    public void CreateEncryptor_AfterDisposeFails()
     {
         var aes = AesCtr.Create();
         aes.Dispose();
         Assert.ThrowsException<ObjectDisposedException>(() =>
         {
-            aes.CreateEncryptor();
+            using var _ = aes.CreateEncryptor();
         });
     }
 
@@ -155,17 +180,17 @@ public class AesCtrTests
     public void CreateDecryptor()
     {
         using var aes = AesCtr.Create();
-        aes.CreateDecryptor();
+        using var _ = aes.CreateDecryptor();
     }
 
     [TestMethod]
-    public void CreateDecryptorAfterDisposeFails()
+    public void CreateDecryptor_AfterDisposeFails()
     {
         var aes = AesCtr.Create();
         aes.Dispose();
         Assert.ThrowsException<ObjectDisposedException>(() =>
         {
-            aes.CreateDecryptor();
+            using var _ = aes.CreateDecryptor();
         });
     }
 }
