@@ -11,20 +11,29 @@ sealed class AesCtrTransform
     readonly ICryptoTransform AesEcbTransform;
     readonly byte[] Counter;
 
-    internal AesCtrTransform(byte[] rgbKey, byte[] rgbIV)
+    static void ThrowUnexpectedAesFailure()
     {
-        using var aes = Aes.Create();
-        aes.Key = rgbKey;
-        aes.Mode = CipherMode.ECB;
-        aes.Padding = PaddingMode.None;
-        AesEcbTransform = aes.CreateEncryptor();
-
-        Counter = rgbIV;
+        throw new CryptographicException("Unexpected failure in the underlying AES implementation.");
     }
 
-    bool IsDisposed;
+    internal AesCtrTransform(byte[] initialCounter, ICryptoTransform aesEcbTransform)
+    {
+        AesEcbTransform = aesEcbTransform;
+        if ((AesEcbTransform.InputBlockSize != BLOCKSIZE) || (AesEcbTransform.OutputBlockSize != BLOCKSIZE))
+        {
+            ThrowUnexpectedAesFailure();
+        }
+
+        if (initialCounter.Length != BLOCKSIZE)
+        {
+            throw new ArgumentException("Specified initialization vector (IV) does not match the block size for this algorithm.", nameof(initialCounter));
+        }
+        Counter = initialCounter;
+    }
 
     #region IDisposable
+    bool IsDisposed;
+
     void IDisposable.Dispose()
     {
         if (!IsDisposed)
@@ -69,7 +78,7 @@ sealed class AesCtrTransform
     {
         if (AesEcbTransform.TransformBlock(X, 0, BLOCKSIZE, output, 0) != BLOCKSIZE)
         {
-            throw new CryptographicException("Unexpected failure in the underlying AES implementation.");
+            ThrowUnexpectedAesFailure();
         }
     }
 
@@ -101,7 +110,7 @@ sealed class AesCtrTransform
         ThrowIfProcessedFinal();
 
         // Input validaton.
-        // NOTE: All other validation is implicitly done by AsSpan().
+        // NOTE: All other validation is implicitly done by the array access itself.
         if (inputCount % BLOCKSIZE != 0)
         {
             throw new ArgumentOutOfRangeException(nameof(inputCount));

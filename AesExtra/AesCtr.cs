@@ -92,17 +92,21 @@ public sealed class AesCtr
         }
     }
 
-    public override ICryptoTransform CreateDecryptor(byte[] rgbKey, byte[]? rgbIV)
+    ICryptoTransform CreateTransform(byte[] rgbKey, byte[]? rgbIV)
     {
         ThrowIfDisposed();
-        return new AesCtrTransform(rgbKey, rgbIV ?? new byte[BLOCKSIZE]);
+
+        using var aes = Aes.Create();
+        aes.Mode = CipherMode.ECB;
+        aes.Padding = PaddingMode.None;
+        // ECB.Encrypt === ECB.Decrypt; the transform is entirely symmetric.
+        // ECB does not use an IV; the IV we received is actually the initial counter for AES-CTR.
+        return new AesCtrTransform(rgbIV ?? new byte[BLOCKSIZE], aes.CreateEncryptor(rgbKey, new byte[BLOCKSIZE]));
     }
 
-    public override ICryptoTransform CreateEncryptor(byte[] rgbKey, byte[]? rgbIV)
-    {
-        ThrowIfDisposed();
-        return new AesCtrTransform(rgbKey, rgbIV ?? new byte[BLOCKSIZE]);
-    }
+    public override ICryptoTransform CreateDecryptor(byte[] rgbKey, byte[]? rgbIV) => CreateTransform(rgbKey, rgbIV);
+
+    public override ICryptoTransform CreateEncryptor(byte[] rgbKey, byte[]? rgbIV) => CreateTransform(rgbKey, rgbIV);
 
     public override void GenerateIV()
     {
