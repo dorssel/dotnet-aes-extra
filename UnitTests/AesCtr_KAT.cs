@@ -1,7 +1,7 @@
 ﻿namespace UnitTests;
 
 [TestClass]
-sealed class AesCtrKAT
+sealed class AesCtr_KAT
 {
     [TestMethod]
     [TestCategory("NIST")]

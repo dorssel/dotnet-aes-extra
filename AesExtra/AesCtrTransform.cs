@@ -11,7 +11,7 @@ sealed class AesCtrTransform
     readonly ICryptoTransform AesEcbTransform;
     readonly byte[] Counter;
 
-    internal AesCtrTransform(byte[] rgbKey, byte[]? rgbIV)
+    internal AesCtrTransform(byte[] rgbKey, byte[] rgbIV)
     {
         using var aes = Aes.Create();
         aes.Key = rgbKey;
@@ -19,7 +19,7 @@ sealed class AesCtrTransform
         aes.Padding = PaddingMode.None;
         AesEcbTransform = aes.CreateEncryptor();
 
-        Counter = rgbIV ?? new byte[BLOCKSIZE];
+        Counter = rgbIV;
     }
 
     bool IsDisposed;

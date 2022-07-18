@@ -1,7 +1,7 @@
 ﻿namespace UnitTests;
 
 [TestClass]
-sealed class AesCtrTests
+sealed class AesCtr_Tests
 {
     [TestMethod]
     public void Create()

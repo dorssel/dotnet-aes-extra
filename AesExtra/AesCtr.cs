@@ -7,6 +7,9 @@ public sealed class AesCtr
     : Aes
 {
     const int BLOCKSIZE = 16; // bytes
+    const CipherMode FixedCipherMode = CipherMode.ECB;
+    const PaddingMode FixedPaddingMode = PaddingMode.None;
+    const int FixedFeedbackSize = BLOCKSIZE * 8; // bits
 
     public static new Aes Create() => new AesCtr();
 
@@ -21,13 +24,14 @@ public sealed class AesCtr
 
     AesCtr()
     {
-        ModeValue = CipherMode.ECB;
-        PaddingValue = PaddingMode.None;
-        FeedbackSizeValue = BLOCKSIZE * 8; // bits
+        Mode = FixedCipherMode;
+        Padding = FixedPaddingMode;
+        FeedbackSize = FixedFeedbackSize;
     }
 
     #region IDisposable
     bool IsDisposed;
+
     protected override void Dispose(bool disposing)
     {
         if (!IsDisposed)
@@ -51,50 +55,53 @@ public sealed class AesCtr
 
     public override CipherMode Mode
     { 
-        get => ModeValue;
+        get => base.Mode;
         set
         {
-            if (value != ModeValue)
+            if (value != FixedCipherMode)
             {
                 throw new CryptographicException("Specified cipher mode is not valid for this algorithm.");
             }
+            base.Mode = value;
         }
     }
 
     public override PaddingMode Padding
     {
-        get => PaddingValue;
+        get => base.Padding;
         set
         {
-            if (value != PaddingValue)
+            if (value != FixedPaddingMode)
             {
                 throw new CryptographicException("Specified padding mode is not valid for this algorithm.");
             }
+            base.Padding = value;
         }
     }
 
     public override int FeedbackSize
     {
-        get => FeedbackSizeValue;
+        get => base.FeedbackSize;
         set
         {
-            if (value != FeedbackSizeValue)
+            if (value != FixedFeedbackSize)
             {
                 throw new CryptographicException("Specified feedback size is not valid for this algorithm.");
             }
+            base.FeedbackSize= value;
         }
     }
 
     public override ICryptoTransform CreateDecryptor(byte[] rgbKey, byte[]? rgbIV)
     {
         ThrowIfDisposed();
-        return new AesCtrTransform(rgbKey, rgbIV);
+        return new AesCtrTransform(rgbKey, rgbIV ?? new byte[BLOCKSIZE]);
     }
 
     public override ICryptoTransform CreateEncryptor(byte[] rgbKey, byte[]? rgbIV)
     {
         ThrowIfDisposed();
-        return new AesCtrTransform(rgbKey, rgbIV);
+        return new AesCtrTransform(rgbKey, rgbIV ?? new byte[BLOCKSIZE]);
     }
 
     public override void GenerateIV()
