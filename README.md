@@ -1,7 +1,7 @@
 <!--
-SPDX-FileCopyrightText: 2020 Frans van Dorsselaer
+SPDX-FileCopyrightText: 2022 Frans van Dorsselaer
 
-SPDX-License-Identifier: GPL-2.0-only
+SPDX-License-Identifier: MIT
 -->
 
 # dotnet-aes-extra
