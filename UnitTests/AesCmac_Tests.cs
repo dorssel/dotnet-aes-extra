@@ -1,4 +1,5 @@
-﻿using System.IO.Pipelines;
+﻿using System.Diagnostics;
+using System.IO.Pipelines;
 
 namespace UnitTests;
 
@@ -106,20 +107,30 @@ sealed class AesCmac_Tests
         using var aesCmac = new AesCmac(testVector.Key.ToArray());
 
         var pipe = new Pipe();
-        using var writer = pipe.Writer.AsStream();
-        using var reader = pipe.Reader.AsStream();
+        using var reader = new AccountingStream(pipe.Reader.AsStream());
         using var plaintextStream = new MemoryStream(testVector.PT.ToArray());
-        var Transfer = (int count) =>
-        {
-            var buffer = new byte[count];
-            plaintextStream.Read(buffer);
-            writer.Write(buffer);
-            Thread.Sleep(100);
-        };
 
         Task.Run(() =>
         {
-            var hmac = aesCmac;
+            using var writer = pipe.Writer.AsStream();
+            var Transfer = (int count) =>
+            {
+                // Transfers 'count' bytes from plaintextStream to the write-end of the pipe
+                // and busy-waits until they have been read by the read-end of the pipe.
+                // Aborts after a 100ms timeout.
+                var oldCount = reader.ReadByteCount;
+                var buffer = new byte[count];
+                plaintextStream.Read(buffer);
+                writer.Write(buffer);
+                var timeout = Stopwatch.StartNew();
+                while (reader.ReadByteCount != oldCount + count)
+                {
+                    if (timeout.ElapsedMilliseconds > 100)
+                    {
+                        throw new TimeoutException();
+                    }
+                }
+            };
 
             // less than 1 block
             Transfer(16 - 3);
