@@ -142,13 +142,12 @@ sealed class AesCtrTransform
             throw new ArgumentOutOfRangeException(nameof(inputCount));
         }
 
-        var inputBlock = new byte[BLOCKSIZE];
-        Array.Copy(inputBuffer, inputOffset, inputBlock, 0, inputCount);
-        var outputBlock = new byte[BLOCKSIZE];
-        TransformBlock(inputBlock, 0, outputBlock, 0);
+        var block = new byte[BLOCKSIZE];
+        Array.Copy(inputBuffer, inputOffset, block, 0, inputCount);
+        TransformBlock(block, 0, block, 0);
         HasProcessedFinal = true;
-        Array.Resize(ref outputBlock, inputCount);
-        return outputBlock;
+        Array.Resize(ref block, inputCount);
+        return block;
     }
     #endregion
 }

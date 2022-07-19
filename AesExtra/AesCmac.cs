@@ -4,7 +4,7 @@ using System.Security.Cryptography;
 
 namespace Dorssel.Security.Cryptography;
 
-public class AesCmac
+public sealed class AesCmac
     : KeyedHashAlgorithm
 {
     const int BLOCKSIZE = 16; // bytes
@@ -25,16 +25,8 @@ public class AesCmac
         AesEcb = Aes.Create();
         AesEcb.Mode = CipherMode.ECB;
         AesEcb.Padding = PaddingMode.None;
-    }
-
-    public override byte[] Key
-    { 
-        get => AesEcb.Key;
-        set
-        {
-            ThrowIfProcessing();
-            AesEcb.Key = value;
-        }
+        CryptoTransform = AesEcb.CreateEncryptor();
+        HashSizeValue = BLOCKSIZE * 8;
     }
 
     public AesCmac(byte[] key)
@@ -51,7 +43,7 @@ public class AesCmac
         {
             if (disposing)
             {
-                CryptoTransform?.Dispose();
+                CryptoTransform.Dispose();
                 AesEcb.Dispose();
             }
             IsDisposed = true;
@@ -60,161 +52,115 @@ public class AesCmac
     }
     #endregion
 
-    bool HasProcessedFinal;
-
-    void ThrowIfDisposed()
+    public override byte[] Key
     {
-        if (IsDisposed)
+        get => AesEcb.Key;
+        set
         {
-            throw new ObjectDisposedException(nameof(AesCtr));
+            CryptoTransform.Dispose();
+            AesEcb.Key = value;
+            CryptoTransform = AesEcb.CreateEncryptor();
         }
     }
 
-    void ThrowIfProcessing()
-    {
-        if (CryptoTransform is not null)
-        {
-            throw new InvalidOperationException("Cannot change settings while processing.");
-        }
-    }
-
-    void ThrowIfHasProcessedFinal()
-    {
-        if (HasProcessedFinal)
-        {
-            throw new InvalidOperationException("HashFinal has already been called");
-        }
-    }
-
-    byte[] K1 = new byte[BLOCKSIZE];
-    byte[] K2 = new byte[BLOCKSIZE];
-    // See: NIST SP 800-38B, Section 6.2, Step 5
-    byte[] C = new byte[BLOCKSIZE];
     readonly Aes AesEcb;
-    ICryptoTransform? CryptoTransform;
+    ICryptoTransform CryptoTransform;
 
-    // See: NIST SP 800-38B, Section 5.3
-    const int Rb = 0b10000111;
+    // See: NIST SP 800-38B, Section 6.2, Step 5
+    readonly byte[] C = new byte[BLOCKSIZE];
 
     // See: NIST SP 800-38B, Section 4.2
-    static byte[] LeftShiftOne(byte[] X)
+    //
+    // In place: X = (X << 1)
+    // Returns final carry.
+    static bool LeftShiftOne_InPlace(byte[] X)
     {
-        var result = new byte[X.Length];
         var carry = false;
         for (var i = X.Length - 1; i >= 0; --i)
         {
-            result[i] = (byte)(X[i] << 1);
+            var nextCarry = (X[i] & 0x80) != 0;
+            X[i] <<= 1;
             if (carry)
             {
-                result[i] |= 1;
+                X[i] |= 1;
             }
-            carry = (X[i] & 0x80) != 0;
+            carry = nextCarry;
         }
-        return result;
+        return carry;
     }
 
     // See: NIST SP 800-38B, Section 4.2.2
-    byte[] CIPH_K(byte[] X)
+    //
+    // In-place: X = CIPH_K(X)
+    void CIPH_K_InPlace(byte[] X_Base, int X_Offset = 0)
     {
-        Debug.Assert(CryptoTransform is not null);
-
-        var result = new byte[BLOCKSIZE];
-        CryptoTransform!.TransformBlock(X, 0, BLOCKSIZE, result, 0);
-        return result;
+        CryptoTransform.TransformBlock(X_Base, X_Offset, BLOCKSIZE, X_Base, X_Offset);
     }
 
     // See: NIST SP 800-38B, Section 6.1
-    (byte[] K1, byte[] K2) SUBK()
+    //
+    // Returns: first ? K1 : K2
+    byte[] SUBK(bool first)
     {
-        // Step 1
-        var L = CIPH_K(new byte[BLOCKSIZE]);
-        // Step 2
-        var K1 = LeftShiftOne(L);
-        if ((L[0] & 0x80) != 0)
+        // See: NIST SP 800-38B, Section 5.3
+        const int Rb = 0b10000111;
+
+        var X = new byte[BLOCKSIZE];
+        // Step 1: X has the role of L
+        CIPH_K_InPlace(X);
+        // Step 2: X has the role of K1
+        if (LeftShiftOne_InPlace(X))
         {
-            K1[15] ^= Rb;
+            X[BLOCKSIZE - 1] ^= Rb;
         }
-        // Step 3
-        var K2 = LeftShiftOne(K1);
-        if ((K1[0] & 0x80) != 0)
+        if (first)
         {
-            K2[15] ^= Rb;
+            // Step 4: return K1
+            return X;
         }
-        // Step 4
-        return (K1, K2);
+        // Step 3: X has the role of K1
+        if (LeftShiftOne_InPlace(X))
+        {
+            X[BLOCKSIZE - 1] ^= Rb;
+        }
+        // Step 4: return K2
+        return X;
     }
 
     public override void Initialize()
     {
-        ThrowIfDisposed();
-        HasProcessedFinal = false;
-
         // See: NIST SP 800-38B, Section 6.2, Step 5
         for (var i = 0; i < C.Length; ++i)
         {
             C[i] = 0;
         }
-    }
 
-    void EnsureProcessing()
-    {
-        if (CryptoTransform is null)
-        {
-            CryptoTransform = AesEcb.CreateEncryptor(Key, new byte[BLOCKSIZE]);
-
-            // See: NIST SP 800-38B, Section 6.2, Step 1
-            (K1, K2) = SUBK();
-        }
+        PartialLength = 0;
     }
 
     readonly byte[] Partial = new byte[BLOCKSIZE];
     int PartialLength;
 
     // See: NIST SP 800-38B, Section 4.2.2
-    static byte[] Xor(byte[] X, byte[] Y)
+    //
+    // In place: X = (X xor Y)
+    static void Xor_InPlace(byte[] X, byte[] Y_Base, int Y_Offset = 0)
     {
-        Debug.Assert(X.Length == Y.Length);
-
-        var result = new byte[X.Length];
         for (var i = 0; i < X.Length; ++i)
         {
-            result[i] = (byte)(X[i] ^ Y[i]);
+            X[i] ^= Y_Base[Y_Offset + i];
         }
-        return result;
     }
 
     // See: NIST SP 800-38B, Section 6.2, Step 6
-    void AddBlock(byte[] block)
+    void AddBlock(byte[] blockBase, int blockOffset = 0)
     {
-        C = CIPH_K(Xor(C, block));
+        Xor_InPlace(C, blockBase, blockOffset);
+        CIPH_K_InPlace(C);
     }
 
     protected override void HashCore(byte[] array, int ibStart, int cbSize)
     {
-        ThrowIfDisposed();
-        ThrowIfHasProcessedFinal();
-
-        EnsureProcessing();
-
-        switch (cbSize)
-        {
-            case < 0:
-                throw new ArgumentOutOfRangeException(nameof(cbSize));
-            case 0:
-                // Nothing to do. We're not even going to check the other arguments.
-                return;
-            default:
-                break;
-        }
-        if (array is null)
-        {
-            throw new ArgumentNullException(nameof(array));
-        }
-        if (ibStart < 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(cbSize));
-        }
-
         // If we have a non-empty && non-full Partial block already -> append to that first.
         if ((0 < PartialLength) && (PartialLength < BLOCKSIZE))
         {
@@ -246,8 +192,7 @@ public class AesCmac
         for (int i = 0, nonFinalBlockCount = (cbSize - 1) / BLOCKSIZE; i < nonFinalBlockCount; i++)
         {
             // See: NIST SP 800-38B, Section 6.2, Steps 3 and 6
-            Array.Copy(array, ibStart, Partial, 0, BLOCKSIZE);
-            AddBlock(Partial);
+            AddBlock(array, ibStart);
             ibStart += BLOCKSIZE;
             cbSize -= BLOCKSIZE;
         }
@@ -259,15 +204,13 @@ public class AesCmac
 
     protected override byte[] HashFinal()
     {
-        ThrowIfDisposed();
-        ThrowIfHasProcessedFinal();
-
-        EnsureProcessing();
-
-        byte[] Mn;
+        // Partial now has the role of Mn*
         if (PartialLength == BLOCKSIZE)
         {
-            Mn = Xor(K1, Partial);
+            // See: NIST SP 800-38B, Section 6.2, Step 1: K1
+            var K1 = SUBK(true);
+            Xor_InPlace(Partial, K1);
+            // Partial now has the role of Mn
         }
         else
         {
@@ -277,12 +220,17 @@ public class AesCmac
             {
                 Partial[i] = 0x00;
             }
-            Mn = Xor(K2, Partial);
+            // See: NIST SP 800-38B, Section 6.2, Step 1: K2
+            var K2 = SUBK(false);
+            Xor_InPlace(Partial, K2);
+            // Partial now has the role of Mn
         }
         // See: NIST SP 800-38B, Section 6.2, Steps 4 and 6
-        AddBlock(Mn);
+        AddBlock(Partial);
+        PartialLength = 0;
 
-        HasProcessedFinal = true;
-        return C;
+        // NOTE: KeyedHashAlgoritm exposes the returned array reference as the
+        // Hash property, so we must *not* return C itself as it may be reused.
+        return (byte[])C.Clone();
     }
 }

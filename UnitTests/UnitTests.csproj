@@ -9,6 +9,7 @@
     <PackageReference Include="Moq" />
     <PackageReference Include="MSTest.TestAdapter" />
     <PackageReference Include="MSTest.TestFramework" />
+    <PackageReference Include="System.IO.Pipelines" />
     <PackageReference Include="coverlet.collector" />
   </ItemGroup>
 
