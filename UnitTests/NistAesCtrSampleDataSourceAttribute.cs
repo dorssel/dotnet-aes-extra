@@ -1,4 +1,8 @@
-﻿using System.Reflection;
+﻿// SPDX-FileCopyrightText: 2022 Frans van Dorsselaer
+//
+// SPDX-License-Identifier: MIT
+
+using System.Reflection;
 
 namespace UnitTests;
 

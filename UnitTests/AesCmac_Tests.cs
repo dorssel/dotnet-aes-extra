@@ -1,4 +1,8 @@
-﻿using System.Diagnostics;
+﻿// SPDX-FileCopyrightText: 2022 Frans van Dorsselaer
+//
+// SPDX-License-Identifier: MIT
+
+using System.Diagnostics;
 using System.IO.Pipelines;
 
 namespace UnitTests;

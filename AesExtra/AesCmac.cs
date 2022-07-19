@@ -1,4 +1,8 @@
-﻿using System;
+﻿// SPDX-FileCopyrightText: 2022 Frans van Dorsselaer
+//
+// SPDX-License-Identifier: MIT
+
+using System;
 using System.Diagnostics;
 using System.Security.Cryptography;
 

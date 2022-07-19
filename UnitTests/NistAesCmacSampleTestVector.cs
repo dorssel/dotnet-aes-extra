@@ -1,4 +1,8 @@
-﻿using System.Text;
+﻿// SPDX-FileCopyrightText: 2022 Frans van Dorsselaer
+//
+// SPDX-License-Identifier: MIT
+
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace UnitTests;
