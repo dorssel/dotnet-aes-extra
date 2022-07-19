@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Security.Cryptography;
 
 namespace Dorssel.Security.Cryptography;
@@ -21,23 +22,23 @@ public class AesCmac
 
     public AesCmac()
     {
-        var randomKey = new byte[32];
-        using var rng = RandomNumberGenerator.Create();
-        rng.GetBytes(randomKey);
-        Key = randomKey;
+        AesEcb = Aes.Create();
+        AesEcb.Mode = CipherMode.ECB;
+        AesEcb.Padding = PaddingMode.None;
     }
 
     public override byte[] Key
     { 
-        get => base.Key;
+        get => AesEcb.Key;
         set
         {
             ThrowIfProcessing();
-            base.Key = value;
+            AesEcb.Key = value;
         }
     }
 
     public AesCmac(byte[] key)
+        : this()
     {
         Key = key;
     }
@@ -50,6 +51,7 @@ public class AesCmac
         {
             if (disposing)
             {
+                CryptoTransform?.Dispose();
                 AesEcb.Dispose();
             }
             IsDisposed = true;
@@ -58,7 +60,6 @@ public class AesCmac
     }
     #endregion
 
-    bool IsProcessing;
     bool HasProcessedFinal;
 
     void ThrowIfDisposed()
@@ -71,7 +72,7 @@ public class AesCmac
 
     void ThrowIfProcessing()
     {
-        if (IsProcessing)
+        if (CryptoTransform is not null)
         {
             throw new InvalidOperationException("Cannot change settings while processing.");
         }
@@ -89,7 +90,8 @@ public class AesCmac
     byte[] K2 = new byte[BLOCKSIZE];
     // See: NIST SP 800-38B, Section 6.2, Step 5
     byte[] C = new byte[BLOCKSIZE];
-    readonly Aes AesEcb = Aes.Create();
+    readonly Aes AesEcb;
+    ICryptoTransform? CryptoTransform;
 
     // See: NIST SP 800-38B, Section 5.3
     const int Rb = 0b10000111;
@@ -114,16 +116,16 @@ public class AesCmac
     // See: NIST SP 800-38B, Section 4.2.2
     byte[] CIPH_K(byte[] X)
     {
-        _ = AesEcb.KeySize;
-        // return AesEcb.EncryptEcb(new byte[BLOCKSIZE], PaddingMode.None);
-        return new byte[BLOCKSIZE];
+        Debug.Assert(CryptoTransform is not null);
+
+        var result = new byte[BLOCKSIZE];
+        CryptoTransform!.TransformBlock(X, 0, BLOCKSIZE, result, 0);
+        return result;
     }
 
     // See: NIST SP 800-38B, Section 6.1
-    (byte[] K1, byte[] K2) SUBK(byte[] K)
+    (byte[] K1, byte[] K2) SUBK()
     {
-        AesEcb.Key = Key;
-
         // Step 1
         var L = CIPH_K(new byte[BLOCKSIZE]);
         // Step 2
@@ -156,11 +158,12 @@ public class AesCmac
 
     void EnsureProcessing()
     {
-        if (!IsProcessing)
+        if (CryptoTransform is null)
         {
+            CryptoTransform = AesEcb.CreateEncryptor(Key, new byte[BLOCKSIZE]);
+
             // See: NIST SP 800-38B, Section 6.2, Step 1
-            (K1, K2) = SUBK(Key);
-            IsProcessing = true;
+            (K1, K2) = SUBK();
         }
     }
 
@@ -170,10 +173,8 @@ public class AesCmac
     // See: NIST SP 800-38B, Section 4.2.2
     static byte[] Xor(byte[] X, byte[] Y)
     {
-        if (X.Length != Y.Length)
-        {
-            throw new ArgumentException("Length mismatch");
-        }
+        Debug.Assert(X.Length == Y.Length);
+
         var result = new byte[X.Length];
         for (var i = 0; i < X.Length; ++i)
         {

@@ -8,8 +8,6 @@ sealed class AesCtr_KAT
     [NistAesCtrSampleDataSource]
     public void Encrypt_Write(NistAesCtrSampleTestVector testVector)
     {
-        _ = testVector ?? throw new ArgumentNullException(nameof(testVector));
-
         using var aes = AesCtr.Create();
         aes.Key = testVector.Key.ToArray();
         aes.IV = testVector.InitialCounter.ToArray();
@@ -28,8 +26,6 @@ sealed class AesCtr_KAT
     [NistAesCtrSampleDataSource]
     public void Encrypt_Read(NistAesCtrSampleTestVector testVector)
     {
-        _ = testVector ?? throw new ArgumentNullException(nameof(testVector));
-
         using var aes = AesCtr.Create();
         aes.Key = testVector.Key.ToArray();
         aes.IV = testVector.InitialCounter.ToArray();
@@ -48,8 +44,6 @@ sealed class AesCtr_KAT
     [NistAesCtrSampleDataSource]
     public void Decrypt_Write(NistAesCtrSampleTestVector testVector)
     {
-        _ = testVector ?? throw new ArgumentNullException(nameof(testVector));
-
         using var aes = AesCtr.Create();
         aes.Key = testVector.Key.ToArray();
         aes.IV = testVector.InitialCounter.ToArray();
@@ -68,8 +62,6 @@ sealed class AesCtr_KAT
     [NistAesCtrSampleDataSource]
     public void Decrypt_Read(NistAesCtrSampleTestVector testVector)
     {
-        _ = testVector ?? throw new ArgumentNullException(nameof(testVector));
-
         using var aes = AesCtr.Create();
         aes.Key = testVector.Key.ToArray();
         aes.IV = testVector.InitialCounter.ToArray();
