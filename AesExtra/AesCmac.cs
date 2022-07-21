@@ -3,7 +3,6 @@
 // SPDX-License-Identifier: MIT
 
 using System;
-using System.Diagnostics;
 using System.Security.Cryptography;
 
 namespace Dorssel.Security.Cryptography;
@@ -233,7 +232,7 @@ public sealed class AesCmac
         AddBlock(Partial);
         PartialLength = 0;
 
-        // NOTE: KeyedHashAlgoritm exposes the returned array reference as the
+        // NOTE: KeyedHashAlgorithm exposes the returned array reference as the
         // Hash property, so we must *not* return C itself as it may be reused.
         var cmac = new byte[BLOCKSIZE];
         C.CopyTo(cmac, 0);

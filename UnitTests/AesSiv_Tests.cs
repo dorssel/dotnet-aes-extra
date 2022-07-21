@@ -2,9 +2,6 @@
 //
 // SPDX-License-Identifier: MIT
 
-using System.Diagnostics;
-using System.IO.Pipelines;
-
 namespace UnitTests;
 
 [TestClass]

@@ -18,8 +18,8 @@ SPDX-License-Identifier: MIT
 
 The implementation is for AnyCPU, and works on all platforms.
 
-API documentation will follow, but here is a sneek preview:
+API documentation will follow, but here is a sneak preview:
 
-- <code>AesCtr</code> is modeled after .NET's <code>Aes</code>. So, instead of <code>Aes.Create()</code>, use <code>AesCtr.Create()</code>.
-- <code>AesCmac</code> is modeled after .NET's <code>HMACSHA256</code>. So, instead of <code>new HMACSHA256(key)</code>, use <code>new AesCmac(key)</code>.
-- <code>AesSiv</code> is modeled after .NET's <code>AesGcm</code>. So, instead of <code>new AesGcm(key)</code>, use <code>new AesSiv(key)</code>.
+- `AesCtr` is modeled after .NET's `Aes`. So, instead of `Aes.Create()`, use `AesCtr.Create()`.
+- `AesCmac` is modeled after .NET's `HMACSHA256`. So, instead of `new HMACSHA256(key)`, use `new AesCmac(key)`.
+- `AesSiv` is modeled after .NET's `AesGcm`. So, instead of `new AesGcm(key)`, use `new AesSiv(key)`.

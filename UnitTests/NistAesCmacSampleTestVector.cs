@@ -2,7 +2,6 @@
 //
 // SPDX-License-Identifier: MIT
 
-using System.Text;
 using System.Text.RegularExpressions;
 
 namespace UnitTests;
@@ -36,7 +35,7 @@ public record NistAesCmacSampleTestVector
             new("CMAC-AES128 #1", @"
                     2B7E1516 28AED2A6 ABF71588 09CF4F3C
                 ", @"
-                    
+
                 ", @"
                     BB1D6929 E9593728 7FA37D12 9B756746
                 "),
@@ -73,7 +72,7 @@ public record NistAesCmacSampleTestVector
                     8E73B0F7 DA0E6452 C810F32B 809079E5
                     62F8EAD2 522C6B7B
                 ", @"
-                    
+
                 ", @"
                     D17DDF46 ADAACDE5 31CAC483 DE7A9367
                 "),
@@ -82,7 +81,7 @@ public record NistAesCmacSampleTestVector
                     8E73B0F7 DA0E6452 C810F32B 809079E5
                     62F8EAD2 522C6B7B
                 ", @"
-                    6BC1BEE2 2E409F96 E93D7E11 7393172A 
+                    6BC1BEE2 2E409F96 E93D7E11 7393172A
                 ", @"
                     9E99A7BF 31E71090 0662F65E 617C5184
                 "),
@@ -91,7 +90,7 @@ public record NistAesCmacSampleTestVector
                     8E73B0F7 DA0E6452 C810F32B 809079E5
                     62F8EAD2 522C6B7B
                 ", @"
-                    6BC1BEE2 2E409F96 E93D7E11 7393172A 
+                    6BC1BEE2 2E409F96 E93D7E11 7393172A
                     AE2D8A57
                 ", @"
                     3D75C194 ED960704 44A9FA7E C740ECF8
@@ -113,7 +112,7 @@ public record NistAesCmacSampleTestVector
                     603DEB10 15CA71BE 2B73AEF0 857D7781
                     1F352C07 3B6108D7 2D9810A3 0914DFF4
                 ", @"
-                    
+
                 ", @"
                     028962F6 1B7BF89E FC6B551F 4667D983
                 "),
@@ -122,7 +121,7 @@ public record NistAesCmacSampleTestVector
                     603DEB10 15CA71BE 2B73AEF0 857D7781
                     1F352C07 3B6108D7 2D9810A3 0914DFF4
                 ", @"
-                    6BC1BEE2 2E409F96 E93D7E11 7393172A 
+                    6BC1BEE2 2E409F96 E93D7E11 7393172A
                 ", @"
                     28A7023F 452E8F82 BD4BF28D 8C37C35C
                 "),
@@ -131,7 +130,7 @@ public record NistAesCmacSampleTestVector
                     603DEB10 15CA71BE 2B73AEF0 857D7781
                     1F352C07 3B6108D7 2D9810A3 0914DFF4
                 ", @"
-                    6BC1BEE2 2E409F96 E93D7E11 7393172A 
+                    6BC1BEE2 2E409F96 E93D7E11 7393172A
                     AE2D8A57
                 ", @"
                     156727DC 0878944A 023C1FE0 3BAD6D93

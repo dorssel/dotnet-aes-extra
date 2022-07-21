@@ -113,7 +113,7 @@ sealed class AesCtrTransform
         ThrowIfDisposed();
         ThrowIfProcessedFinal();
 
-        // Input validaton.
+        // Input validation.
         // NOTE: All other validation is implicitly done by the array access itself.
         if (inputCount % BLOCKSIZE != 0)
         {

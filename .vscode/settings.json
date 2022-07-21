@@ -1,0 +1,16 @@
+{
+    "cSpell.words": [
+        "BLOCKSIZE",
+        "ciphertext",
+        "decryptor",
+        "encryptor"
+    ],
+    "cSpell.ignoreWords": [
+        "CIPH",
+        "CMAC",
+        "Dorssel",
+        "PKCS7",
+        "SUBK",
+        "xorend"
+    ]
+}

@@ -27,7 +27,8 @@ public record NistAesCtrSampleTestVector
         var initialCounterHex = new StringBuilder();
         var plaintextHex = new StringBuilder();
         var ciphertextHex = new StringBuilder();
-        foreach (var rawLine in Data.Split(new char[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)) {
+        foreach (var rawLine in Data.Split(new char[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries))
+        {
             var line = rawLine.Trim();
             var match = Regex.Match(line, "([0-9a-fA-F]+)$");
             if (match.Success)
