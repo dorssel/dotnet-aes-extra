@@ -235,6 +235,8 @@ public sealed class AesCmac
 
         // NOTE: KeyedHashAlgoritm exposes the returned array reference as the
         // Hash property, so we must *not* return C itself as it may be reused.
-        return (byte[])C.Clone();
+        var cmac = new byte[BLOCKSIZE];
+        C.CopyTo(cmac, 0);
+        return cmac;
     }
 }
