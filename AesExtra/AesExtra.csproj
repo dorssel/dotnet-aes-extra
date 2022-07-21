@@ -9,6 +9,10 @@ SPDX-License-Identifier: MIT
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>Dorssel.Security.Cryptography</RootNamespace>
+    <AssemblyName>Dorssel.Security.Cryptography.AesExtra</AssemblyName>
+
+    <IsPackable>true</IsPackable>
+    <PackageId>Dorssel.Security.Cryptography.AesExtra</PackageId>
   </PropertyGroup>
 
 </Project>
