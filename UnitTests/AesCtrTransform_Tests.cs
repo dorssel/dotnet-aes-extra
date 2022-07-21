@@ -204,7 +204,7 @@ sealed class AesCtrTransform_Tests
     }
 
     [TestMethod]
-    public void TransformfinalBlock_AfterFinalFails()
+    public void TransformFinalBlock_AfterFinalFails()
     {
         using ICryptoTransform transform = new AesCtrTransform(InitialCounter, AesEcbTransform);
         _ = transform.TransformFinalBlock(Array.Empty<byte>(), 0, 0);

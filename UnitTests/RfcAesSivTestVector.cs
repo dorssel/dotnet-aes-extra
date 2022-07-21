@@ -3,7 +3,6 @@
 // SPDX-License-Identifier: MIT
 
 using System.Collections.ObjectModel;
-using System.Text;
 using System.Text.RegularExpressions;
 
 namespace UnitTests;
@@ -48,6 +47,7 @@ public record RfcAesSivTestVector
     {
         var testVectors = new List<RfcAesSivTestVector>
         {
+            // cspell:disable
             new("Deterministic", @"
                     fffefdfc fbfaf9f8 f7f6f5f4 f3f2f1f0
                     f0f1f2f3 f4f5f6f7 f8f9fafb fcfdfeff
@@ -87,6 +87,7 @@ public record RfcAesSivTestVector
                 "
             ),
 
+            // cspell:enable
         };
         All = testVectors.AsReadOnly();
     }

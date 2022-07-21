@@ -56,7 +56,7 @@ public sealed class AesCtr
     #endregion
 
     public override CipherMode Mode
-    { 
+    {
         get => AesEcb.Mode;
         set
         {
@@ -92,7 +92,7 @@ public sealed class AesCtr
             {
                 throw new CryptographicException("Specified feedback size is not valid for this algorithm.");
             }
-            AesEcb.FeedbackSize= value;
+            AesEcb.FeedbackSize = value;
         }
     }
 
