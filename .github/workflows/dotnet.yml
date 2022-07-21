@@ -35,6 +35,15 @@ jobs:
     - name: Test
       run: dotnet test --configuration Release --no-build --verbosity normal --collect:"XPlat Code Coverage"
 
+    - name: Package
+      run: dotnet pack --configuration Release --no-build
+
+    - name: Upload Package Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: nuget-package
+        path: "**/*.nupkg"
+
     - name: Codecov
       uses: codecov/codecov-action@v3
       with:
