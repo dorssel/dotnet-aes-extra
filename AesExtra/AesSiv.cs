@@ -83,6 +83,18 @@ public sealed class AesSiv
         }
     }
 
+    // RFC 5297, Section 2.6 and 2.7
+    //
+    // Q = V bitand (1^64 || 0^1 || 1^31 || 0^1 || 1^31)
+    static byte[] InitializationVectorToInitialCounter(byte[] V)
+    {
+        var Q = new byte[BLOCKSIZE];
+        V.CopyTo(Q, 0);
+        Q[8] &= 0x7f;
+        Q[12] &= 0x7f;
+        return Q;
+    }
+
     public void Encrypt(byte[] plaintext, byte[] ciphertext, params byte[][] associatedData)
     {
         // Input validation
@@ -105,28 +117,18 @@ public sealed class AesSiv
         var V = S2V(associatedData, plaintext);
         if (plaintext.Length > 0)
         {
-            {
-                var Q = new byte[BLOCKSIZE];
-                V.CopyTo(Q, 0);
-                Q[8] &= 0x7f;
-                Q[12] &= 0x7f;
-                Ctr.IV = Q;
-            }
+            Ctr.IV = InitializationVectorToInitialCounter(V);
             using var encryptor = Ctr.CreateEncryptor();
-            var fullBlockCount = plaintext.Length / BLOCKSIZE;
+            var fullBlocksByteCount = plaintext.Length / BLOCKSIZE * BLOCKSIZE;
             var ciphertextOffset = BLOCKSIZE;
-            if (fullBlockCount > 0)
+            if (fullBlocksByteCount > 0)
             {
-                ciphertextOffset += encryptor.TransformBlock(plaintext, 0, fullBlockCount * BLOCKSIZE, ciphertext, ciphertextOffset);
+                ciphertextOffset += encryptor.TransformBlock(plaintext, 0, fullBlocksByteCount, ciphertext, ciphertextOffset);
             }
-            if (plaintext.Length > fullBlockCount * BLOCKSIZE)
+            if (plaintext.Length > fullBlocksByteCount)
             {
-                encryptor.TransformFinalBlock(plaintext, fullBlockCount * BLOCKSIZE, plaintext.Length - fullBlockCount * BLOCKSIZE).CopyTo(ciphertext, ciphertextOffset);
+                encryptor.TransformFinalBlock(plaintext, fullBlocksByteCount, plaintext.Length - fullBlocksByteCount).CopyTo(ciphertext, ciphertextOffset);
             }
-        }
-        else
-        {
-            Console.WriteLine("Bingo");
         }
         V.CopyTo(ciphertext, 0);
     }
@@ -150,7 +152,7 @@ public sealed class AesSiv
 
         if (plaintext.Length != ciphertext.Length - BLOCKSIZE)
         {
-            throw new ArgumentException("Plaintext must be shorter than ciphertext by exactly BlockSize (16 bytes).", nameof(plaintext));
+            throw new ArgumentException($"Plaintext must be shorter than ciphertext by exactly BlockSize ({BLOCKSIZE} bytes).", nameof(plaintext));
         }
 
         // RFC 5297, Section 2.7
@@ -158,23 +160,17 @@ public sealed class AesSiv
         var V = ciphertext.Take(BLOCKSIZE).ToArray();
         if (plaintext.Length > 0)
         {
-            {
-                var Q = new byte[BLOCKSIZE];
-                V.CopyTo(Q, 0);
-                Q[8] &= 0x7f;
-                Q[12] &= 0x7f;
-                Ctr.IV = Q;
-            }
+            Ctr.IV = InitializationVectorToInitialCounter(V);
             using var decryptor = Ctr.CreateDecryptor();
-            var fullBlockCount = plaintext.Length / BLOCKSIZE;
+            var fullBlocksByteCount = plaintext.Length / BLOCKSIZE * BLOCKSIZE;
             var plaintextOffset = 0;
-            if (fullBlockCount > 0)
+            if (fullBlocksByteCount > 0)
             {
-                plaintextOffset += decryptor.TransformBlock(ciphertext, BLOCKSIZE, fullBlockCount * BLOCKSIZE, plaintext, plaintextOffset);
+                plaintextOffset += decryptor.TransformBlock(ciphertext, BLOCKSIZE, fullBlocksByteCount, plaintext, plaintextOffset);
             }
-            if (plaintext.Length > fullBlockCount * BLOCKSIZE)
+            if (plaintext.Length > fullBlocksByteCount)
             {
-                decryptor.TransformFinalBlock(ciphertext, BLOCKSIZE + fullBlockCount * BLOCKSIZE, plaintext.Length - fullBlockCount * BLOCKSIZE).CopyTo(plaintext, plaintextOffset);
+                decryptor.TransformFinalBlock(ciphertext, BLOCKSIZE + fullBlocksByteCount, plaintext.Length - fullBlocksByteCount).CopyTo(plaintext, plaintextOffset);
             }
         }
         var T = S2V(associatedData, plaintext);

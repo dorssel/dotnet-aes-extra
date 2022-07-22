@@ -45,6 +45,7 @@ public record RfcAesSivTestVector
 
     static RfcAesSivTestVector()
     {
+        // See: RFC 5297, Appendix A
         var testVectors = new List<RfcAesSivTestVector>
         {
             // cspell:disable

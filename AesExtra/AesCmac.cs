@@ -72,26 +72,6 @@ public sealed class AesCmac
     // See: NIST SP 800-38B, Section 6.2, Step 5
     readonly byte[] C = new byte[BLOCKSIZE];
 
-    // See: NIST SP 800-38B, Section 4.2
-    //
-    // In place: X = (X << 1)
-    // Returns final carry.
-    static bool LeftShiftOne_InPlace(byte[] X)
-    {
-        var carry = false;
-        for (var i = X.Length - 1; i >= 0; --i)
-        {
-            var nextCarry = (X[i] & 0x80) != 0;
-            X[i] <<= 1;
-            if (carry)
-            {
-                X[i] |= 1;
-            }
-            carry = nextCarry;
-        }
-        return carry;
-    }
-
     // See: NIST SP 800-38B, Section 4.2.2
     //
     // In-place: X = CIPH_K(X)
@@ -105,27 +85,18 @@ public sealed class AesCmac
     // Returns: first ? K1 : K2
     byte[] SUBK(bool first)
     {
-        // See: NIST SP 800-38B, Section 5.3
-        const int Rb = 0b10000111;
-
         var X = new byte[BLOCKSIZE];
         // Step 1: X has the role of L
         CIPH_K_InPlace(X);
         // Step 2: X has the role of K1
-        if (LeftShiftOne_InPlace(X))
-        {
-            X[BLOCKSIZE - 1] ^= Rb;
-        }
+        X.dbl_InPlace();
         if (first)
         {
             // Step 4: return K1
             return X;
         }
         // Step 3: X has the role of K1
-        if (LeftShiftOne_InPlace(X))
-        {
-            X[BLOCKSIZE - 1] ^= Rb;
-        }
+        X.dbl_InPlace();
         // Step 4: return K2
         return X;
     }
@@ -144,21 +115,10 @@ public sealed class AesCmac
     readonly byte[] Partial = new byte[BLOCKSIZE];
     int PartialLength;
 
-    // See: NIST SP 800-38B, Section 4.2.2
-    //
-    // In place: X = (X xor Y)
-    static void Xor_InPlace(byte[] X, byte[] Y_Base, int Y_Offset = 0)
-    {
-        for (var i = 0; i < X.Length; ++i)
-        {
-            X[i] ^= Y_Base[Y_Offset + i];
-        }
-    }
-
     // See: NIST SP 800-38B, Section 6.2, Step 6
     void AddBlock(byte[] blockBase, int blockOffset = 0)
     {
-        Xor_InPlace(C, blockBase, blockOffset);
+        C.xor_InPlace(0, blockBase, blockOffset, BLOCKSIZE);
         CIPH_K_InPlace(C);
     }
 
@@ -167,7 +127,6 @@ public sealed class AesCmac
         // If we have a non-empty && non-full Partial block already -> append to that first.
         if ((0 < PartialLength) && (PartialLength < BLOCKSIZE))
         {
-            // We've got a non-empty && non-full Partial block already -> append to that first.
             var count = Math.Min(cbSize, BLOCKSIZE - PartialLength);
             Array.Copy(array, ibStart, Partial, PartialLength, count);
             PartialLength += count;
@@ -212,7 +171,7 @@ public sealed class AesCmac
         {
             // See: NIST SP 800-38B, Section 6.2, Step 1: K1
             var K1 = SUBK(true);
-            Xor_InPlace(Partial, K1);
+            Partial.xor_InPlace(0, K1, 0, BLOCKSIZE);
             // Partial now has the role of Mn
         }
         else
@@ -225,7 +184,7 @@ public sealed class AesCmac
             }
             // See: NIST SP 800-38B, Section 6.2, Step 1: K2
             var K2 = SUBK(false);
-            Xor_InPlace(Partial, K2);
+            Partial.xor_InPlace(0, K2, 0, BLOCKSIZE);
             // Partial now has the role of Mn
         }
         // See: NIST SP 800-38B, Section 6.2, Steps 4 and 6

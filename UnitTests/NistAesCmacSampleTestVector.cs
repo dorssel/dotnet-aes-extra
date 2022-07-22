@@ -30,6 +30,7 @@ public record NistAesCmacSampleTestVector
 
     static NistAesCmacSampleTestVector()
     {
+        // See: https://csrc.nist.gov/projects/cryptographic-standards-and-guidelines/example-values
         var testVectors = new List<NistAesCmacSampleTestVector>
         {
             new("CMAC-AES128 #1", @"

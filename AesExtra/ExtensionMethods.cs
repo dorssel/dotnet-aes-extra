@@ -12,7 +12,7 @@ static class ExtensionMethods
     //
     // In place: X = (X << 1)
     // Returns final carry.
-    public static bool LeftShiftOne_InPlace(this byte[] X)
+    static bool LeftShiftOne_InPlace(this byte[] X)
     {
         var carry = false;
         for (var i = X.Length - 1; i >= 0; --i)
@@ -28,12 +28,17 @@ static class ExtensionMethods
         return carry;
     }
 
+    // See: NIST SP 800-38B, Section 6.1
+    // See: RFC 5297, Section 2.1
+    //
+    // In place: S = dbl(S)
     public static void dbl_InPlace(this byte[] S)
     {
         // See: NIST SP 800-38B, Section 5.3
         // See: RFC 5297, Section 2.3
         const int Rb = 0b10000111;
 
+        // See: NIST SP 800-38B, Section 6.1, Step 2/3
         if (S.LeftShiftOne_InPlace())
         {
             S[BLOCKSIZE - 1] ^= Rb;
