@@ -38,6 +38,12 @@ public sealed class AesCmac
         Key = key;
     }
 
+    void ZeroizeState()
+    {
+        CryptographicOperations.ZeroMemory(C);
+        CryptographicOperations.ZeroMemory(Partial);
+    }
+
     #region IDisposable
     bool IsDisposed;
     protected override void Dispose(bool disposing)
@@ -48,6 +54,7 @@ public sealed class AesCmac
             {
                 CryptoTransform.Dispose();
                 AesEcb.Dispose();
+                ZeroizeState();
             }
             IsDisposed = true;
         }
@@ -104,10 +111,7 @@ public sealed class AesCmac
     public override void Initialize()
     {
         // See: NIST SP 800-38B, Section 6.2, Step 5
-        for (var i = 0; i < C.Length; ++i)
-        {
-            C[i] = 0;
-        }
+        ZeroizeState();
 
         PartialLength = 0;
     }
@@ -195,6 +199,9 @@ public sealed class AesCmac
         // Hash property, so we must *not* return C itself as it may be reused.
         var cmac = new byte[BLOCKSIZE];
         C.CopyTo(cmac, 0);
+
+        ZeroizeState();
+
         return cmac;
     }
 }
