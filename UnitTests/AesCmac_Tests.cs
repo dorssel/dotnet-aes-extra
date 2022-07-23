@@ -110,49 +110,29 @@ sealed class AesCmac_Tests
 
         using var aesCmac = new AesCmac(testVector.Key.ToArray());
 
-        var pipe = new Pipe();
-        using var reader = new AccountingStream(pipe.Reader.AsStream());
-        using var plaintextStream = new MemoryStream(testVector.PT.ToArray());
-
-        Task.Run(() =>
+        var pos = 0;
+        var Transfer = (int count) =>
         {
-            using var writer = pipe.Writer.AsStream();
-            var Transfer = (int count) =>
-            {
-                // Transfers 'count' bytes from plaintextStream to the write-end of the pipe
-                // and busy-waits until they have been read by the read-end of the pipe.
-                // Aborts after a 100ms timeout.
-                var oldCount = reader.ReadByteCount;
-                var buffer = new byte[count];
-                plaintextStream.Read(buffer);
-                writer.Write(buffer);
-                var timeout = Stopwatch.StartNew();
-                while (reader.ReadByteCount != oldCount + count)
-                {
-                    if (timeout.ElapsedMilliseconds > 100)
-                    {
-                        throw new TimeoutException();
-                    }
-                }
-            };
+            aesCmac.TransformBlock(testVector.PT.ToArray(), pos, count, null, 0);
+            pos += count;
+        };
 
-            // less than 1 block
-            Transfer(16 - 3);
-            // append to, but don't complete the partial block
-            Transfer(2);
-            // complete the partial block precisely
-            Transfer(1);
-            // more than 1 block, but not an exact multiple
-            Transfer(2 * 16 - 3);
-            // topping off the partial block + again less than 1 block
-            Transfer(16);
-            // remainder
-            plaintextStream.CopyTo(writer);
+        // less than 1 block
+        Transfer(16 - 3);
+        // append to, but don't complete the partial block
+        Transfer(2);
+        // complete the partial block precisely
+        Transfer(1);
+        // more than 1 block, but not an exact multiple
+        Transfer(2 * 16 - 3);
+        // topping off the partial block + again less than 1 block
+        Transfer(16);
+        // remainder
+        Transfer(testVector.PT.Length - pos);
 
-            writer.Close();
-        });
+        aesCmac.TransformFinalBlock(Array.Empty<byte>(), 0, 0);
 
-        Assert.IsTrue(Enumerable.SequenceEqual(testVector.Tag.ToArray(), aesCmac.ComputeHash(reader)));
+        Assert.IsTrue(Enumerable.SequenceEqual(testVector.Tag.ToArray(), aesCmac.Hash!));
     }
 
     [TestMethod]
