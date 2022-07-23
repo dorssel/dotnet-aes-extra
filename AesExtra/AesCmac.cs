@@ -128,6 +128,11 @@ public sealed class AesCmac
 
     protected override void HashCore(byte[] array, int ibStart, int cbSize)
     {
+        if (cbSize == 0)
+        {
+            return;
+        }
+
         // If we have a non-empty && non-full Partial block already -> append to that first.
         if ((0 < PartialLength) && (PartialLength < BLOCKSIZE))
         {
