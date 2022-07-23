@@ -174,12 +174,9 @@ public sealed class AesSiv
             }
         }
         var T = S2V(associatedData, plaintext);
-        if (!Enumerable.SequenceEqual(T, V))
+        if (!CryptographicOperations.FixedTimeEquals(T, V))
         {
-            for (var i = 0; i < plaintext.Length; ++i)
-            {
-                plaintext[i] = 0;
-            }
+            CryptographicOperations.ZeroMemory(plaintext);
             throw new CryptographicException("Authentication failed.");
         }
     }
