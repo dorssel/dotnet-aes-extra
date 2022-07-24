@@ -21,6 +21,8 @@ public sealed class AesSiv
     }
 
     const int BLOCKSIZE = 16; // bytes
+    // See: RFC 5297, Section 7
+    const int MaximumAssociatedDataCount = 126;
 
     static readonly byte[] zero = new byte[BLOCKSIZE];
 
@@ -102,6 +104,10 @@ public sealed class AesSiv
         _ = plaintext ?? throw new ArgumentNullException(nameof(plaintext));
         _ = ciphertext ?? throw new ArgumentNullException(nameof(plaintext));
         _ = associatedData ?? throw new ArgumentNullException(nameof(plaintext));
+        if (associatedData.Length > MaximumAssociatedDataCount)
+        {
+            throw new ArgumentException("Too many associated data items.");
+        }
         foreach (var ad in associatedData)
         {
             _ = ad ?? throw new ArgumentException("Associated data items must not be null.", nameof(associatedData));
@@ -140,6 +146,10 @@ public sealed class AesSiv
         _ = ciphertext ?? throw new ArgumentNullException(nameof(ciphertext));
         _ = plaintext ?? throw new ArgumentNullException(nameof(plaintext));
         _ = associatedData ?? throw new ArgumentNullException(nameof(associatedData));
+        if (associatedData.Length > MaximumAssociatedDataCount)
+        {
+            throw new ArgumentException("Too many associated data items.");
+        }
         foreach (var ad in associatedData)
         {
             _ = ad ?? throw new ArgumentException("Associated data items must not be null.", nameof(associatedData));
