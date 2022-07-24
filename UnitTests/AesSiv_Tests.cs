@@ -144,6 +144,27 @@ sealed class AesSiv_Tests
     }
 
     [TestMethod]
+    public void Encrypt_MaximumAssociatedData()
+    {
+        var associatedData = Enumerable.Range(1, 126).Select(i => Array.Empty<byte>()).ToArray();
+
+        using var aesSiv = new AesSiv(TestKey);
+        aesSiv.Encrypt(TestPlaintext, new byte[TestCiphertext.Length], associatedData);
+    }
+
+    [TestMethod]
+    public void Encrypt_TooManyAssociatedDataThrows()
+    {
+        var associatedData = Enumerable.Range(1, 127).Select(i => Array.Empty<byte>()).ToArray();
+
+        using var aesSiv = new AesSiv(TestKey);
+        Assert.ThrowsException<ArgumentException>(() =>
+        {
+            aesSiv.Encrypt(TestPlaintext, new byte[TestCiphertext.Length], associatedData);
+        });
+    }
+
+    [TestMethod]
     public void Decrypt_NullCiphertextThrows()
     {
         using var aesSiv = new AesSiv(TestKey);
@@ -203,6 +224,29 @@ sealed class AesSiv_Tests
         Assert.ThrowsException<ArgumentException>(() =>
         {
             aesSiv.Decrypt(TestCiphertext, new byte[TestPlaintext.Length + 1]);
+        });
+    }
+
+    [TestMethod]
+    public void Decrypt_MaximumAssociatedData()
+    {
+        var associatedData = Enumerable.Range(1, 126).Select(i => Array.Empty<byte>()).ToArray();
+
+        using var aesSiv = new AesSiv(TestKey);
+        var cipherText = new byte[TestCiphertext.Length];
+        aesSiv.Encrypt(TestPlaintext, cipherText, associatedData);
+        aesSiv.Decrypt(cipherText, new byte[TestPlaintext.Length], associatedData);
+    }
+
+    [TestMethod]
+    public void Decrypt_TooManyAssociatedDataThrows()
+    {
+        var associatedData = Enumerable.Range(1, 127).Select(i => Array.Empty<byte>()).ToArray();
+
+        using var aesSiv = new AesSiv(TestKey);
+        Assert.ThrowsException<ArgumentException>(() =>
+        {
+            aesSiv.Decrypt(TestCiphertext, new byte[TestPlaintext.Length], associatedData);
         });
     }
 
