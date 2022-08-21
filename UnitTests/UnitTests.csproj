@@ -9,6 +9,8 @@ SPDX-License-Identifier: MIT
   <PropertyGroup>
     <ImplicitUsings>enable</ImplicitUsings>
     <CheckForOverflowUnderflow>True</CheckForOverflowUnderflow>
+    <SignAssembly>True</SignAssembly>
+    <AssemblyOriginatorKeyFile>..\strongname.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
   <ItemGroup>
