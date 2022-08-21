@@ -15,4 +15,8 @@ SPDX-License-Identifier: MIT
     <PackageId>Dorssel.Security.Cryptography.AesExtra</PackageId>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
+    <CheckForOverflowUnderflow>True</CheckForOverflowUnderflow>
+  </PropertyGroup>
+
 </Project>

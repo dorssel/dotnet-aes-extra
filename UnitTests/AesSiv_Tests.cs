@@ -285,16 +285,16 @@ sealed class AesSiv_Tests
     public void EncryptDecrypt_Reuse()
     {
         // one key
-        var key = Enumerable.Range(3, 32).Select(i => (byte)i).ToArray();
+        var key = Enumerable.Range(3, 32).ToUncheckedByteArray();
 
         // two totally different messages
         var associatedData_1 = new byte[][]
         {
-            Enumerable.Range(1001, 99).Select(i => (byte)i).ToArray(),
-            Enumerable.Range(2001, 1).Select(i => (byte)i).ToArray(),
-            Enumerable.Range(3001, 16).Select(i => (byte)i).ToArray(),
+            Enumerable.Range(1001, 99).ToUncheckedByteArray(),
+            Enumerable.Range(2001, 1).ToUncheckedByteArray(),
+            Enumerable.Range(3001, 16).ToUncheckedByteArray(),
         };
-        var plaintext_1 = Enumerable.Range(1, 207).Select(i => (byte)i).ToArray();
+        var plaintext_1 = Enumerable.Range(1, 207).ToUncheckedByteArray();
         var ciphertext_1 = new byte[16 + plaintext_1.Length];
         {
             using var aesSiv = new AesSiv(key);
@@ -303,9 +303,9 @@ sealed class AesSiv_Tests
 
         var associatedData_2 = new byte[][]
         {
-            Enumerable.Range(4001, 4).Select(i => (byte)i).ToArray(),
+            Enumerable.Range(4001, 4).ToUncheckedByteArray(),
         };
-        var plaintext_2 = Enumerable.Range(9, 5).Select(i => (byte)i).ToArray();
+        var plaintext_2 = Enumerable.Range(9, 5).ToUncheckedByteArray();
         var ciphertext_2 = new byte[16 + plaintext_2.Length];
         {
             using var aesSiv = new AesSiv(key);
