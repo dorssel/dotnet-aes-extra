@@ -1,6 +1,8 @@
 ﻿// SPDX-FileCopyrightText: 2022 Frans van Dorsselaer
+// SPDX-FileCopyrightText: 2008 Dan Harkins
 //
 // SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: LicenseRef-IETF-Trust
 
 using System.Collections.ObjectModel;
 using System.Text.RegularExpressions;
@@ -46,6 +48,7 @@ public record RfcAesSivTestVector
     static RfcAesSivTestVector()
     {
         // See: RFC 5297, Appendix A
+        // Licenced under LicenseRef-IETF-Trust
         var testVectors = new List<RfcAesSivTestVector>
         {
             // cspell:disable
