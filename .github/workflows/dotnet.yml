@@ -42,7 +42,9 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: nuget-package
-          path: '**/*.nupkg'
+          path: |
+            **/*.nupkg
+            **/*.snupkg
 
       - name: Codecov
         uses: codecov/codecov-action@v3
