@@ -1,6 +1,8 @@
 ﻿// SPDX-FileCopyrightText: 2022 Frans van Dorsselaer
+// SPDX-FileCopyrightText: 2022 NIST
 //
 // SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: LicenseRef-NIST-OtherDataWorks
 
 using System.Text;
 using System.Text.RegularExpressions;
@@ -62,6 +64,7 @@ public record NistAesCtrSampleTestVector
     {
         // See: NIST SP 800-38A, Appendix F
         // See: https://csrc.nist.gov/projects/cryptographic-standards-and-guidelines/example-values
+        // Licenced under LicenseRef-NIST-OtherDataWorks
         //
         // NOTE: The Encrypt (odd) and Decrypt (even) examples are actually the same.
         // We include only one.

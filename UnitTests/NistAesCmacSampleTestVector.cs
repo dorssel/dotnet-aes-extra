@@ -1,6 +1,8 @@
 ﻿// SPDX-FileCopyrightText: 2022 Frans van Dorsselaer
+// SPDX-FileCopyrightText: 2022 NIST
 //
 // SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: LicenseRef-NIST-OtherDataWorks
 
 using System.Text.RegularExpressions;
 
@@ -31,6 +33,7 @@ public record NistAesCmacSampleTestVector
     static NistAesCmacSampleTestVector()
     {
         // See: https://csrc.nist.gov/projects/cryptographic-standards-and-guidelines/example-values
+        // Licenced under LicenseRef-NIST-OtherDataWorks
         var testVectors = new List<NistAesCmacSampleTestVector>
         {
             new("CMAC-AES128 #1", @"
