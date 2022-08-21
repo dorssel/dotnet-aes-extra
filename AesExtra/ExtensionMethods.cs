@@ -18,7 +18,7 @@ static class ExtensionMethods
         for (var i = X.Length - 1; i >= 0; --i)
         {
             var nextCarry = (X[i] & 0x80) != 0;
-            X[i] <<= 1;
+            _ = unchecked(X[i] <<= 1);
             if (carry)
             {
                 X[i] |= 1;

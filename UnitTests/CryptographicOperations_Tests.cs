@@ -39,7 +39,7 @@ sealed class CryptographicOperations_Tests
     [DataRow(32 + 1)]
     public void ZeroMemory_Size(int size)
     {
-        var data = Enumerable.Range(1, size).Select(x => (byte)x).ToArray();
+        var data = Enumerable.Range(1, size).ToUncheckedByteArray();
         Assert.IsFalse(data.Any(x => x == 0));
 
         ZeroMemory(data);

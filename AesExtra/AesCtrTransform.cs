@@ -76,7 +76,7 @@ sealed class AesCtrTransform
     {
         for (var i = Counter.Length - 1; i >= 0; --i)
         {
-            if (++Counter[i] != 0)
+            if (unchecked(++Counter[i]) != 0)
             {
                 break;
             }
