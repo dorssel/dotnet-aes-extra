@@ -33,6 +33,7 @@ SPDX-License-Identifier: MIT
     <IsPackable>false</IsPackable>
     <IsPublishable>false</IsPublishable>
     <IsTrimmable>true</IsTrimmable>
+    <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)\strongname.snk</AssemblyOriginatorKeyFile>
 
     <!-- Assembly metadata -->
     <Product>dotnet-aes-extra</Product>
@@ -45,6 +46,14 @@ SPDX-License-Identifier: MIT
     <Description>.NET Standard 2.0 implementation of AES-CTR, AES-CMAC, and AES-SIV.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/dorssel/dotnet-aes-extra</PackageProjectUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <UseFullSemVerForNuGet>false</UseFullSemVerForNuGet>
+
+    <!-- SourceLink -->
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
 
   <ItemGroup>
