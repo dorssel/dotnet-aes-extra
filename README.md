@@ -11,6 +11,7 @@ SPDX-License-Identifier: MIT
 [![MegaLinter](https://github.com/dorssel/dotnet-aes-extra/workflows/MegaLinter/badge.svg?branch=master)](https://github.com/dorssel/dotnet-aes-extra/actions?query=workflow%3AMegaLinter+branch%3Amaster)
 [![codecov](https://codecov.io/gh/dorssel/dotnet-aes-extra/branch/master/graph/badge.svg?token=zsbTiXoisQ)](https://codecov.io/gh/dorssel/dotnet-aes-extra)
 [![REUSE status](https://api.reuse.software/badge/github.com/dorssel/dotnet-aes-extra)](https://api.reuse.software/info/github.com/dorssel/dotnet-aes-extra)
+[![NuGet](https://img.shields.io/nuget/v/Dorssel.Security.Cryptography.AesExtra?logo=nuget)](https://www.nuget.org/packages/Dorssel.Security.Cryptography.AesExtra)
 
 .NET Standard 2.0 implementation of the following AES modes that are not included in .NET 6.0 / .NET Framework:
 
