@@ -21,7 +21,16 @@ SPDX-License-Identifier: MIT
 
 The implementation is for AnyCPU, and works on all platforms.
 
-API documentation will follow, but here is a sneak preview:
+# Usage
+
+The released binary NuGet packages and the .NET assemblies contained therein:
+
+- use [Strong Naming](https://docs.microsoft.com/en-us/dotnet/standard/library-guidance/strong-naming),
+- include [SourceLink](https://docs.microsoft.com/en-us/dotnet/standard/library-guidance/sourcelink),
+- include [IntelliSense](https://docs.microsoft.com/en-us/visualstudio/ide/using-intellisense) compatible documentation, and
+- are signed and timestamped with Authenticode.
+
+All public classes are in the `Dorssel.Security.Cryptography` namespace.
 
 - `AesCtr` is modeled after .NET's `Aes`. So, instead of `Aes.Create()`, use `AesCtr.Create()`.
 - `AesCmac` is modeled after .NET's `HMACSHA256`. So, instead of `new HMACSHA256(key)`, use `new AesCmac(key)`.
