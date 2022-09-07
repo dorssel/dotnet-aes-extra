@@ -7,6 +7,8 @@ namespace UnitTests;
 [TestClass]
 sealed class AesSiv_KAT
 {
+    const int BLOCKSIZE = 16; // bytes
+
     [TestMethod]
     [TestCategory("RFC")]
     [RfcAesSivTestVectorSource]
@@ -18,7 +20,7 @@ sealed class AesSiv_KAT
         {
             associatedData.Add(testVector.Nonce.Value.ToArray());
         }
-        var ciphertext = new byte[AesSiv.BlockSize / 8 + testVector.Plaintext.Length];
+        var ciphertext = new byte[BLOCKSIZE + testVector.Plaintext.Length];
         aesSiv.Encrypt(testVector.Plaintext.ToArray(), ciphertext, associatedData.ToArray());
         Assert.IsTrue(Enumerable.SequenceEqual(testVector.output.ToArray(), ciphertext));
     }
@@ -34,7 +36,7 @@ sealed class AesSiv_KAT
         {
             associatedData.Add(testVector.Nonce.Value.ToArray());
         }
-        var plaintext = new byte[testVector.output.Length - AesSiv.BlockSize / 8];
+        var plaintext = new byte[testVector.output.Length - BLOCKSIZE];
         aesSiv.Decrypt(testVector.output.ToArray(), plaintext, associatedData.ToArray());
         Assert.IsTrue(Enumerable.SequenceEqual(testVector.Plaintext.ToArray(), plaintext));
     }

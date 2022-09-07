@@ -54,43 +54,6 @@ sealed class AesSiv_Tests
     }
 
     [TestMethod]
-    public void LegalKeySizes_Get()
-    {
-        var legalKeySizes = new SortedSet<int>();
-        foreach (var legalKeySize in AesSiv.LegalKeySizes)
-        {
-            for (var keySize = legalKeySize.MinSize; keySize <= legalKeySize.MaxSize; keySize += Math.Max(legalKeySize.SkipSize, 1))
-            {
-                Assert.IsFalse(legalKeySizes.Contains(keySize));
-                legalKeySizes.Add(keySize);
-            }
-        }
-        Assert.IsTrue(Enumerable.SequenceEqual(new SortedSet<int>() { 256, 384, 512 }, legalKeySizes));
-    }
-
-    [TestMethod]
-    [DataRow(256)]
-    [DataRow(384)]
-    [DataRow(512)]
-    public void ValidKeySize_WithValidSize(int keySize)
-    {
-        Assert.IsTrue(AesSiv.ValidKeySize(keySize));
-    }
-
-    [TestMethod]
-    [DataRow(0)]
-    [DataRow(1)]
-    [DataRow(128 / 8)]
-    [DataRow(192 / 8)]
-    [DataRow(256 / 8)]
-    [DataRow(384 / 8)]
-    [DataRow(512 / 8)]
-    public void ValidKeySize_WithInvalidSize(int keySize)
-    {
-        Assert.IsFalse(AesSiv.ValidKeySize(keySize));
-    }
-
-    [TestMethod]
     public void Encrypt_NullPlaintextThrows()
     {
         using var aesSiv = new AesSiv(TestKey);

@@ -7,13 +7,19 @@ using System.Security.Cryptography;
 
 namespace Dorssel.Security.Cryptography;
 
+/// <summary>
+/// Computes a Cipher-based Message Authentication Code (CMAC) by using the symmetric key AES block cipher.
+/// </summary>
 public sealed class AesCmac
     : KeyedHashAlgorithm
 {
     const int BLOCKSIZE = 16; // bytes
 
+    /// <inheritdoc cref="KeyedHashAlgorithm.Create()" />
+    /// <remarks>This static override defaults to <see cref="AesCmac" />.</remarks>
     public static new KeyedHashAlgorithm Create() => new AesCmac();
 
+    /// <inheritdoc cref="KeyedHashAlgorithm.Create(string)" />
     public static new KeyedHashAlgorithm? Create(string algorithmName)
     {
         if (algorithmName == null)
@@ -23,6 +29,9 @@ public sealed class AesCmac
         return algorithmName == nameof(AesCmac) ? Create() : null;
     }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AesCmac" /> class with a randomly generated key.
+    /// </summary>
     public AesCmac()
     {
         AesEcb = Aes.Create();
@@ -32,6 +41,10 @@ public sealed class AesCmac
         HashSizeValue = BLOCKSIZE * 8;
     }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AesCmac" /> class with the specified key data.
+    /// </summary>
+    /// <param name="key">The secret key for AES-CMAC algorithm.</param>
     public AesCmac(byte[] key)
         : this()
     {
@@ -46,6 +59,8 @@ public sealed class AesCmac
 
     #region IDisposable
     bool IsDisposed;
+
+    /// <inheritdoc cref="KeyedHashAlgorithm.Dispose(bool)" />
     protected override void Dispose(bool disposing)
     {
         if (!IsDisposed)
@@ -62,6 +77,7 @@ public sealed class AesCmac
     }
     #endregion
 
+    /// <inheritdoc cref="KeyedHashAlgorithm.Key" />
     public override byte[] Key
     {
         get => AesEcb.Key;
@@ -108,6 +124,7 @@ public sealed class AesCmac
         return X;
     }
 
+    /// <inheritdoc cref="HashAlgorithm.Initialize" />
     public override void Initialize()
     {
         // See: NIST SP 800-38B, Section 6.2, Step 5
@@ -126,6 +143,7 @@ public sealed class AesCmac
         CIPH_K_InPlace(C);
     }
 
+    /// <inheritdoc cref="HashAlgorithm.HashCore(byte[], int, int)" />
     protected override void HashCore(byte[] array, int ibStart, int cbSize)
     {
         if (cbSize == 0)
@@ -173,6 +191,7 @@ public sealed class AesCmac
         PartialLength = cbSize;
     }
 
+    /// <inheritdoc cref="HashAlgorithm.HashFinal" />
     protected override byte[] HashFinal()
     {
         // Partial now has the role of Mn*
