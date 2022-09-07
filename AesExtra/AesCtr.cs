@@ -7,6 +7,9 @@ using System.Security.Cryptography;
 
 namespace Dorssel.Security.Cryptography;
 
+/// <summary>
+/// Provides an implementation of the Advanced Encryption Standard (AES) symmetric algorithm in CTR mode.
+/// </summary>
 public sealed class AesCtr
     : Aes
 {
@@ -15,8 +18,10 @@ public sealed class AesCtr
     const PaddingMode FixedPaddingMode = PaddingMode.None;
     const int FixedFeedbackSize = FixedBlockSize * 8; // bits
 
+    /// <inheritdoc cref="Aes.Create()" />
     public static new Aes Create() => new AesCtr();
 
+    /// <inheritdoc cref="Aes.Create(string)" />
     public static new Aes? Create(string algorithmName)
     {
         if (algorithmName == null)
@@ -41,6 +46,7 @@ public sealed class AesCtr
     #region IDisposable
     bool IsDisposed;
 
+    /// <inheritdoc cref="SymmetricAlgorithm.Dispose(bool)" />
     protected override void Dispose(bool disposing)
     {
         if (!IsDisposed)
@@ -55,6 +61,8 @@ public sealed class AesCtr
     }
     #endregion
 
+    /// <inheritdoc cref="AesManaged.Mode" />
+    /// <remarks><see cref="AesCtr"/> always uses <see cref="CipherMode.ECB" />.</remarks>
     public override CipherMode Mode
     {
         get => AesEcb.Mode;
@@ -69,6 +77,8 @@ public sealed class AesCtr
         }
     }
 
+    /// <inheritdoc cref="SymmetricAlgorithm.Padding" />
+    /// <remarks><see cref="AesCtr"/> always uses <see cref="PaddingMode.None" />.</remarks>
     public override PaddingMode Padding
     {
         get => AesEcb.Padding;
@@ -83,6 +93,8 @@ public sealed class AesCtr
         }
     }
 
+    /// <inheritdoc cref="SymmetricAlgorithm.FeedbackSize" />
+    /// <remarks><see cref="AesCtr"/> always uses 128 bits.</remarks>
     public override int FeedbackSize
     {
         get => AesEcb.FeedbackSize;
@@ -96,11 +108,22 @@ public sealed class AesCtr
         }
     }
 
+    /// <inheritdoc cref="SymmetricAlgorithm.IV" />
     public override byte[] IV { get => AesEcb.IV; set => AesEcb.IV = value; }
+
+    /// <inheritdoc cref="SymmetricAlgorithm.Key" />
     public override byte[] Key { get => AesEcb.Key; set => AesEcb.Key = value; }
+
+    /// <inheritdoc cref="SymmetricAlgorithm.BlockSize" />
     public override int BlockSize { get => AesEcb.BlockSize; set => AesEcb.BlockSize = value; }
+
+    /// <inheritdoc cref="SymmetricAlgorithm.KeySize" />
     public override int KeySize { get => AesEcb.KeySize; set => AesEcb.KeySize = value; }
+
+    /// <inheritdoc cref="SymmetricAlgorithm.LegalBlockSizes" />
     public override KeySizes[] LegalBlockSizes => AesEcb.LegalBlockSizes;
+
+    /// <inheritdoc cref="SymmetricAlgorithm.LegalKeySizes" />
     public override KeySizes[] LegalKeySizes => base.LegalKeySizes;
 
     ICryptoTransform CreateTransform(byte[] rgbKey, byte[]? rgbIV)
@@ -110,15 +133,19 @@ public sealed class AesCtr
         return new AesCtrTransform(rgbIV ?? new byte[FixedBlockSize], AesEcb.CreateEncryptor(rgbKey, new byte[FixedBlockSize]));
     }
 
+    /// <inheritdoc cref="AesManaged.CreateDecryptor(byte[], byte[])" />
     public override ICryptoTransform CreateDecryptor(byte[] rgbKey, byte[]? rgbIV) => CreateTransform(rgbKey, rgbIV);
 
+    /// <inheritdoc cref="AesManaged.CreateEncryptor(byte[], byte[])" />
     public override ICryptoTransform CreateEncryptor(byte[] rgbKey, byte[]? rgbIV) => CreateTransform(rgbKey, rgbIV);
 
+    /// <inheritdoc cref="AesManaged.GenerateIV" />
     public override void GenerateIV()
     {
         AesEcb.GenerateIV();
     }
 
+    /// <inheritdoc cref="AesManaged.GenerateKey" />
     public override void GenerateKey()
     {
         AesEcb.GenerateKey();

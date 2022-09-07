@@ -9,9 +9,17 @@ using System.Security.Cryptography;
 
 namespace Dorssel.Security.Cryptography;
 
+/// <summary>
+/// Represents an Advanced Encryption Standard (AES) key to be used with the Synthetic Initialization Vector (SIV) mode of operation.
+/// </summary>
 public sealed class AesSiv
     : IDisposable
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AesSiv"/> class with a provided key.
+    /// </summary>
+    /// <param name="key">The secret key to use for this instance.</param>
+    /// <exception cref="ArgumentNullException" />
     public AesSiv(byte[] key)
     {
         _ = key ?? throw new ArgumentNullException(nameof(key));
@@ -32,6 +40,7 @@ public sealed class AesSiv
     #region IDisposable
     bool IsDisposed;
 
+    /// <inheritdoc cref="IDisposable.Dispose()" />
     public void Dispose()
     {
         if (!IsDisposed)
@@ -42,20 +51,6 @@ public sealed class AesSiv
         }
     }
     #endregion
-
-    public static int BlockSize { get => 128; }
-
-    static readonly ReadOnlyCollection<KeySizes> _LegalKeySizes = new(new KeySizes[] { new(256, 512, 128) });
-    public static ReadOnlyCollection<KeySizes> LegalKeySizes { get => _LegalKeySizes; }
-
-    public static bool ValidKeySize(int bitLength)
-    {
-        return bitLength switch
-        {
-            256 or 384 or 512 => true,
-            _ => false
-        };
-    }
 
     byte[] S2V(byte[][] associatedData, byte[] plaintext)
     {
@@ -97,6 +92,14 @@ public sealed class AesSiv
         return Q;
     }
 
+    /// <summary>
+    /// Encrypts the plaintext into the ciphertext destination buffer, prepending the synthetic IV.
+    /// </summary>
+    /// <param name="plaintext">The content to encrypt.</param>
+    /// <param name="ciphertext">The byte array to receive the encrypted contents, prepended with the synthetic IV.</param>
+    /// <param name="associatedData">Extra data associated with this message, which must also be provided during decryption.</param>
+    /// <exception cref="ArgumentNullException" />
+    /// <exception cref="ArgumentException" />
     public void Encrypt(byte[] plaintext, byte[] ciphertext, params byte[][] associatedData)
     {
         // Input validation
@@ -139,6 +142,15 @@ public sealed class AesSiv
         V.CopyTo(ciphertext, 0);
     }
 
+    /// <summary>
+    /// Decrypts the ciphertext into the provided destination buffer if the data can be validated.
+    /// </summary>
+    /// <param name="ciphertext">The encrypted content to decrypt, including the prepended IV.</param>
+    /// <param name="plaintext">The byte array to receive the decrypted contents.</param>
+    /// <param name="associatedData">xtra data associated with this message, which must match the value provided during encryption.</param>
+    /// <exception cref="ArgumentNullException" />
+    /// <exception cref="ArgumentException" />
+    /// <exception cref="CryptographicException" />
     public void Decrypt(byte[] ciphertext, byte[] plaintext, params byte[][] associatedData)
     {
         // Input validation
