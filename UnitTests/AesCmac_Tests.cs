@@ -2,9 +2,6 @@
 //
 // SPDX-License-Identifier: MIT
 
-using System.Diagnostics;
-using System.IO.Pipelines;
-
 namespace UnitTests;
 
 [TestClass]
@@ -93,7 +90,7 @@ sealed class AesCmac_Tests
     {
         var keys = NistAesCmacSampleTestVector.All
             .Select(tv => tv.Key.ToArray())
-            .DistinctBy(key => BitConverter.ToString(key));
+            .DistinctBy(BitConverter.ToString);
 
         using var aesCmac = new AesCmac();
         foreach (var key in keys)

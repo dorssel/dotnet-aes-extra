@@ -9,7 +9,7 @@ using System.Text.RegularExpressions;
 
 namespace UnitTests;
 
-public record NistAesCtrSampleTestVector
+public partial record NistAesCtrSampleTestVector
 {
     public static IReadOnlyList<NistAesCtrSampleTestVector> All { get; }
 
@@ -32,15 +32,15 @@ public record NistAesCtrSampleTestVector
         foreach (var rawLine in Data.Split(new char[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries))
         {
             var line = rawLine.Trim();
-            var match = Regex.Match(line, "([0-9a-fA-F]+)$");
+            var match = EndingHexRegex().Match(line);
             if (match.Success)
             {
                 var hex = match.Groups[1].Value;
-                if (line.StartsWith("Key") || (line == hex))
+                if (line.StartsWith("Key") || line == hex)
                 {
                     keyHex.Append(hex);
                 }
-                else if (line.StartsWith("Init."))
+                else if (line.StartsWith("Init. Counter"))
                 {
                     initialCounterHex.Append(hex);
                 }
@@ -59,6 +59,9 @@ public record NistAesCtrSampleTestVector
         Plaintext = Convert.FromHexString(plaintextHex.ToString());
         Ciphertext = Convert.FromHexString(ciphertextHex.ToString());
     }
+
+    [GeneratedRegex("([0-9a-fA-F]+)$")]
+    private static partial Regex EndingHexRegex();
 
     static NistAesCtrSampleTestVector()
     {

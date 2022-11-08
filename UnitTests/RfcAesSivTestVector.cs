@@ -9,13 +9,16 @@ using System.Text.RegularExpressions;
 
 namespace UnitTests;
 
-public record RfcAesSivTestVector
+public partial record RfcAesSivTestVector
 {
     public static IReadOnlyList<RfcAesSivTestVector> All { get; }
 
+    [GeneratedRegex(@"\s+")]
+    private static partial Regex WhitespaceRegex();
+
     static byte[] FromHexString(string hexWithWhiteSpace)
     {
-        return Convert.FromHexString(Regex.Replace(hexWithWhiteSpace, @"\s+", ""));
+        return Convert.FromHexString(WhitespaceRegex().Replace(hexWithWhiteSpace, ""));
     }
 
     public string Name { get; }
