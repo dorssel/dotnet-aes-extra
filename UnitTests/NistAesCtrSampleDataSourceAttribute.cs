@@ -20,9 +20,9 @@ internal sealed class NistAesCtrSampleDataSourceAttribute
         return NistAesCtrSampleTestVector.All.Select(tv => new object[] { tv });
     }
 
-    public string GetDisplayName(MethodInfo methodInfo, object[] data)
+    public string GetDisplayName(MethodInfo methodInfo, object?[]? data)
     {
-        var testVector = (NistAesCtrSampleTestVector)data[0];
-        return $"{methodInfo.Name}({testVector.Name})";
+        var testVector = data?.FirstOrDefault() as NistAesCtrSampleTestVector;
+        return $"{methodInfo.Name}({testVector?.Name})";
     }
 }

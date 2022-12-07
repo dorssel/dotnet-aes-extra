@@ -20,9 +20,9 @@ internal sealed class NistAesCmacSampleDataSourceAttribute
         return NistAesCmacSampleTestVector.All.Select(tv => new object[] { tv });
     }
 
-    public string GetDisplayName(MethodInfo methodInfo, object[] data)
+    public string GetDisplayName(MethodInfo methodInfo, object?[]? data)
     {
-        var testVector = (NistAesCmacSampleTestVector)data[0];
-        return $"{methodInfo.Name}({testVector.Name})";
+        var testVector = data?.FirstOrDefault() as NistAesCmacSampleTestVector;
+        return $"{methodInfo.Name}({testVector?.Name})";
     }
 }

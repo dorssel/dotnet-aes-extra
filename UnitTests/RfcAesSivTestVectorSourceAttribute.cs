@@ -20,9 +20,9 @@ internal sealed class RfcAesSivTestVectorSourceAttribute
         return RfcAesSivTestVector.All.Select(tv => new object[] { tv });
     }
 
-    public string GetDisplayName(MethodInfo methodInfo, object[] data)
+    public string GetDisplayName(MethodInfo methodInfo, object?[]? data)
     {
-        var testVector = (RfcAesSivTestVector)data[0];
-        return $"{methodInfo.Name}({testVector.Name})";
+        var testVector = data?.FirstOrDefault() as RfcAesSivTestVector;
+        return $"{methodInfo.Name}({testVector?.Name})";
     }
 }
