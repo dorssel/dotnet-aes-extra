@@ -2,5 +2,5 @@
 //
 // SPDX-License-Identifier: MIT
 
-[assembly: CLSCompliant(true)]
+[assembly: CLSCompliant(false)]
 [assembly: DiscoverInternals]
