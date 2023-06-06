@@ -10,4 +10,4 @@
 using System.Diagnostics.CodeAnalysis;
 
 [assembly: SuppressMessage("Security", "CA5358:Review cipher mode usage with cryptography experts", Justification = "Done :)")]
-[assembly: SuppressMessage("Security", "CA5401:Do not use CreateEncryptor with non-default IV", Justification = "We only use ECB, which does not use an IV")]
+[assembly: SuppressMessage("Security", "CA5401:Do not use CreateEncryptor with non-default IV", Justification = "We only use ECB, which does not use an IV")] // DevSkim: ignore DS187371

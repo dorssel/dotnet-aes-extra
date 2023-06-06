@@ -14,7 +14,7 @@ public sealed class AesCtr
     : Aes
 {
     internal const int FixedBlockSize = 16; // bytes
-    const CipherMode FixedCipherMode = CipherMode.ECB;
+    const CipherMode FixedCipherMode = CipherMode.ECB; // DevSkim: ignore DS187371
     const PaddingMode FixedPaddingMode = PaddingMode.None;
     const int FixedFeedbackSize = FixedBlockSize * 8; // bits
 

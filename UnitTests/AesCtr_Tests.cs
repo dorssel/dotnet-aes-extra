@@ -56,21 +56,21 @@ sealed class AesCtr_Tests
     public void Mode_SetUnchanged()
     {
         using var aes = AesCtr.Create();
-        Assert.AreEqual(CipherMode.ECB, aes.Mode);
-        aes.Mode = CipherMode.ECB;
-        Assert.AreEqual(CipherMode.ECB, aes.Mode);
+        Assert.AreEqual(CipherMode.ECB, aes.Mode); // DevSkim: ignore DS187371
+        aes.Mode = CipherMode.ECB; // DevSkim: ignore DS187371
+        Assert.AreEqual(CipherMode.ECB, aes.Mode); // DevSkim: ignore DS187371
     }
 
     [TestMethod]
     public void Mode_CannotChange()
     {
         using var aes = AesCtr.Create();
-        Assert.AreEqual(CipherMode.ECB, aes.Mode);
+        Assert.AreEqual(CipherMode.ECB, aes.Mode); // DevSkim: ignore DS187371
         Assert.ThrowsException<CryptographicException>(() =>
         {
             aes.Mode = CipherMode.CBC;
         });
-        Assert.AreEqual(CipherMode.ECB, aes.Mode);
+        Assert.AreEqual(CipherMode.ECB, aes.Mode); // DevSkim: ignore DS187371
     }
 
     [TestMethod]

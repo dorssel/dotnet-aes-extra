@@ -15,7 +15,7 @@ sealed class AesCtrTransform_Tests
     public AesCtrTransform_Tests()
     {
         using var aes = Aes.Create();
-        aes.Mode = CipherMode.ECB;
+        aes.Mode = CipherMode.ECB; // DevSkim: ignore DS187371
         aes.Padding = PaddingMode.None;
         AesEcbTransform = aes.CreateEncryptor(new byte[128 / 8], new byte[BLOCKSIZE]);
     }
