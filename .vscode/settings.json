@@ -1,17 +1,29 @@
 {
-    "cSpell.words": [
-        "BLOCKSIZE",
-        "ciphertext",
-        "decryptor",
-        "encryptor"
-    ],
-    "cSpell.ignoreWords": [
-        "bitand",
-        "CIPH",
-        "CMAC",
-        "Dorssel",
-        "PKCS7",
-        "SUBK",
-        "xorend"
-    ]
+  "cSpell.words": [
+    "BLOCKSIZE",
+    "ciphertext",
+    "decryptor",
+    "Dorsselaer",
+    "encryptor",
+    "Frans",
+    "Zeroize"
+  ],
+  "cSpell.ignoreWords": [
+    "accum",
+    "autobuild",
+    "bitand",
+    "buildscript",
+    "CIPH",
+    "CMAC",
+    "codeql",
+    "codecov",
+    "Dorssel",
+    "fsfe",
+    "nupkg",
+    "PKCS7",
+    "snupkg",
+    "stefanzweifel",
+    "SUBK",
+    "xorend"
+  ]
 }

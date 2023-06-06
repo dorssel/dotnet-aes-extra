@@ -8,31 +8,15 @@
 .gitattributes   text
 .gitignore       text
 .editorconfig    text
-.json            text
-.license         text
 
-*.md    text
-*.txt   text
+*.txt       text
+*.md        text
+*.license   text
+*.json      text
+*.yml       text
+*.config    text
 
-*.yml   text
-
-*.sln   text
-
+*.sln      text
 *.csproj   text
 *.cs       text eol=crlf
 *.props    text
-
-*.wixproj   text
-*.wxs       text
-*.xslt      text
-*.png       binary
-*.xcf       binary
-
-# VBoxUsb drivers
-*.cat   binary
-*.inf   text
-*.sys   binary
-*.cer   binary
-
-# Linux scripts
-*.sh   text eol=lf

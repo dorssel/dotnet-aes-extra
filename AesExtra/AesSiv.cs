@@ -146,7 +146,7 @@ public sealed class AesSiv
     /// </summary>
     /// <param name="ciphertext">The encrypted content to decrypt, including the prepended IV.</param>
     /// <param name="plaintext">The byte array to receive the decrypted contents.</param>
-    /// <param name="associatedData">xtra data associated with this message, which must match the value provided during encryption.</param>
+    /// <param name="associatedData">Extra data associated with this message, which must match the value provided during encryption.</param>
     /// <exception cref="ArgumentNullException" />
     /// <exception cref="ArgumentException" />
     /// <exception cref="CryptographicException" />
