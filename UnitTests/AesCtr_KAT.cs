@@ -22,7 +22,7 @@ sealed class AesCtr_KAT
             using var encryptorStream = new CryptoStream(ciphertextStream, encryptor, CryptoStreamMode.Write);
             plaintextStream.CopyTo(encryptorStream);
         }
-        Assert.IsTrue(Enumerable.SequenceEqual(testVector.Ciphertext.ToArray(), ciphertextStream.ToArray()));
+        CollectionAssert.AreEqual(testVector.Ciphertext.ToArray(), ciphertextStream.ToArray());
     }
 
     [TestMethod]
@@ -40,7 +40,7 @@ sealed class AesCtr_KAT
             using var encryptorStream = new CryptoStream(plaintextStream, encryptor, CryptoStreamMode.Read);
             encryptorStream.CopyTo(ciphertextStream);
         }
-        Assert.IsTrue(Enumerable.SequenceEqual(testVector.Ciphertext.ToArray(), ciphertextStream.ToArray()));
+        CollectionAssert.AreEqual(testVector.Ciphertext.ToArray(), ciphertextStream.ToArray());
     }
 
     [TestMethod]
@@ -58,7 +58,7 @@ sealed class AesCtr_KAT
             using var decryptorStream = new CryptoStream(plaintextStream, decryptor, CryptoStreamMode.Write);
             ciphertextStream.CopyTo(decryptorStream);
         }
-        Assert.IsTrue(Enumerable.SequenceEqual(testVector.Plaintext.ToArray(), plaintextStream.ToArray()));
+        CollectionAssert.AreEqual(testVector.Plaintext.ToArray(), plaintextStream.ToArray());
     }
 
     [TestMethod]
@@ -76,6 +76,6 @@ sealed class AesCtr_KAT
             using var decryptorStream = new CryptoStream(ciphertextStream, decryptor, CryptoStreamMode.Read);
             decryptorStream.CopyTo(plaintextStream);
         }
-        Assert.IsTrue(Enumerable.SequenceEqual(testVector.Plaintext.ToArray(), plaintextStream.ToArray()));
+        CollectionAssert.AreEqual(testVector.Plaintext.ToArray(), plaintextStream.ToArray());
     }
 }

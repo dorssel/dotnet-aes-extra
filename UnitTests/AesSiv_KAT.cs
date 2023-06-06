@@ -22,7 +22,7 @@ sealed class AesSiv_KAT
         }
         var ciphertext = new byte[BLOCKSIZE + testVector.Plaintext.Length];
         aesSiv.Encrypt(testVector.Plaintext.ToArray(), ciphertext, associatedData.ToArray());
-        Assert.IsTrue(Enumerable.SequenceEqual(testVector.output.ToArray(), ciphertext));
+        CollectionAssert.AreEqual(testVector.output.ToArray(), ciphertext);
     }
 
     [TestMethod]
@@ -38,6 +38,6 @@ sealed class AesSiv_KAT
         }
         var plaintext = new byte[testVector.output.Length - BLOCKSIZE];
         aesSiv.Decrypt(testVector.output.ToArray(), plaintext, associatedData.ToArray());
-        Assert.IsTrue(Enumerable.SequenceEqual(testVector.Plaintext.ToArray(), plaintext));
+        CollectionAssert.AreEqual(testVector.Plaintext.ToArray(), plaintext);
     }
 }

@@ -15,6 +15,6 @@ sealed class AesCmac_KAT
         using var aesCmac = AesCmac.Create();
         aesCmac.Key = testVector.Key.ToArray();
         var tag = aesCmac.ComputeHash(testVector.PT.ToArray());
-        Assert.IsTrue(Enumerable.SequenceEqual(testVector.Tag.ToArray(), tag));
+        CollectionAssert.AreEqual(testVector.Tag.ToArray(), tag);
     }
 }
