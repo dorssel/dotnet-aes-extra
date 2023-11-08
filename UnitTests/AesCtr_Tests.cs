@@ -177,9 +177,23 @@ sealed class AesCtr_Tests
     }
 
     [TestMethod]
+    public void CreateEncryptor_WithKeyAndDefaultIV()
+    {
+        using var aes = AesCtr.Create();
+        using var _ = aes.CreateEncryptor(new byte[16], null);
+    }
+
+    [TestMethod]
     public void CreateDecryptor()
     {
         using var aes = AesCtr.Create();
         using var _ = aes.CreateDecryptor();
+    }
+
+    [TestMethod]
+    public void CreateDecryptor_WithKeyAndDefaultIV()
+    {
+        using var aes = AesCtr.Create();
+        using var _ = aes.CreateDecryptor(new byte[16], null);
     }
 }
