@@ -108,11 +108,11 @@ sealed class AesCmac_Tests
         using var aesCmac = new AesCmac(testVector.Key.ToArray());
 
         var pos = 0;
-        var Transfer = (int count) =>
+        void Transfer(int count)
         {
             aesCmac.TransformBlock(testVector.PT.ToArray(), pos, count, null, 0);
             pos += count;
-        };
+        }
 
         // less than 1 block
         Transfer(16 - 3);
@@ -127,7 +127,7 @@ sealed class AesCmac_Tests
         // remainder
         Transfer(testVector.PT.Length - pos);
 
-        aesCmac.TransformFinalBlock(Array.Empty<byte>(), 0, 0);
+        aesCmac.TransformFinalBlock([], 0, 0);
 
         CollectionAssert.AreEqual(testVector.Tag.ToArray(), aesCmac.Hash);
     }

@@ -66,7 +66,7 @@ public sealed class AesSiv
             // Using Transform instead of Compute prevents cloning plaintext.
             Cmac.TransformBlock(plaintext, 0, plaintext.Length - BLOCKSIZE, null, 0);
             Cmac.TransformBlock(D, 0, BLOCKSIZE, null, 0);
-            Cmac.TransformFinalBlock(Array.Empty<byte>(), 0, 0);
+            Cmac.TransformFinalBlock([], 0, 0);
             return Cmac.Hash;
         }
         else

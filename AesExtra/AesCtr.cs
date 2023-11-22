@@ -126,11 +126,11 @@ public sealed class AesCtr
     /// <inheritdoc cref="SymmetricAlgorithm.LegalKeySizes" />
     public override KeySizes[] LegalKeySizes => base.LegalKeySizes;
 
-    ICryptoTransform CreateTransform(byte[] rgbKey, byte[]? rgbIV)
+    AesCtrTransform CreateTransform(byte[] rgbKey, byte[]? rgbIV)
     {
         // ECB.Encrypt === ECB.Decrypt; the transform is entirely symmetric.
         // ECB does not use an IV; the IV we received is actually the initial counter for AES-CTR.
-        return new AesCtrTransform(rgbIV ?? new byte[FixedBlockSize], AesEcb.CreateEncryptor(rgbKey, new byte[FixedBlockSize]));
+        return new(rgbIV ?? new byte[FixedBlockSize], AesEcb.CreateEncryptor(rgbKey, new byte[FixedBlockSize]));
     }
 
     /// <inheritdoc cref="AesManaged.CreateDecryptor(byte[], byte[])" />
