@@ -21,7 +21,7 @@ sealed class AesSiv_KAT
             associatedData.Add(testVector.Nonce.Value.ToArray());
         }
         var ciphertext = new byte[BLOCKSIZE + testVector.Plaintext.Length];
-        aesSiv.Encrypt(testVector.Plaintext.ToArray(), ciphertext, associatedData.ToArray());
+        aesSiv.Encrypt(testVector.Plaintext.ToArray(), ciphertext, [.. associatedData]);
         CollectionAssert.AreEqual(testVector.output.ToArray(), ciphertext);
     }
 
@@ -37,7 +37,7 @@ sealed class AesSiv_KAT
             associatedData.Add(testVector.Nonce.Value.ToArray());
         }
         var plaintext = new byte[testVector.output.Length - BLOCKSIZE];
-        aesSiv.Decrypt(testVector.output.ToArray(), plaintext, associatedData.ToArray());
+        aesSiv.Decrypt(testVector.output.ToArray(), plaintext, [.. associatedData]);
         CollectionAssert.AreEqual(testVector.Plaintext.ToArray(), plaintext);
     }
 }

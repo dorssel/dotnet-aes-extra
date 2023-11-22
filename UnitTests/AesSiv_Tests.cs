@@ -89,10 +89,7 @@ sealed class AesSiv_Tests
         using var aesSiv = new AesSiv(TestKey);
         Assert.ThrowsException<ArgumentException>(() =>
         {
-            aesSiv.Encrypt(TestPlaintext, TestCiphertext, new byte[][]
-            {
-                null!,
-            });
+            aesSiv.Encrypt(TestPlaintext, TestCiphertext, [null!]);
         });
     }
 
@@ -163,10 +160,7 @@ sealed class AesSiv_Tests
         using var aesSiv = new AesSiv(TestKey);
         Assert.ThrowsException<ArgumentException>(() =>
         {
-            aesSiv.Decrypt(TestCiphertext, TestPlaintext, new byte[][]
-            {
-                null!,
-            });
+            aesSiv.Decrypt(TestCiphertext, TestPlaintext, [null!]);
         });
     }
 
@@ -217,10 +211,10 @@ sealed class AesSiv_Tests
     public void Decrypt_InvalidAuthenticationThrows()
     {
         using var aesSiv = new AesSiv(TestKey);
-        aesSiv.Encrypt(TestPlaintext, TestCiphertext, new byte[] { 1 });
+        aesSiv.Encrypt(TestPlaintext, TestCiphertext, [1]);
         Assert.ThrowsException<CryptographicException>(() =>
         {
-            aesSiv.Decrypt(TestCiphertext, TestPlaintext, new byte[] { 2 });
+            aesSiv.Decrypt(TestCiphertext, TestPlaintext, [2]);
         });
     }
 
@@ -230,17 +224,17 @@ sealed class AesSiv_Tests
         var cipherText = new byte[16];
         {
             using var aesSiv = new AesSiv(TestKey);
-            aesSiv.Encrypt(Array.Empty<byte>(), cipherText);
+            aesSiv.Encrypt([], cipherText);
             CollectionAssert.AreNotEqual(new byte[16], cipherText);
         }
         {
             using var aesSiv = new AesSiv(TestKey);
-            aesSiv.Decrypt(cipherText, Array.Empty<byte>());
+            aesSiv.Decrypt(cipherText, []);
         }
         Assert.ThrowsException<CryptographicException>(() =>
         {
             using var aesSiv = new AesSiv(TestKey);
-            aesSiv.Decrypt(cipherText, Array.Empty<byte>(), new byte[] { 2 });
+            aesSiv.Decrypt(cipherText, [], [2]);
         });
     }
 

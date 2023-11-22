@@ -143,7 +143,7 @@ sealed class AesCtrTransform
         if (inputCount == 0)
         {
             HasProcessedFinal = true;
-            return Array.Empty<byte>();
+            return [];
         }
 
         // Input validation.

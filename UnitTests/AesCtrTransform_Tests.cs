@@ -142,7 +142,7 @@ sealed class AesCtrTransform_Tests
     public void TransformBlock_AfterFinalFails()
     {
         using ICryptoTransform transform = new AesCtrTransform(InitialCounter, AesEcbTransform);
-        _ = transform.TransformFinalBlock(Array.Empty<byte>(), 0, 0);
+        _ = transform.TransformFinalBlock([], 0, 0);
         Assert.ThrowsException<InvalidOperationException>(() =>
         {
             _ = transform.TransformBlock(new byte[BLOCKSIZE], 0, BLOCKSIZE, new byte[BLOCKSIZE], 0);
@@ -207,10 +207,10 @@ sealed class AesCtrTransform_Tests
     public void TransformFinalBlock_AfterFinalFails()
     {
         using ICryptoTransform transform = new AesCtrTransform(InitialCounter, AesEcbTransform);
-        _ = transform.TransformFinalBlock(Array.Empty<byte>(), 0, 0);
+        _ = transform.TransformFinalBlock([], 0, 0);
         Assert.ThrowsException<InvalidOperationException>(() =>
         {
-            _ = transform.TransformFinalBlock(Array.Empty<byte>(), 0, 0);
+            _ = transform.TransformFinalBlock([], 0, 0);
         });
     }
 
@@ -222,7 +222,7 @@ sealed class AesCtrTransform_Tests
         transform.Dispose();
         Assert.ThrowsException<ObjectDisposedException>(() =>
         {
-            _ = transform.TransformFinalBlock(Array.Empty<byte>(), 0, 0);
+            _ = transform.TransformFinalBlock([], 0, 0);
         });
     }
 

@@ -20,6 +20,8 @@ public partial record NistAesCtrSampleTestVector
     public ReadOnlyMemory<byte> Plaintext { get; }
     public ReadOnlyMemory<byte> Ciphertext { get; }
 
+    private static readonly char[] lineSeparators = ['\r', '\n'];
+
     NistAesCtrSampleTestVector(string Section, string Name, string Data)
     {
         this.Section = Section;
@@ -29,7 +31,7 @@ public partial record NistAesCtrSampleTestVector
         var initialCounterHex = new StringBuilder();
         var plaintextHex = new StringBuilder();
         var ciphertextHex = new StringBuilder();
-        foreach (var rawLine in Data.Split(new char[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries))
+        foreach (var rawLine in Data.Split(lineSeparators, StringSplitOptions.RemoveEmptyEntries))
         {
             var line = rawLine.Trim();
             var match = EndingHexRegex().Match(line);
