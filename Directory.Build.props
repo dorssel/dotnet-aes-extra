@@ -13,7 +13,6 @@ SPDX-License-Identifier: MIT
 
     <!-- Use the latest .NET SDK -->
     <TargetFrameworks>net8.0</TargetFrameworks>
-    <GitVersionTargetFramework>net8.0</GitVersionTargetFramework>
     
     <!-- Use the latest C# language standard -->
     <LangVersion>12.0</LangVersion>
