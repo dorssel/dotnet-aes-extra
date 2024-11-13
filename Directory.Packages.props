@@ -7,7 +7,7 @@ SPDX-License-Identifier: MIT
 <Project>
   <ItemGroup>
     <!-- all -->
-    <PackageVersion Include="GitVersion.MsBuild" Version="6.0.4" />
+    <PackageVersion Include="GitVersion.MsBuild" Version="6.0.5" />
     <!-- AesExtra -->
     <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="8.0.0" />
     <!-- UnitTests -->
