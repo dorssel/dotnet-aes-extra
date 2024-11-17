@@ -24,7 +24,7 @@ sealed class AesCtr_Tests
     [TestMethod]
     public void Create_NullNameFails()
     {
-        Assert.ThrowsException<ArgumentNullException>(() =>
+        _ = Assert.ThrowsException<ArgumentNullException>(() =>
         {
             using var aes = AesCtr.Create(null!);
         });
@@ -66,7 +66,7 @@ sealed class AesCtr_Tests
     {
         using var aes = AesCtr.Create();
         Assert.AreEqual(CipherMode.ECB, aes.Mode); // DevSkim: ignore DS187371
-        Assert.ThrowsException<CryptographicException>(() =>
+        _ = Assert.ThrowsException<CryptographicException>(() =>
         {
             aes.Mode = CipherMode.CBC;
         });
@@ -88,7 +88,7 @@ sealed class AesCtr_Tests
         using var aes = AesCtr.Create();
         var padding = aes.Padding;
         Assert.AreEqual(PaddingMode.None, padding);
-        Assert.ThrowsException<CryptographicException>(() =>
+        _ = Assert.ThrowsException<CryptographicException>(() =>
         {
             aes.Padding = PaddingMode.PKCS7;
         });
@@ -109,7 +109,7 @@ sealed class AesCtr_Tests
     {
         using var aes = AesCtr.Create();
         Assert.AreEqual(aes.BlockSize, aes.FeedbackSize);
-        Assert.ThrowsException<CryptographicException>(() =>
+        _ = Assert.ThrowsException<CryptographicException>(() =>
         {
             aes.FeedbackSize = 8;
         });

@@ -24,7 +24,7 @@ sealed class AesCmac_Tests
     [TestMethod]
     public void Create_NullNameFails()
     {
-        Assert.ThrowsException<ArgumentNullException>(() =>
+        _ = Assert.ThrowsException<ArgumentNullException>(() =>
         {
             using var keyedHashAlgorithm = AesCmac.Create(null!);
         });
@@ -55,7 +55,7 @@ sealed class AesCmac_Tests
     [TestMethod]
     public void Constructor_WithInvalidKeySize()
     {
-        Assert.ThrowsException<CryptographicException>(() =>
+        _ = Assert.ThrowsException<CryptographicException>(() =>
         {
             using var aesCmac = new AesCmac(new byte[42]);
         });
@@ -64,7 +64,7 @@ sealed class AesCmac_Tests
     [TestMethod]
     public void Constructor_WithNullKey()
     {
-        Assert.ThrowsException<ArgumentNullException>(() =>
+        _ = Assert.ThrowsException<ArgumentNullException>(() =>
         {
             using var aesCmac = new AesCmac(null!);
         });
@@ -110,7 +110,7 @@ sealed class AesCmac_Tests
         var pos = 0;
         void Transfer(int count)
         {
-            aesCmac.TransformBlock(testVector.PT.ToArray(), pos, count, null, 0);
+            _ = aesCmac.TransformBlock(testVector.PT.ToArray(), pos, count, null, 0);
             pos += count;
         }
 
@@ -121,13 +121,13 @@ sealed class AesCmac_Tests
         // complete the partial block precisely
         Transfer(1);
         // more than 1 block, but not an exact multiple
-        Transfer(2 * 16 - 3);
+        Transfer((2 * 16) - 3);
         // topping off the partial block + again less than 1 block
         Transfer(16);
         // remainder
         Transfer(testVector.PT.Length - pos);
 
-        aesCmac.TransformFinalBlock([], 0, 0);
+        _ = aesCmac.TransformFinalBlock([], 0, 0);
 
         CollectionAssert.AreEqual(testVector.Tag.ToArray(), aesCmac.Hash);
     }

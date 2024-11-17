@@ -9,7 +9,7 @@ using System.Text.RegularExpressions;
 
 namespace UnitTests;
 
-public partial record NistAesCtrSampleTestVector
+sealed partial record NistAesCtrSampleTestVector
 {
     public static IReadOnlyList<NistAesCtrSampleTestVector> All { get; }
 
@@ -20,7 +20,7 @@ public partial record NistAesCtrSampleTestVector
     public ReadOnlyMemory<byte> Plaintext { get; }
     public ReadOnlyMemory<byte> Ciphertext { get; }
 
-    private static readonly char[] lineSeparators = ['\r', '\n'];
+    static readonly char[] lineSeparators = ['\r', '\n'];
 
     NistAesCtrSampleTestVector(string Section, string Name, string Data)
     {
@@ -40,19 +40,19 @@ public partial record NistAesCtrSampleTestVector
                 var hex = match.Groups[1].Value;
                 if (line.StartsWith("Key") || line == hex)
                 {
-                    keyHex.Append(hex);
+                    _ = keyHex.Append(hex);
                 }
                 else if (line.StartsWith("Init. Counter"))
                 {
-                    initialCounterHex.Append(hex);
+                    _ = initialCounterHex.Append(hex);
                 }
                 else if (line.StartsWith("Plaintext"))
                 {
-                    plaintextHex.Append(hex);
+                    _ = plaintextHex.Append(hex);
                 }
                 else if (line.StartsWith("Ciphertext"))
                 {
-                    ciphertextHex.Append(hex);
+                    _ = ciphertextHex.Append(hex);
                 }
             }
         }

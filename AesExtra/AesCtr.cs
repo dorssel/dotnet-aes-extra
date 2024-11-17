@@ -2,7 +2,6 @@
 //
 // SPDX-License-Identifier: MIT
 
-using System;
 using System.Security.Cryptography;
 
 namespace Dorssel.Security.Cryptography;
@@ -19,16 +18,16 @@ public sealed class AesCtr
     const int FixedFeedbackSize = FixedBlockSize * 8; // bits
 
     /// <inheritdoc cref="Aes.Create()" />
-    public static new Aes Create() => new AesCtr();
+    public static new Aes Create()
+    {
+        return new AesCtr();
+    }
 
     /// <inheritdoc cref="Aes.Create(string)" />
     public static new Aes? Create(string algorithmName)
     {
-        if (algorithmName == null)
-        {
-            throw new ArgumentNullException(nameof(algorithmName));
-        }
-        return algorithmName == nameof(AesCtr) ? Create() : null;
+        return algorithmName != null ? algorithmName == nameof(AesCtr) ? Create() : null
+            : throw new ArgumentNullException(nameof(algorithmName));
     }
 
     AesCtr()
@@ -134,10 +133,16 @@ public sealed class AesCtr
     }
 
     /// <inheritdoc cref="AesManaged.CreateDecryptor(byte[], byte[])" />
-    public override ICryptoTransform CreateDecryptor(byte[] rgbKey, byte[]? rgbIV) => CreateTransform(rgbKey, rgbIV);
+    public override ICryptoTransform CreateDecryptor(byte[] rgbKey, byte[]? rgbIV)
+    {
+        return CreateTransform(rgbKey, rgbIV);
+    }
 
     /// <inheritdoc cref="AesManaged.CreateEncryptor(byte[], byte[])" />
-    public override ICryptoTransform CreateEncryptor(byte[] rgbKey, byte[]? rgbIV) => CreateTransform(rgbKey, rgbIV);
+    public override ICryptoTransform CreateEncryptor(byte[] rgbKey, byte[]? rgbIV)
+    {
+        return CreateTransform(rgbKey, rgbIV);
+    }
 
     /// <inheritdoc cref="AesManaged.GenerateIV" />
     public override void GenerateIV()

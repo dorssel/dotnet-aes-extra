@@ -12,10 +12,11 @@ SPDX-License-Identifier: MIT
     <Platforms>AnyCPU</Platforms>
 
     <!-- Use the latest .NET SDK -->
-    <TargetFrameworks>net8.0</TargetFrameworks>
+    <TargetFrameworks>net9.0</TargetFrameworks>
     
     <!-- Use the latest C# language standard -->
-    <LangVersion>12.0</LangVersion>
+    <LangVersion>13.0</LangVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
     
     <!-- Be very strict -->
     <WarningLevel>9999</WarningLevel>
@@ -31,6 +32,10 @@ SPDX-License-Identifier: MIT
     <IsPackable>false</IsPackable>
     <IsPublishable>false</IsPublishable>
     <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)\strongname.snk</AssemblyOriginatorKeyFile>
+    <!--
+    See https://github.com/dotnet/roslyn/issues/41640
+    -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
 
     <!-- Assembly metadata -->
     <Product>dotnet-aes-extra</Product>
@@ -40,15 +45,11 @@ SPDX-License-Identifier: MIT
     <!-- NuGet metadata -->
     <Title>$(Product)</Title>
     <Authors>$(Company)</Authors>
-    <Description>.NET Standard 2.0 implementation of AES-CTR, AES-CMAC, and AES-SIV.</Description>
+    <Description>.NET Standard 2.0 implementation of AES-CTR, AES-CMAC, and SIV-AES.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageProjectUrl>https://github.com/dorssel/dotnet-aes-extra</PackageProjectUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <UseFullSemVerForNuGet>false</UseFullSemVerForNuGet>
-
-    <!-- SourceLink -->
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
-    <EmbedUntrackedSources>true</EmbedUntrackedSources>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
@@ -60,6 +61,7 @@ SPDX-License-Identifier: MIT
   <Target Name="SetPackageVersion" AfterTargets="GetVersion">
     <PropertyGroup>
       <PackageVersion>$(GitVersion_MajorMinorPatch)</PackageVersion>
+      <PackageVersion Condition=" '$(GitVersion_MajorMinorPatch)' == '' ">0.9.99</PackageVersion>
     </PropertyGroup>
   </Target>
 

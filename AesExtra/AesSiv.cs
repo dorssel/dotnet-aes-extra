@@ -2,8 +2,6 @@
 //
 // SPDX-License-Identifier: MIT
 
-using System;
-using System.Linq;
 using System.Security.Cryptography;
 
 namespace Dorssel.Security.Cryptography;
@@ -64,9 +62,9 @@ public sealed class AesSiv
             // D takes the role of the "end" in "xorend"
             D.xor_InPlace(0, plaintext, plaintext.Length - BLOCKSIZE, BLOCKSIZE);
             // Using Transform instead of Compute prevents cloning plaintext.
-            Cmac.TransformBlock(plaintext, 0, plaintext.Length - BLOCKSIZE, null, 0);
-            Cmac.TransformBlock(D, 0, BLOCKSIZE, null, 0);
-            Cmac.TransformFinalBlock([], 0, 0);
+            _ = Cmac.TransformBlock(plaintext, 0, plaintext.Length - BLOCKSIZE, null, 0);
+            _ = Cmac.TransformBlock(D, 0, BLOCKSIZE, null, 0);
+            _ = Cmac.TransformFinalBlock([], 0, 0);
             return Cmac.Hash;
         }
         else

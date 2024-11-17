@@ -2,7 +2,6 @@
 //
 // SPDX-License-Identifier: MIT
 
-using System;
 using System.Security.Cryptography;
 
 namespace Dorssel.Security.Cryptography;
@@ -17,16 +16,16 @@ public sealed class AesCmac
 
     /// <inheritdoc cref="KeyedHashAlgorithm.Create()" />
     /// <remarks>This static override defaults to <see cref="AesCmac" />.</remarks>
-    public static new KeyedHashAlgorithm Create() => new AesCmac();
+    public static new KeyedHashAlgorithm Create()
+    {
+        return new AesCmac();
+    }
 
     /// <inheritdoc cref="KeyedHashAlgorithm.Create(string)" />
     public static new KeyedHashAlgorithm? Create(string algorithmName)
     {
-        if (algorithmName == null)
-        {
-            throw new ArgumentNullException(nameof(algorithmName));
-        }
-        return algorithmName == nameof(AesCmac) ? Create() : null;
+        return algorithmName != null ? algorithmName == nameof(AesCmac) ? Create() : null
+            : throw new ArgumentNullException(nameof(algorithmName));
     }
 
     /// <summary>
@@ -100,7 +99,7 @@ public sealed class AesCmac
     // In-place: X = CIPH_K(X)
     void CIPH_K_InPlace(byte[] X_Base, int X_Offset = 0)
     {
-        CryptoTransform.TransformBlock(X_Base, X_Offset, BLOCKSIZE, X_Base, X_Offset);
+        _ = CryptoTransform.TransformBlock(X_Base, X_Offset, BLOCKSIZE, X_Base, X_Offset);
     }
 
     // See: NIST SP 800-38B, Section 6.1
@@ -152,7 +151,7 @@ public sealed class AesCmac
         }
 
         // If we have a non-empty && non-full Partial block already -> append to that first.
-        if ((0 < PartialLength) && (PartialLength < BLOCKSIZE))
+        if (PartialLength is > 0 and < BLOCKSIZE)
         {
             var count = Math.Min(cbSize, BLOCKSIZE - PartialLength);
             Array.Copy(array, ibStart, Partial, PartialLength, count);

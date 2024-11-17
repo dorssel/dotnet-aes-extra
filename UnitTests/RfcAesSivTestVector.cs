@@ -9,7 +9,7 @@ using System.Text.RegularExpressions;
 
 namespace UnitTests;
 
-public partial record RfcAesSivTestVector
+sealed partial record RfcAesSivTestVector
 {
     public static IReadOnlyList<RfcAesSivTestVector> All { get; }
 

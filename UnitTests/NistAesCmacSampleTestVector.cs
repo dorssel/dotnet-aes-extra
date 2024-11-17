@@ -8,7 +8,7 @@ using System.Text.RegularExpressions;
 
 namespace UnitTests;
 
-public partial record NistAesCmacSampleTestVector
+sealed partial record NistAesCmacSampleTestVector
 {
     public static IReadOnlyList<NistAesCmacSampleTestVector> All { get; }
 
