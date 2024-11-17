@@ -13,9 +13,9 @@ DISABLE:
   - COPYPASTE # Comment to enable checks of excessive copy-pastes
   - SPELL # Comment to enable checks of spelling mistakes
 DISABLE_LINTERS:
-  - CSHARP_DOTNET_FORMAT # Not compatible with .NET 8 (yet)
-  - CSHARP_CSHARPIER # Not compatible with .NET 8 (yet)
-  - CSHARP_ROSLYNATOR # Not compatible with .NET 8 (yet)
+  - CSHARP_DOTNET_FORMAT # Not compatible with .NET 9 (yet)
+  - CSHARP_CSHARPIER # Not compatible with .NET 9 (yet)
+  - CSHARP_ROSLYNATOR # Not compatible with .NET 9 (yet)
   - REPOSITORY_TRIVY # Unstable, leading to a lot of build failures
 SHOW_ELAPSED_TIME: true
 FILEIO_REPORTER: false

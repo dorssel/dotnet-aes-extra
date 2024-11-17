@@ -8,7 +8,7 @@ using System.Runtime.CompilerServices;
 namespace Dorssel.Security.Cryptography;
 
 /// <summary>
-/// This is a backport of .NET 6.0. Since this library is for .NET Standard 2.0 it uses <see cref="byte"/>[] instead of Span.
+/// This is a backport of .NET 9. Since this library is for .NET Standard 2.0 it uses <see cref="byte"/>[] instead of Span.
 /// <para/>
 /// See:
 /// <see href="https://github.com/dotnet/runtime/blob/main/src/libraries/System.Security.Cryptography/src/System/Security/Cryptography/CryptographicOperations.cs"/>

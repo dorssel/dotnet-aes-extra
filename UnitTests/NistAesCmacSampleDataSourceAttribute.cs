@@ -7,7 +7,7 @@ using System.Reflection;
 namespace UnitTests;
 
 [AttributeUsage(AttributeTargets.Method)]
-internal sealed class NistAesCmacSampleDataSourceAttribute
+sealed class NistAesCmacSampleDataSourceAttribute
     : Attribute
     , ITestDataSource
 {

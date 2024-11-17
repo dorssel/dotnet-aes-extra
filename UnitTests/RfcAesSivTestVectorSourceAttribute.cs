@@ -7,7 +7,7 @@ using System.Reflection;
 namespace UnitTests;
 
 [AttributeUsage(AttributeTargets.Method)]
-internal sealed class RfcAesSivTestVectorSourceAttribute
+sealed class RfcAesSivTestVectorSourceAttribute
     : Attribute
     , ITestDataSource
 {

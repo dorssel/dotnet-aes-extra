@@ -2,7 +2,6 @@
 //
 // SPDX-License-Identifier: MIT
 
-using System;
 using System.Security.Cryptography;
 
 namespace Dorssel.Security.Cryptography;
@@ -128,7 +127,7 @@ sealed class AesCtrTransform
 
         for (var i = 0; i < inputCount / BLOCKSIZE; ++i)
         {
-            TransformBlock(inputBuffer, inputOffset + i * BLOCKSIZE, outputBuffer, outputOffset + i * BLOCKSIZE);
+            TransformBlock(inputBuffer, inputOffset + (i * BLOCKSIZE), outputBuffer, outputOffset + (i * BLOCKSIZE));
         }
         return inputCount;
     }

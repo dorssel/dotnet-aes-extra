@@ -7,7 +7,6 @@ SPDX-License-Identifier: MIT
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <ImplicitUsings>enable</ImplicitUsings>
     <CheckForOverflowUnderflow>True</CheckForOverflowUnderflow>
     <SignAssembly>True</SignAssembly>
   </PropertyGroup>
@@ -17,7 +16,6 @@ SPDX-License-Identifier: MIT
     <PackageReference Include="Moq" />
     <PackageReference Include="MSTest.TestAdapter" />
     <PackageReference Include="MSTest.TestFramework" />
-    <PackageReference Include="System.IO.Pipelines" />
     <PackageReference Include="coverlet.collector" />
   </ItemGroup>
 
