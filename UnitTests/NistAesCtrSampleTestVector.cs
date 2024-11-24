@@ -4,28 +4,43 @@
 // SPDX-License-Identifier: MIT
 // SPDX-License-Identifier: LicenseRef-NIST-OtherDataWorks
 
+using System.Runtime.Serialization;
 using System.Text;
 using System.Text.RegularExpressions;
 
 namespace UnitTests;
 
+[DataContract]
 sealed partial record NistAesCtrSampleTestVector
 {
     public static IReadOnlyList<NistAesCtrSampleTestVector> All { get; }
 
-    public string Section { get; }
-    public string Name { get; }
-    public ReadOnlyMemory<byte> Key { get; }
-    public ReadOnlyMemory<byte> InitialCounter { get; }
-    public ReadOnlyMemory<byte> Plaintext { get; }
-    public ReadOnlyMemory<byte> Ciphertext { get; }
+    [DataMember]
+    string _Section { get; init; }
+    [DataMember]
+    string _Name { get; init; }
+    [DataMember]
+    byte[] _Key { get; init; }
+    [DataMember]
+    byte[] _InitialCounter { get; init; }
+    [DataMember]
+    byte[] _Plaintext { get; init; }
+    [DataMember]
+    byte[] _Ciphertext { get; init; }
+
+    public string Section => _Section;
+    public string Name => _Name;
+    public ReadOnlyMemory<byte> Key => _Key;
+    public ReadOnlyMemory<byte> InitialCounter => _InitialCounter;
+    public ReadOnlyMemory<byte> Plaintext => _Plaintext;
+    public ReadOnlyMemory<byte> Ciphertext => _Ciphertext;
 
     static readonly char[] lineSeparators = ['\r', '\n'];
 
     NistAesCtrSampleTestVector(string Section, string Name, string Data)
     {
-        this.Section = Section;
-        this.Name = Name;
+        _Section = Section;
+        _Name = Name;
 
         var keyHex = new StringBuilder();
         var initialCounterHex = new StringBuilder();
@@ -56,10 +71,10 @@ sealed partial record NistAesCtrSampleTestVector
                 }
             }
         }
-        Key = Convert.FromHexString(keyHex.ToString());
-        InitialCounter = Convert.FromHexString(initialCounterHex.ToString());
-        Plaintext = Convert.FromHexString(plaintextHex.ToString());
-        Ciphertext = Convert.FromHexString(ciphertextHex.ToString());
+        _Key = Convert.FromHexString(keyHex.ToString());
+        _InitialCounter = Convert.FromHexString(initialCounterHex.ToString());
+        _Plaintext = Convert.FromHexString(plaintextHex.ToString());
+        _Ciphertext = Convert.FromHexString(ciphertextHex.ToString());
     }
 
     [GeneratedRegex("([0-9a-fA-F]+)$")]

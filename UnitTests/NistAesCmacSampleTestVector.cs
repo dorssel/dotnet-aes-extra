@@ -4,10 +4,12 @@
 // SPDX-License-Identifier: MIT
 // SPDX-License-Identifier: LicenseRef-NIST-OtherDataWorks
 
+using System.Runtime.Serialization;
 using System.Text.RegularExpressions;
 
 namespace UnitTests;
 
+[DataContract]
 sealed partial record NistAesCmacSampleTestVector
 {
     public static IReadOnlyList<NistAesCmacSampleTestVector> All { get; }
@@ -20,17 +22,26 @@ sealed partial record NistAesCmacSampleTestVector
         return Convert.FromHexString(WhitespaceRegex().Replace(hexWithWhiteSpace, ""));
     }
 
-    public string Name { get; }
-    public ReadOnlyMemory<byte> Key { get; }
-    public ReadOnlyMemory<byte> PT { get; }
-    public ReadOnlyMemory<byte> Tag { get; }
+    [DataMember]
+    string _Name { get; init; }
+    [DataMember]
+    byte[] _Key { get; init; }
+    [DataMember]
+    byte[] _PT { get; init; }
+    [DataMember]
+    byte[] _Tag { get; init; }
+
+    public string Name => _Name;
+    public ReadOnlyMemory<byte> Key => _Key;
+    public ReadOnlyMemory<byte> PT => _PT;
+    public ReadOnlyMemory<byte> Tag => _Tag;
 
     NistAesCmacSampleTestVector(string Name, string Key, string PT, string Tag)
     {
-        this.Name = Name;
-        this.Key = FromHexString(Key);
-        this.PT = FromHexString(PT);
-        this.Tag = FromHexString(Tag);
+        _Name = Name;
+        _Key = FromHexString(Key);
+        _PT = FromHexString(PT);
+        _Tag = FromHexString(Tag);
     }
 
     static NistAesCmacSampleTestVector()

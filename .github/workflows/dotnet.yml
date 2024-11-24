@@ -13,7 +13,11 @@ on:
   pull_request:
     branches: [master]
 
-permissions: read-all
+permissions:
+  contents: read
+  issues: read
+  checks: write
+  pull-requests: write
 
 jobs:
   build:
@@ -28,17 +32,35 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
 
+      - name: Cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('global.json', '**/Directory.Packages.props') }}
+
       - name: Restore dependencies
-        run: dotnet restore
+        run: |
+          dotnet restore
 
       - name: Build
-        run: dotnet build --configuration Release --no-restore
+        run: |
+          dotnet build --configuration Release --no-restore
 
       - name: Test
-        run: dotnet test --configuration Release --no-build --verbosity normal --collect:"XPlat Code Coverage"
+        run: |
+          dotnet test --configuration Release --no-build \
+            -p:TestingPlatformCommandLineArguments="--report-trx --coverage --coverage-output-format cobertura --coverage-output coverage.cobertura.xml"
 
       - name: Package
-        run: dotnet pack --configuration Release --no-build
+        run: |
+          dotnet pack --configuration Release --no-build
+
+      - name: Publish Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        if: always()
+        with:
+          files: |
+            **/TestResults/*.trx
 
       - name: Upload Package Artifact
         uses: actions/upload-artifact@v4
