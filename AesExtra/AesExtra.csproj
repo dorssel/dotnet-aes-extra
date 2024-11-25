@@ -7,22 +7,13 @@ SPDX-License-Identifier: MIT
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0</TargetFrameworks>
+    <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>Dorssel.Security.Cryptography</RootNamespace>
     <AssemblyName>Dorssel.Security.Cryptography.AesExtra</AssemblyName>
 
     <IsPackable>true</IsPackable>
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <PackageId>Dorssel.Security.Cryptography.AesExtra</PackageId>
     <SignAssembly>True</SignAssembly>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
-    <CheckForOverflowUnderflow>True</CheckForOverflowUnderflow>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(GITHUB_ACTIONS)' == 'true'">
-    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
   </PropertyGroup>
 
   <ItemGroup>

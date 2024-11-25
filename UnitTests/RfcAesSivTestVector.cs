@@ -5,10 +5,12 @@
 // SPDX-License-Identifier: LicenseRef-IETF-Trust
 
 using System.Collections.ObjectModel;
+using System.Runtime.Serialization;
 using System.Text.RegularExpressions;
 
 namespace UnitTests;
 
+[DataContract]
 sealed partial record RfcAesSivTestVector
 {
     public static IReadOnlyList<RfcAesSivTestVector> All { get; }
@@ -21,31 +23,44 @@ sealed partial record RfcAesSivTestVector
         return Convert.FromHexString(WhitespaceRegex().Replace(hexWithWhiteSpace, ""));
     }
 
-    public string Name { get; }
-    public ReadOnlyMemory<byte> Key { get; }
-    public ReadOnlyCollection<ReadOnlyMemory<byte>> AD { get; }
-    public ReadOnlyMemory<byte>? Nonce { get; }
-    public ReadOnlyMemory<byte> Plaintext { get; }
-    public ReadOnlyMemory<byte> output { get; }
+    [DataMember]
+    string _Name { get; init; }
+    [DataMember]
+    byte[] _Key { get; init; }
+    [DataMember]
+    byte[][] _AD { get; init; }
+    [DataMember]
+    byte[]? _Nonce { get; init; }
+    [DataMember]
+    byte[] _Plaintext { get; init; }
+    [DataMember]
+    byte[] _output { get; init; }
+
+    public string Name => _Name;
+    public ReadOnlyMemory<byte> Key => _Key;
+    public ReadOnlyCollection<ReadOnlyMemory<byte>> AD => new((from item in _AD select (ReadOnlyMemory<byte>)item.AsMemory()).ToList());
+    public ReadOnlyMemory<byte>? Nonce => _Nonce is null ? null : (ReadOnlyMemory<byte>?)_Nonce.AsMemory();
+    public ReadOnlyMemory<byte> Plaintext => _Plaintext;
+    public ReadOnlyMemory<byte> output => _output;
 
     RfcAesSivTestVector(string Name, string Key, string[] AD, string? Nonce, string Plaintext, string output)
     {
-        this.Name = Name;
-        this.Key = FromHexString(Key);
+        _Name = Name;
+        _Key = FromHexString(Key);
         {
-            var associatedData = new ReadOnlyMemory<byte>[AD.Length];
+            var associatedData = new byte[AD.Length][];
             for (var i = 0; i < AD.Length; i++)
             {
                 associatedData[i] = FromHexString(AD[i]);
             }
-            this.AD = new(associatedData);
+            _AD = associatedData;
         }
         if (Nonce is not null)
         {
-            this.Nonce = FromHexString(Nonce);
+            _Nonce = FromHexString(Nonce);
         }
-        this.Plaintext = FromHexString(Plaintext);
-        this.output = FromHexString(output);
+        _Plaintext = FromHexString(Plaintext);
+        _output = FromHexString(output);
     }
 
     static RfcAesSivTestVector()
