@@ -32,7 +32,9 @@ static class ExtensionMethods
     // See: RFC 5297, Section 2.1
     //
     // In place: S = dbl(S)
+#pragma warning disable IDE1006 // Naming Styles
     public static void dbl_InPlace(this byte[] S)
+#pragma warning restore IDE1006 // Naming Styles
     {
         // See: NIST SP 800-38B, Section 5.3
         // See: RFC 5297, Section 2.3
@@ -48,7 +50,9 @@ static class ExtensionMethods
     // See: NIST SP 800-38B, Section 4.2.2
     //
     // In place: X = (X xor Y)
+#pragma warning disable IDE1006 // Naming Styles
     public static void xor_InPlace(this byte[] X_Base, int X_Offset, byte[] Y_Base, int Y_Offset, int count)
+#pragma warning restore IDE1006 // Naming Styles
     {
         for (var i = 0; i < count; ++i)
         {

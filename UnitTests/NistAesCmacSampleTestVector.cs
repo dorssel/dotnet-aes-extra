@@ -22,6 +22,7 @@ sealed partial record NistAesCmacSampleTestVector
         return Convert.FromHexString(WhitespaceRegex().Replace(hexWithWhiteSpace, ""));
     }
 
+#pragma warning disable IDE1006 // Naming Styles
     [DataMember]
     string _Name { get; init; }
     [DataMember]
@@ -30,6 +31,7 @@ sealed partial record NistAesCmacSampleTestVector
     byte[] _PT { get; init; }
     [DataMember]
     byte[] _Tag { get; init; }
+#pragma warning restore IDE1006 // Naming Styles
 
     public string Name => _Name;
     public ReadOnlyMemory<byte> Key => _Key;
