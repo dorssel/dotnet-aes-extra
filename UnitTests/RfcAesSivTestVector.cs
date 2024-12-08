@@ -23,6 +23,7 @@ sealed partial record RfcAesSivTestVector
         return Convert.FromHexString(WhitespaceRegex().Replace(hexWithWhiteSpace, ""));
     }
 
+#pragma warning disable IDE1006 // Naming Styles
     [DataMember]
     string _Name { get; init; }
     [DataMember]
@@ -35,13 +36,16 @@ sealed partial record RfcAesSivTestVector
     byte[] _Plaintext { get; init; }
     [DataMember]
     byte[] _output { get; init; }
+#pragma warning restore IDE1006 // Naming Styles
 
     public string Name => _Name;
     public ReadOnlyMemory<byte> Key => _Key;
     public ReadOnlyCollection<ReadOnlyMemory<byte>> AD => new((from item in _AD select (ReadOnlyMemory<byte>)item.AsMemory()).ToList());
     public ReadOnlyMemory<byte>? Nonce => _Nonce is null ? null : (ReadOnlyMemory<byte>?)_Nonce.AsMemory();
     public ReadOnlyMemory<byte> Plaintext => _Plaintext;
+#pragma warning disable IDE1006 // Naming Styles
     public ReadOnlyMemory<byte> output => _output;
+#pragma warning restore IDE1006 // Naming Styles
 
     RfcAesSivTestVector(string Name, string Key, string[] AD, string? Nonce, string Plaintext, string output)
     {

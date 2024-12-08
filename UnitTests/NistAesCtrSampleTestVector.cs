@@ -15,6 +15,7 @@ sealed partial record NistAesCtrSampleTestVector
 {
     public static IReadOnlyList<NistAesCtrSampleTestVector> All { get; }
 
+#pragma warning disable IDE1006 // Naming Styles
     [DataMember]
     string _Section { get; init; }
     [DataMember]
@@ -27,6 +28,7 @@ sealed partial record NistAesCtrSampleTestVector
     byte[] _Plaintext { get; init; }
     [DataMember]
     byte[] _Ciphertext { get; init; }
+#pragma warning restore IDE1006 // Naming Styles
 
     public string Section => _Section;
     public string Name => _Name;
