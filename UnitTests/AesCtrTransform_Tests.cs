@@ -89,14 +89,14 @@ sealed class AesCtrTransform_Tests
     public void CanReuseTransform_Get()
     {
         using ICryptoTransform transform = new AesCtrTransform(InitialCounter, AesEcbTransform);
-        Assert.AreEqual(false, transform.CanReuseTransform);
+        Assert.IsFalse(transform.CanReuseTransform);
     }
 
     [TestMethod]
     public void CanTransformMultipleBlocks_Get()
     {
         using ICryptoTransform transform = new AesCtrTransform(InitialCounter, AesEcbTransform);
-        Assert.AreEqual(true, transform.CanTransformMultipleBlocks);
+        Assert.IsTrue(transform.CanTransformMultipleBlocks);
     }
 
     [TestMethod]

@@ -50,7 +50,7 @@ public sealed class AesCmac
         Key = key;
     }
 
-    void ZeroizeState()
+    void Purge()
     {
         CryptographicOperations.ZeroMemory(C);
         CryptographicOperations.ZeroMemory(Partial);
@@ -68,7 +68,7 @@ public sealed class AesCmac
             {
                 CryptoTransform.Dispose();
                 AesEcb.Dispose();
-                ZeroizeState();
+                Purge();
             }
             IsDisposed = true;
         }
@@ -127,7 +127,7 @@ public sealed class AesCmac
     public override void Initialize()
     {
         // See: NIST SP 800-38B, Section 6.2, Step 5
-        ZeroizeState();
+        Purge();
 
         PartialLength = 0;
     }
@@ -223,7 +223,7 @@ public sealed class AesCmac
         var cmac = new byte[BLOCKSIZE];
         C.CopyTo(cmac, 0);
 
-        ZeroizeState();
+        Purge();
 
         return cmac;
     }
