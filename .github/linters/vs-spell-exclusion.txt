@@ -8,5 +8,6 @@ dotnet
 Encryptor
 inliner
 IntelliSense
+netstandard
 NIST
 xorend

@@ -65,7 +65,7 @@ public sealed class AesSiv
             _ = Cmac.TransformBlock(plaintext, 0, plaintext.Length - BLOCKSIZE, null, 0);
             _ = Cmac.TransformBlock(D, 0, BLOCKSIZE, null, 0);
             _ = Cmac.TransformFinalBlock([], 0, 0);
-            return Cmac.Hash;
+            return Cmac.Hash!;
         }
         else
         {
