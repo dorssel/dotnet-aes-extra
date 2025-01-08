@@ -19,6 +19,7 @@ DISABLE_LINTERS:
   - CSHARP_DOTNET_FORMAT # Not compatible with .NET 9 (yet)
   - CSHARP_CSHARPIER # Not compatible with .NET 9 (yet)
   - CSHARP_ROSLYNATOR # Not compatible with .NET 9 (yet)
+  - JSON_V8R # Too many missing/obsolete schemas
   - REPOSITORY_TRIVY # Unstable, leading to a lot of build failures
 SHOW_ELAPSED_TIME: true
 FILEIO_REPORTER: false

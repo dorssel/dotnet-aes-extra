@@ -1,0 +1,26 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!--
+SPDX-FileCopyrightText: 2025 Frans van Dorsselaer
+
+SPDX-License-Identifier: MIT
+-->
+<Project Sdk="Microsoft.Build.NoTargets">
+
+  <PropertyGroup>
+    <TargetFramework>$(MainTargetFramework)</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="api/**/*.yml;api/.manifest" />
+    <None Remove="_site/**/*.*" />
+  </ItemGroup>
+
+  <Target Name="docfx" BeforeTargets="AfterBuild">
+    <Exec Command="dotnet docfx" />
+    <ItemGroup>
+      <MapFiles Include="_site\**\*.map" />
+    </ItemGroup>
+    <Delete Files="@(MapFiles)" />
+  </Target>
+
+</Project>

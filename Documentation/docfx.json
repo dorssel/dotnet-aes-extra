@@ -1,0 +1,47 @@
+{
+  "$schema": "https://raw.githubusercontent.com/dotnet/docfx/main/schemas/docfx.schema.json",
+  "metadata": [
+    {
+      "src": [
+        {
+          "files": ["*.csproj"],
+          "src": "../AesExtra"
+        }
+      ],
+      "noRestore": true,
+      "dest": "api"
+    }
+  ],
+  "build": {
+    "content": [
+      {
+        "files": ["**/*.{md,yml}"],
+        "exclude": ["_site/**", "obj/**"]
+      }
+    ],
+    "resource": [
+      {
+        "files": [".nojekyll"]
+      }
+    ],
+    "postProcessors": ["ExtractSearchIndex"],
+    "globalMetadata": {
+      "_appTitle": "dotnet-aes-extra",
+      "_appName": "dotnet-aes-extra",
+      "_lang": "en-US",
+      "pdf": false
+    },
+    "markdownEngineProperties": {
+      "alerts": {
+        "TODO": "alert alert-secondary"
+      }
+    },
+    "sitemap": {
+      "baseUrl": "https://dorssel.github.io/dotnet-aes-extra",
+      "priority": 0.5,
+      "changefreq": "daily"
+    },
+    "output": "_site",
+    "template": ["default", "modern", "template"]
+  }
+}
