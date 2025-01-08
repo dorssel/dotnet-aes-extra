@@ -1,0 +1,12 @@
+accum
+bitand
+CMAC
+Codecov
+Decryptor
+Dorssel
+dotnet
+Encryptor
+inliner
+IntelliSense
+NIST
+xorend

@@ -49,7 +49,7 @@ sealed partial record NistAesCmacSampleTestVector
     static NistAesCmacSampleTestVector()
     {
         // See: https://csrc.nist.gov/projects/cryptographic-standards-and-guidelines/example-values
-        // Licenced under LicenseRef-NIST-OtherDataWorks
+        // Licensed under LicenseRef-NIST-OtherDataWorks
         var testVectors = new List<NistAesCmacSampleTestVector>
         {
             new("CMAC-AES128 #1", @"

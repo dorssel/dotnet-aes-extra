@@ -86,7 +86,7 @@ sealed partial record NistAesCtrSampleTestVector
     {
         // See: NIST SP 800-38A, Appendix F
         // See: https://csrc.nist.gov/projects/cryptographic-standards-and-guidelines/example-values
-        // Licenced under LicenseRef-NIST-OtherDataWorks
+        // Licensed under LicenseRef-NIST-OtherDataWorks
         //
         // NOTE: The Encrypt (odd) and Decrypt (even) examples are actually the same.
         // We include only one.

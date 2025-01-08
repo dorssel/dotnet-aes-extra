@@ -70,10 +70,9 @@ sealed partial record RfcAesSivTestVector
     static RfcAesSivTestVector()
     {
         // See: RFC 5297, Appendix A
-        // Licenced under LicenseRef-IETF-Trust
+        // Licensed under LicenseRef-IETF-Trust
         var testVectors = new List<RfcAesSivTestVector>
         {
-            // cspell:disable
             new("Deterministic", @"
                     fffefdfc fbfaf9f8 f7f6f5f4 f3f2f1f0
                     f0f1f2f3 f4f5f6f7 f8f9fafb fcfdfeff
@@ -112,8 +111,6 @@ sealed partial record RfcAesSivTestVector
                     ea64ad54 4a272e9c 485b62a3 fd5c0d
                 "
             ),
-
-            // cspell:enable
         };
         All = testVectors.AsReadOnly();
     }

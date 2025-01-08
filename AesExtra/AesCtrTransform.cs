@@ -33,7 +33,7 @@ sealed class AesCtrTransform
         }
         Counter = initialCounter;
     }
-    void ZeroizeState()
+    void Purge()
     {
         CryptographicOperations.ZeroMemory(XorBlock);
         CryptographicOperations.ZeroMemory(Counter);
@@ -47,7 +47,7 @@ sealed class AesCtrTransform
         if (!IsDisposed)
         {
             AesEcbTransform.Dispose();
-            ZeroizeState();
+            Purge();
             IsDisposed = true;
         }
     }
@@ -157,7 +157,7 @@ sealed class AesCtrTransform
         Array.Resize(ref block, inputCount);
         HasProcessedFinal = true;
 
-        ZeroizeState();
+        Purge();
 
         return block;
     }
