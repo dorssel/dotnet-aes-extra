@@ -8,6 +8,7 @@
 .gitattributes   text
 .gitignore       text
 .editorconfig    text
+.nojekyll        text
 
 *.txt       text
 *.md        text
@@ -20,3 +21,10 @@
 *.csproj   text
 *.cs       text eol=crlf
 *.props    text
+*.targets  text
+
+*.snk      binary
+
+# These are part of the nuget package
+LICENSE.txt   text eol=crlf
+README.md     text eol=crlf
