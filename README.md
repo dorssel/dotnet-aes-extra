@@ -6,30 +6,31 @@ SPDX-License-Identifier: MIT
 
 # dotnet-aes-extra
 
-[![Build](https://github.com/dorssel/dotnet-aes-extra/workflows/Build/badge.svg?branch=master)](https://github.com/dorssel/dotnet-aes-extra/actions?query=workflow%3ABuild+branch%3Amaster)
-[![CodeQL](https://github.com/dorssel/dotnet-aes-extra/workflows/CodeQL/badge.svg?branch=master)](https://github.com/dorssel/dotnet-aes-extra/actions?query=workflow%3ACodeQL+branch%3Amaster)
-[![MegaLinter](https://github.com/dorssel/dotnet-aes-extra/workflows/MegaLinter/badge.svg?branch=master)](https://github.com/dorssel/dotnet-aes-extra/actions?query=workflow%3AMegaLinter+branch%3Amaster)
-[![codecov](https://codecov.io/gh/dorssel/dotnet-aes-extra/branch/master/graph/badge.svg?token=zsbTiXoisQ)](https://codecov.io/gh/dorssel/dotnet-aes-extra)
-[![REUSE status](https://api.reuse.software/badge/github.com/dorssel/dotnet-aes-extra)](https://api.reuse.software/info/github.com/dorssel/dotnet-aes-extra)
+[![Build](https://github.com/dorssel/dotnet-aes-extra/actions/workflows/dotnet.yml/badge.svg?branch=master)](https://github.com/dorssel/dotnet-aes-extra/actions/workflows/dotnet.yml?query=branch%3Amaster)
+[![CodeQL](https://github.com/dorssel/dotnet-aes-extra/actions/workflows/codeql.yml/badge.svg?branch=master)](https://github.com/dorssel/dotnet-aes-extra/actions/workflows/codeql.yml?query=branch%3Amaster)
+[![Lint](https://github.com/dorssel/dotnet-aes-extra/actions/workflows/lint.yml/badge.svg?branch=master)](https://github.com/dorssel/dotnet-aes-extra/actions/workflows/lint.yml?query=branch%3Amaster)
+[![Codecov](https://codecov.io/gh/dorssel/dotnet-aes-extra/branch/master/graph/badge.svg?token=zsbTiXoisQ)](https://codecov.io/gh/dorssel/dotnet-aes-extra)
+[![REUSE](https://api.reuse.software/badge/github.com/dorssel/dotnet-aes-extra)](https://api.reuse.software/info/github.com/dorssel/dotnet-aes-extra)
 [![NuGet](https://img.shields.io/nuget/v/Dorssel.Security.Cryptography.AesExtra?logo=nuget)](https://www.nuget.org/packages/Dorssel.Security.Cryptography.AesExtra)
 
-.NET Standard 2.0 implementation of the following AES modes that are not included in .NET 6.0 / .NET Framework:
+.NET Standard 2.0 implementation of the following AES modes that are not included in .NET:
 
 - AES-CTR, as defined by [NIST SP 800-38A](https://csrc.nist.gov/publications/detail/sp/800-38a/final)
 - AES-CMAC, as defined by [NIST SP 800-38B](https://csrc.nist.gov/publications/detail/sp/800-38b/final)
 - SIV-AES, as defined by [RFC 5297](https://datatracker.ietf.org/doc/html/rfc5297) \
-  (Note: this is often refered to as AES-SIV, but the original RFC specification uses the name SIV-AES)
+  (Note: this is often referred to as AES-SIV, but the original RFC specification uses the name SIV-AES)
 
 The implementation is for AnyCPU, and works on all platforms.
 
 # Usage
 
-The released binary NuGet packages and the .NET assemblies contained therein:
+The released [NuGet package](https://www.nuget.org/packages/Dorssel.Security.Cryptography.AesExtra)
+and the .NET assemblies contained therein have the following properties:
 
-- use [Strong Naming](https://docs.microsoft.com/en-us/dotnet/standard/library-guidance/strong-naming),
-- include [SourceLink](https://docs.microsoft.com/en-us/dotnet/standard/library-guidance/sourcelink),
-- include [IntelliSense](https://docs.microsoft.com/en-us/visualstudio/ide/using-intellisense) compatible documentation, and
-- are signed and timestamped with Authenticode.
+- [Strong Naming](https://learn.microsoft.com/en-us/dotnet/standard/library-guidance/strong-naming)
+- [SourceLink](https://learn.microsoft.com/en-us/dotnet/standard/library-guidance/sourcelink)
+- [IntelliSense](https://learn.microsoft.com/en-us/visualstudio/ide/using-intellisense)
+- [Authenticode](https://learn.microsoft.com/en-us/windows/win32/seccrypto/time-stamping-authenticode-signatures#a-brief-introduction-to-authenticode)
 
 All public classes are in the `Dorssel.Security.Cryptography` namespace.
 
