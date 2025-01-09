@@ -35,8 +35,11 @@ SPDX-License-Identifier: MIT
     <SelfContained>false</SelfContained>
     <IsPackable>false</IsPackable>
     <IsPublishable>false</IsPublishable>
+    <IsTrimmable Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net6.0'))">true</IsTrimmable>
     <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)\strongname.snk</AssemblyOriginatorKeyFile>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <OptimizeImplicitlyTriggeredBuild>True</OptimizeImplicitlyTriggeredBuild>
+    <DisableRuntimeMarshalling>True</DisableRuntimeMarshalling>
 
     <!-- Assembly metadata -->
     <Product>dotnet-aes-extra</Product>

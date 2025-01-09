@@ -16,9 +16,10 @@ public sealed class AesCtr
     const CipherMode FixedCipherMode = CipherMode.ECB; // DevSkim: ignore DS187371
     const PaddingMode FixedPaddingMode = PaddingMode.None;
     const int FixedFeedbackSize = FixedBlockSize * 8; // bits
+    static readonly byte[] BlockOfZeros = new byte[FixedBlockSize];
 
     /// <inheritdoc cref="Aes.Create()" />
-    public static new Aes Create()
+    public static new AesCtr Create()
     {
         return new AesCtr();
     }
@@ -129,7 +130,7 @@ public sealed class AesCtr
     {
         // ECB.Encrypt === ECB.Decrypt; the transform is entirely symmetric.
         // ECB does not use an IV; the IV we received is actually the initial counter for AES-CTR.
-        return new(rgbIV ?? new byte[FixedBlockSize], AesEcb.CreateEncryptor(rgbKey, new byte[FixedBlockSize]));
+        return new(rgbIV ?? BlockOfZeros, AesEcb.CreateEncryptor(rgbKey, BlockOfZeros));
     }
 
     /// <inheritdoc cref="AesManaged.CreateDecryptor(byte[], byte[])" />
@@ -155,4 +156,123 @@ public sealed class AesCtr
     {
         AesEcb.GenerateKey();
     }
+
+    #region Modern_SymmetricAlgorithm
+    bool TryTransformCtr(ReadOnlySpan<byte> input, Span<byte> destination, out int bytesWritten)
+    {
+        if (destination.Length < input.Length)
+        {
+            bytesWritten = 0;
+            return false;
+        }
+        using var transform = new AesCtrTransform(IV, AesEcb.CreateEncryptor(Key, BlockOfZeros));
+        var inputSlice = input;
+        var destinationSlice = destination;
+        while (inputSlice.Length >= FixedBlockSize)
+        {
+            // full blocks
+            transform.TransformBlock(inputSlice, destinationSlice);
+            inputSlice = inputSlice[FixedBlockSize..];
+            destinationSlice = destinationSlice[FixedBlockSize..];
+        }
+        if (!inputSlice.IsEmpty)
+        {
+            // final partial block (if any)
+            Span<byte> block = stackalloc byte[FixedBlockSize];
+            inputSlice.CopyTo(block);
+            transform.TransformBlock(block, block);
+            block[0..inputSlice.Length].CopyTo(destinationSlice);
+            CryptographicOperations.ZeroMemory(block);
+        }
+        bytesWritten = input.Length;
+        return true;
+    }
+
+    byte[] TransformCtr(ReadOnlySpan<byte> input)
+    {
+        var output = new byte[input.Length];
+        _ = TryTransformCtr(input, output, out _);
+        return output;
+    }
+
+    int TransformCtr(ReadOnlySpan<byte> plaintext, Span<byte> destination)
+    {
+        return TryTransformCtr(plaintext, destination, out var bytesWritten) ? bytesWritten
+            : throw new ArgumentException("Destination is too short.");
+    }
+
+    /// <summary>
+    /// TODO
+    /// </summary>
+    /// <param name="plaintext">TODO</param>
+    /// <returns>TODO</returns>
+    public byte[] EncryptCtr(byte[] plaintext)
+    {
+        return TransformCtr(plaintext);
+    }
+
+    /// <summary>
+    /// TODO
+    /// </summary>
+    /// <param name="plaintext">TODO</param>
+    /// <returns>TODO</returns>
+    public byte[] EncryptCtr(ReadOnlySpan<byte> plaintext)
+    {
+        return TransformCtr(plaintext);
+    }
+
+    /// <summary>
+    /// TODO
+    /// </summary>
+    /// <param name="plaintext">TODO</param>
+    /// <param name="destination">TODO</param>
+    /// <returns>TODO</returns>
+    public int EncryptCtr(ReadOnlySpan<byte> plaintext, Span<byte> destination)
+    {
+        return TransformCtr(plaintext, destination);
+    }
+
+    /// <summary>
+    /// TODO
+    /// </summary>
+    /// <param name="plaintext">TODO</param>
+    /// <param name="destination">TODO</param>
+    /// <param name="bytesWritten">TODO</param>
+    /// <returns>TODO</returns>
+    public bool TryEncryptCtr(ReadOnlySpan<byte> plaintext, Span<byte> destination, out int bytesWritten)
+    {
+        return TryTransformCtr(plaintext, destination, out bytesWritten);
+    }
+
+    /// <summary>
+    /// TODO
+    /// </summary>
+    /// <param name="ciphertext">TODO</param>
+    /// <returns>TODO</returns>
+    public byte[] DecryptCtr(byte[] ciphertext)
+    {
+        return TransformCtr(ciphertext);
+    }
+
+    /// <summary>
+    /// TODO
+    /// </summary>
+    /// <param name="ciphertext">TODO</param>
+    /// <returns>TODO</returns>
+    public byte[] DecryptCtr(ReadOnlySpan<byte> ciphertext)
+    {
+        return TransformCtr(ciphertext);
+    }
+
+    /// <summary>
+    /// TODO
+    /// </summary>
+    /// <param name="ciphertext">TODO</param>
+    /// <param name="destination">TODO</param>
+    /// <returns>TODO</returns>
+    public int DecryptCtr(ReadOnlySpan<byte> ciphertext, Span<byte> destination)
+    {
+        return TransformCtr(ciphertext, destination);
+    }
+    #endregion
 }
