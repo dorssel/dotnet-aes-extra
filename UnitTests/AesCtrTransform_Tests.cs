@@ -131,7 +131,7 @@ sealed class AesCtrTransform_Tests
     [DataRow(BLOCKSIZE + 1)]
     public void TransformBlock_InvalidSizeFails(int size)
     {
-        _ = Assert.ThrowsException<ArgumentOutOfRangeException>(() =>
+        _ = Assert.ThrowsException<ArgumentException>(() =>
         {
             using ICryptoTransform transform = new AesCtrTransform(InitialCounter, AesEcbTransform);
             _ = transform.TransformBlock(new byte[size], 0, size, new byte[size], 0);

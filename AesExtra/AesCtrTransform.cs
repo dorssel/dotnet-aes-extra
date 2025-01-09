@@ -33,6 +33,7 @@ sealed class AesCtrTransform
         }
         Counter = initialCounter;
     }
+
     void Purge()
     {
         CryptographicOperations.ZeroMemory(XorBlock);
@@ -93,12 +94,12 @@ sealed class AesCtrTransform
 
     readonly byte[] XorBlock = new byte[BLOCKSIZE];
 
-    void TransformBlock(byte[] inputBlockBase, int inputBlockOffset, byte[] outputBlockBase, int outputBlockOffset)
+    internal void TransformBlock(ReadOnlySpan<byte> inputBlock, Span<byte> destination)
     {
         CIPH_K(Counter, XorBlock);
         for (var i = 0; i < BLOCKSIZE; ++i)
         {
-            outputBlockBase[outputBlockOffset + i] = (byte)(inputBlockBase[inputBlockOffset + i] ^ XorBlock[i]);
+            destination[i] = (byte)(inputBlock[i] ^ XorBlock[i]);
         }
         IncrementCounter();
     }
@@ -122,12 +123,12 @@ sealed class AesCtrTransform
         // NOTE: All other validation is implicitly done by the array access itself.
         if (inputCount % BLOCKSIZE != 0)
         {
-            throw new ArgumentOutOfRangeException(nameof(inputCount));
+            throw new ArgumentException("Input must be a multiple of the block size.", nameof(inputCount));
         }
 
         for (var i = 0; i < inputCount / BLOCKSIZE; ++i)
         {
-            TransformBlock(inputBuffer, inputOffset + (i * BLOCKSIZE), outputBuffer, outputOffset + (i * BLOCKSIZE));
+            TransformBlock(inputBuffer.AsSpan(inputOffset + (i * BLOCKSIZE), BLOCKSIZE), outputBuffer.AsSpan(outputOffset + (i * BLOCKSIZE)));
         }
         return inputCount;
     }
@@ -153,7 +154,7 @@ sealed class AesCtrTransform
 
         var block = new byte[BLOCKSIZE];
         Array.Copy(inputBuffer, inputOffset, block, 0, inputCount);
-        TransformBlock(block, 0, block, 0);
+        TransformBlock(block, block);
         Array.Resize(ref block, inputCount);
         HasProcessedFinal = true;
 

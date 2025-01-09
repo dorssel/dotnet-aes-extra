@@ -3,12 +3,14 @@
 //
 // SPDX-License-Identifier: MIT
 
+#if NETSTANDARD2_0
+
 using System.Runtime.CompilerServices;
 
 namespace Dorssel.Security.Cryptography;
 
 /// <summary>
-/// This is a backport of .NET 9. Since this library is for .NET Standard 2.0 it uses <see cref="byte"/>[] instead of Span.
+/// This is a backport of .NET 9.
 /// <para/>
 /// See:
 /// <see href="https://github.com/dotnet/runtime/blob/main/src/libraries/System.Security.Cryptography/src/System/Security/Cryptography/CryptographicOperations.cs"/>
@@ -16,7 +18,7 @@ namespace Dorssel.Security.Cryptography;
 static class CryptographicOperations
 {
     [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
-    public static bool FixedTimeEquals(byte[] left, byte[] right)
+    public static bool FixedTimeEquals(ReadOnlySpan<byte> left, ReadOnlySpan<byte> right)
     {
         // NoOptimization because we want this method to be exactly as non-short-circuiting
         // as written.
@@ -40,7 +42,7 @@ static class CryptographicOperations
     }
 
     [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
-    public static void ZeroMemory(byte[] buffer)
+    public static void ZeroMemory(Span<byte> buffer)
     {
         // NoOptimize to prevent the optimizer from deciding this call is unnecessary
         // NoInlining to prevent the inliner from forgetting that the method was no-optimize
@@ -50,3 +52,5 @@ static class CryptographicOperations
         }
     }
 }
+
+#endif
