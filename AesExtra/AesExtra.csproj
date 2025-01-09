@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <!--
 SPDX-FileCopyrightText: 2022 Frans van Dorsselaer
 
@@ -7,7 +7,7 @@ SPDX-License-Identifier: MIT
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFrameworks>netstandard2.0;net8.0</TargetFrameworks>
     <RootNamespace>Dorssel.Security.Cryptography</RootNamespace>
     <AssemblyName>Dorssel.Security.Cryptography.AesExtra</AssemblyName>
 
@@ -19,6 +19,10 @@ SPDX-License-Identifier: MIT
   <ItemGroup>
     <None Include="..\LICENSE.txt" Pack="true" PackagePath="" Visible="false" />
     <None Include="..\README.md" Pack="true" PackagePath="" Visible="false" />
+  </ItemGroup>
+
+  <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
+    <PackageReference Include="Microsoft.Bcl.Memory" />
   </ItemGroup>
 
 </Project>

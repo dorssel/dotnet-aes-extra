@@ -28,6 +28,18 @@ sealed class AesCtr_KAT
     [TestMethod]
     [TestCategory("NIST")]
     [NistAesCtrSampleDataSource]
+    public void EncryptCtr(NistAesCtrSampleTestVector testVector)
+    {
+        using var aes = AesCtr.Create();
+        aes.Key = testVector.Key.ToArray();
+        aes.IV = testVector.InitialCounter.ToArray();
+        var ciphertext = aes.EncryptCtr(testVector.Plaintext.Span);
+        CollectionAssert.AreEqual(testVector.Ciphertext.ToArray(), ciphertext);
+    }
+
+    [TestMethod]
+    [TestCategory("NIST")]
+    [NistAesCtrSampleDataSource]
     public void Encrypt_Read(NistAesCtrSampleTestVector testVector)
     {
         using var aes = AesCtr.Create();
