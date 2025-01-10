@@ -7,6 +7,21 @@ namespace UnitTests;
 [TestClass]
 sealed class AesCtr_Tests
 {
+    static readonly byte[] TestKey =
+        [
+            31, 32, 33, 34, 35, 36, 37, 38,
+            41, 42, 43, 44, 45, 46, 47, 48,
+            51, 52, 53, 54, 55, 56, 57, 58
+        ];
+
+    static readonly byte[] TestIV =
+        [
+            61, 62, 63, 64, 65, 66, 67, 68,
+            71, 72, 73, 74, 75, 76, 77, 78
+        ];
+
+    static readonly byte[] TestMessage = [1, 2, 3, 4, 5];
+
     [TestMethod]
     public void Create()
     {
@@ -177,10 +192,13 @@ sealed class AesCtr_Tests
     }
 
     [TestMethod]
-    public void CreateEncryptor_WithKeyAndDefaultIV()
+    public void CreateEncryptor_Null()
     {
         using var aes = AesCtr.Create();
-        using var _ = aes.CreateEncryptor(new byte[16], null);
+        Assert.ThrowsException<CryptographicException>(() =>
+        {
+            using var _ = aes.CreateEncryptor(TestKey, null);
+        });
     }
 
     [TestMethod]
@@ -191,25 +209,13 @@ sealed class AesCtr_Tests
     }
 
     [TestMethod]
-    public void CreateDecryptor_WithKeyAndDefaultIV()
+    public void CreateDecryptor_Null()
     {
         using var aes = AesCtr.Create();
-        using var _ = aes.CreateDecryptor(new byte[16], null);
-    }
-
-    [TestMethod]
-    public void EncryptCtr_WithDefaultIV()
-    {
-        using var aes = AesCtr.Create();
-        aes.Key = new byte[128 / 8];
-
-        var fromDefaultIV = aes.EncryptCtr([1, 2, 3]);
-
-        aes.IV = new byte[16];
-
-        var fromExplicitIV = aes.EncryptCtr([1, 2, 3]);
-
-        CollectionAssert.AreEqual(fromExplicitIV, fromDefaultIV);
+        Assert.ThrowsException<CryptographicException>(() =>
+        {
+            using var _ = aes.CreateDecryptor(TestKey, null);
+        });
     }
 
     [TestMethod]
@@ -218,7 +224,7 @@ sealed class AesCtr_Tests
         using var aes = AesCtr.Create();
         Assert.ThrowsException<ArgumentException>(() =>
         {
-            aes.EncryptCtr([3, 3, 3], new byte[2]);
+            aes.EncryptCtr(TestMessage, TestIV, new byte[TestMessage.Length - 1]);
         });
     }
 
@@ -228,7 +234,7 @@ sealed class AesCtr_Tests
         using var aes = AesCtr.Create();
         Assert.ThrowsException<ArgumentException>(() =>
         {
-            aes.DecryptCtr([3, 3, 3], new byte[2]);
+            aes.DecryptCtr(TestMessage, TestIV, new byte[TestMessage.Length - 1]);
         });
     }
 
@@ -236,7 +242,7 @@ sealed class AesCtr_Tests
     public void TryEncryptCtr_DestinationShort()
     {
         using var aes = AesCtr.Create();
-        Assert.IsFalse(aes.TryEncryptCtr([3, 3, 3], new byte[2], out var bytesWritten));
+        Assert.IsFalse(aes.TryEncryptCtr(TestMessage, TestIV, new byte[TestMessage.Length - 1], out var bytesWritten));
         Assert.AreEqual(0, bytesWritten);
     }
 
@@ -244,7 +250,7 @@ sealed class AesCtr_Tests
     public void TryDecryptCtr_DestinationShort()
     {
         using var aes = AesCtr.Create();
-        Assert.IsFalse(aes.TryEncryptCtr([3, 3, 3], new byte[2], out var bytesWritten));
+        Assert.IsFalse(aes.TryEncryptCtr(TestMessage, TestIV, new byte[TestMessage.Length - 1], out var bytesWritten));
         Assert.AreEqual(0, bytesWritten);
     }
 
@@ -252,7 +258,7 @@ sealed class AesCtr_Tests
     public void TryEncryptCtr_PartialBlock()
     {
         using var aes = AesCtr.Create();
-        Assert.IsTrue(aes.TryEncryptCtr([5, 5, 5, 5, 5], new byte[5], out var bytesWritten));
+        Assert.IsTrue(aes.TryEncryptCtr(TestMessage, TestIV, new byte[TestMessage.Length], out var bytesWritten));
         Assert.AreEqual(5, bytesWritten);
     }
 
@@ -260,7 +266,7 @@ sealed class AesCtr_Tests
     public void TryDecryptCtr_PartialBlock()
     {
         using var aes = AesCtr.Create();
-        Assert.IsTrue(aes.TryDecryptCtr([5, 5, 5, 5, 5], new byte[5], out var bytesWritten));
+        Assert.IsTrue(aes.TryDecryptCtr(TestMessage, TestIV, new byte[TestMessage.Length], out var bytesWritten));
         Assert.AreEqual(5, bytesWritten);
     }
 }

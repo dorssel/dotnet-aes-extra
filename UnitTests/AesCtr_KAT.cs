@@ -50,8 +50,7 @@ sealed class AesCtr_KAT
     {
         using var aes = AesCtr.Create();
         aes.Key = testVector.Key.ToArray();
-        aes.IV = testVector.InitialCounter.ToArray();
-        var ciphertext = aes.EncryptCtr(testVector.Plaintext.ToArray());
+        var ciphertext = aes.EncryptCtr(testVector.Plaintext.ToArray(), testVector.InitialCounter.ToArray());
         CollectionAssert.AreEqual(testVector.Ciphertext.ToArray(), ciphertext);
     }
 
@@ -62,8 +61,7 @@ sealed class AesCtr_KAT
     {
         using var aes = AesCtr.Create();
         aes.Key = testVector.Key.ToArray();
-        aes.IV = testVector.InitialCounter.ToArray();
-        var ciphertext = aes.EncryptCtr(testVector.Plaintext.Span);
+        var ciphertext = aes.EncryptCtr(testVector.Plaintext.Span, testVector.InitialCounter.Span);
         CollectionAssert.AreEqual(testVector.Ciphertext.ToArray(), ciphertext);
     }
 
@@ -74,9 +72,8 @@ sealed class AesCtr_KAT
     {
         using var aes = AesCtr.Create();
         aes.Key = testVector.Key.ToArray();
-        aes.IV = testVector.InitialCounter.ToArray();
         var ciphertext = new byte[testVector.Plaintext.Length];
-        var count = aes.EncryptCtr(testVector.Plaintext.Span, ciphertext);
+        var count = aes.EncryptCtr(testVector.Plaintext.Span, testVector.InitialCounter.Span, ciphertext);
         CollectionAssert.AreEqual(testVector.Ciphertext.ToArray(), ciphertext.ToArray());
         Assert.AreEqual(testVector.Plaintext.Length, count);
     }
@@ -124,8 +121,7 @@ sealed class AesCtr_KAT
     {
         using var aes = AesCtr.Create();
         aes.Key = testVector.Key.ToArray();
-        aes.IV = testVector.InitialCounter.ToArray();
-        var plaintext = aes.DecryptCtr(testVector.Ciphertext.ToArray());
+        var plaintext = aes.DecryptCtr(testVector.Ciphertext.ToArray(), testVector.InitialCounter.ToArray());
         CollectionAssert.AreEqual(testVector.Plaintext.ToArray(), plaintext);
     }
 
@@ -136,8 +132,7 @@ sealed class AesCtr_KAT
     {
         using var aes = AesCtr.Create();
         aes.Key = testVector.Key.ToArray();
-        aes.IV = testVector.InitialCounter.ToArray();
-        var plaintext = aes.DecryptCtr(testVector.Ciphertext.Span);
+        var plaintext = aes.DecryptCtr(testVector.Ciphertext.Span, testVector.InitialCounter.Span);
         CollectionAssert.AreEqual(testVector.Plaintext.ToArray(), plaintext);
     }
 
@@ -148,9 +143,8 @@ sealed class AesCtr_KAT
     {
         using var aes = AesCtr.Create();
         aes.Key = testVector.Key.ToArray();
-        aes.IV = testVector.InitialCounter.ToArray();
         var plaintext = new byte[testVector.Ciphertext.Length];
-        var count = aes.DecryptCtr(testVector.Ciphertext.Span, plaintext);
+        var count = aes.DecryptCtr(testVector.Ciphertext.Span, testVector.InitialCounter.Span, plaintext);
         CollectionAssert.AreEqual(testVector.Plaintext.ToArray(), plaintext.ToArray());
         Assert.AreEqual(testVector.Ciphertext.Length, count);
     }

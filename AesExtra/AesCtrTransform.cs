@@ -26,7 +26,7 @@ sealed class AesCtrTransform
         using var aes = Aes.Create();
         aes.Mode = CipherMode.ECB;  // DevSkim: ignore DS187371
         aes.BlockSize = BLOCKSIZE * BitsPerByte;
-        AesEcbTransform = aes.CreateEncryptor(key, null!);
+        AesEcbTransform = aes.CreateEncryptor(key, null);
         Counter = initialCounter.ToArray();
     }
 
