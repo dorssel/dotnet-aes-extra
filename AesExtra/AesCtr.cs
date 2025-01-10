@@ -12,11 +12,12 @@ namespace Dorssel.Security.Cryptography;
 public sealed class AesCtr
     : Aes
 {
-    internal const int FixedBlockSize = 16; // bytes
-    const CipherMode FixedCipherMode = CipherMode.ECB; // DevSkim: ignore DS187371
-    const PaddingMode FixedPaddingMode = PaddingMode.None;
-    const int FixedFeedbackSize = FixedBlockSize * 8; // bits
-    static readonly byte[] BlockOfZeros = new byte[FixedBlockSize];
+    const int BLOCKSIZE = 16;  // bytes
+    const int BitsPerByte = 8;
+    const CipherMode FixedModeValue = CipherMode.CTS;  // DevSkim: ignore DS187371
+    const PaddingMode FixedPaddingValue = PaddingMode.None;
+    const int FixedFeedbackSizeValue = BLOCKSIZE * BitsPerByte;
+    static readonly byte[] BlockOfZeros = new byte[BLOCKSIZE];
 
     /// <inheritdoc cref="Aes.Create()" />
     public static new AesCtr Create()
@@ -33,47 +34,38 @@ public sealed class AesCtr
 
     AesCtr()
     {
-        Mode = FixedCipherMode;
-        Padding = FixedPaddingMode;
-        FeedbackSize = FixedFeedbackSize;
+        KeySizeValue = 256;
+        ModeValue = FixedModeValue;
+        PaddingValue = FixedPaddingValue;
+        FeedbackSizeValue = FixedFeedbackSizeValue;
+        BlockSizeValue = BLOCKSIZE * BitsPerByte;
+        LegalBlockSizesValue = [new(128, 128, 0)];
+        LegalKeySizesValue = [new(128, 256, 64)];
     }
 
-    /// <summary>
-    /// The aggregated underlying AES-ECB implementation.
-    /// </summary>
-    readonly Aes AesEcb = Aes.Create();
-
     #region IDisposable
-    bool IsDisposed;
-
     /// <inheritdoc cref="SymmetricAlgorithm.Dispose(bool)" />
     protected override void Dispose(bool disposing)
     {
-        if (!IsDisposed)
-        {
-            if (disposing)
-            {
-                AesEcb.Dispose();
-            }
-            IsDisposed = true;
-        }
+        CryptographicOperations.ZeroMemory(KeyValue);
+        KeyValue = null;
+        CryptographicOperations.ZeroMemory(IVValue);
+        IVValue = null;
         base.Dispose(disposing);
     }
     #endregion
 
     /// <inheritdoc cref="AesManaged.Mode" />
-    /// <remarks><see cref="AesCtr"/> always uses <see cref="CipherMode.ECB" />.</remarks>
+    /// <remarks><see cref="AesCtr"/> always pretends to use <see cref="CipherMode.CTS" />.</remarks>
     public override CipherMode Mode
     {
-        get => AesEcb.Mode;
+        get => FixedModeValue;
         set
         {
-            if (value != FixedCipherMode)
+            if (value != FixedModeValue)
             {
                 throw new CryptographicException("Specified cipher mode is not valid for this algorithm.");
             }
-            // Just in case there are side-effects of setting to the current value.
-            AesEcb.Mode = value;
         }
     }
 
@@ -81,15 +73,13 @@ public sealed class AesCtr
     /// <remarks><see cref="AesCtr"/> always uses <see cref="PaddingMode.None" />.</remarks>
     public override PaddingMode Padding
     {
-        get => AesEcb.Padding;
+        get => FixedPaddingValue;
         set
         {
-            if (value != FixedPaddingMode)
+            if (value != FixedPaddingValue)
             {
                 throw new CryptographicException("Specified padding mode is not valid for this algorithm.");
             }
-            // Just in case there are side-effects of setting to the current value.
-            AesEcb.Padding = value;
         }
     }
 
@@ -97,40 +87,21 @@ public sealed class AesCtr
     /// <remarks><see cref="AesCtr"/> always uses 128 bits.</remarks>
     public override int FeedbackSize
     {
-        get => AesEcb.FeedbackSize;
+        get => FixedFeedbackSizeValue;
         set
         {
-            if (value != FixedFeedbackSize)
+            if (value != FixedFeedbackSizeValue)
             {
                 throw new CryptographicException("Specified feedback size is not valid for this algorithm.");
             }
-            AesEcb.FeedbackSize = value;
         }
     }
 
-    /// <inheritdoc cref="SymmetricAlgorithm.IV" />
-    public override byte[] IV { get => AesEcb.IV; set => AesEcb.IV = value; }
-
-    /// <inheritdoc cref="SymmetricAlgorithm.Key" />
-    public override byte[] Key { get => AesEcb.Key; set => AesEcb.Key = value; }
-
-    /// <inheritdoc cref="SymmetricAlgorithm.BlockSize" />
-    public override int BlockSize { get => AesEcb.BlockSize; set => AesEcb.BlockSize = value; }
-
-    /// <inheritdoc cref="SymmetricAlgorithm.KeySize" />
-    public override int KeySize { get => AesEcb.KeySize; set => AesEcb.KeySize = value; }
-
-    /// <inheritdoc cref="SymmetricAlgorithm.LegalBlockSizes" />
-    public override KeySizes[] LegalBlockSizes => AesEcb.LegalBlockSizes;
-
-    /// <inheritdoc cref="SymmetricAlgorithm.LegalKeySizes" />
-    public override KeySizes[] LegalKeySizes => base.LegalKeySizes;
-
-    AesCtrTransform CreateTransform(byte[] rgbKey, byte[]? rgbIV)
+    static AesCtrTransform CreateTransform(byte[] rgbKey, byte[]? rgbIV)
     {
         // ECB.Encrypt === ECB.Decrypt; the transform is entirely symmetric.
         // ECB does not use an IV; the IV we received is actually the initial counter for AES-CTR.
-        return new(rgbIV ?? BlockOfZeros, AesEcb.CreateEncryptor(rgbKey, BlockOfZeros));
+        return new(rgbKey, rgbIV ?? BlockOfZeros);
     }
 
     /// <inheritdoc cref="AesManaged.CreateDecryptor(byte[], byte[])" />
@@ -148,13 +119,19 @@ public sealed class AesCtr
     /// <inheritdoc cref="AesManaged.GenerateIV" />
     public override void GenerateIV()
     {
-        AesEcb.GenerateIV();
+        CryptographicOperations.ZeroMemory(IVValue);
+        using var randomNumberGenerator = RandomNumberGenerator.Create();
+        IVValue = new byte[BLOCKSIZE];
+        randomNumberGenerator.GetBytes(IVValue);
     }
 
     /// <inheritdoc cref="AesManaged.GenerateKey" />
     public override void GenerateKey()
     {
-        AesEcb.GenerateKey();
+        CryptographicOperations.ZeroMemory(KeyValue);
+        using var randomNumberGenerator = RandomNumberGenerator.Create();
+        KeyValue = new byte[KeySize / BitsPerByte];
+        randomNumberGenerator.GetBytes(KeyValue);
     }
 
     #region Modern_SymmetricAlgorithm
@@ -165,20 +142,20 @@ public sealed class AesCtr
             bytesWritten = 0;
             return false;
         }
-        using var transform = new AesCtrTransform(IV, AesEcb.CreateEncryptor(Key, BlockOfZeros));
+        using var transform = new AesCtrTransform(Key, IV);
         var inputSlice = input;
         var destinationSlice = destination;
-        while (inputSlice.Length >= FixedBlockSize)
+        while (inputSlice.Length >= BLOCKSIZE)
         {
             // full blocks
             transform.TransformBlock(inputSlice, destinationSlice);
-            inputSlice = inputSlice[FixedBlockSize..];
-            destinationSlice = destinationSlice[FixedBlockSize..];
+            inputSlice = inputSlice[BLOCKSIZE..];
+            destinationSlice = destinationSlice[BLOCKSIZE..];
         }
         if (!inputSlice.IsEmpty)
         {
             // final partial block (if any)
-            Span<byte> block = stackalloc byte[FixedBlockSize];
+            Span<byte> block = stackalloc byte[BLOCKSIZE];
             inputSlice.CopyTo(block);
             transform.TransformBlock(block, block);
             block[0..inputSlice.Length].CopyTo(destinationSlice);

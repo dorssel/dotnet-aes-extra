@@ -34,7 +34,7 @@ public sealed class AesCmac
     public AesCmac()
     {
         AesEcb = Aes.Create();
-        AesEcb.Mode = CipherMode.ECB; // DevSkim: ignore DS187371
+        AesEcb.Mode = CipherMode.ECB;  // DevSkim: ignore DS187371
         AesEcb.Padding = PaddingMode.None;
         CryptoTransform = AesEcb.CreateEncryptor();
         HashSizeValue = BLOCKSIZE * 8;

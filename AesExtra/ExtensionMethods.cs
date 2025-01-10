@@ -6,7 +6,7 @@ namespace Dorssel.Security.Cryptography;
 
 static class ExtensionMethods
 {
-    const int BLOCKSIZE = AesCtr.FixedBlockSize;
+    const int BLOCKSIZE = 16;  // bytes
 
     // See: NIST SP 800-38B, Section 4.2
     //
