@@ -17,7 +17,6 @@ public sealed class AesCtr
     const CipherMode FixedModeValue = CipherMode.CTS;  // DevSkim: ignore DS187371
     const PaddingMode FixedPaddingValue = PaddingMode.None;
     const int FixedFeedbackSizeValue = BLOCKSIZE * BitsPerByte;
-    static readonly byte[] BlockOfZeros = new byte[BLOCKSIZE];
 
     /// <inheritdoc cref="Aes.Create()" />
     public static new AesCtr Create()
@@ -97,18 +96,23 @@ public sealed class AesCtr
         }
     }
 
+    // CTR.Encrypt === CTR.Decrypt; the transform is entirely symmetric.
+    static AesCtrTransform CreateTransform(byte[] rgbKey, byte[]? rgbIV)
+    {
+        return rgbIV is not null ? new(rgbKey, rgbIV)
+            : throw new CryptographicException("The cipher mode specified requires that an initialization vector(IV) be used.");
+    }
+
     /// <inheritdoc cref="AesManaged.CreateDecryptor(byte[], byte[])" />
     public override ICryptoTransform CreateDecryptor(byte[] rgbKey, byte[]? rgbIV)
     {
-        // CTR.Encrypt === CTR.Decrypt; the transform is entirely symmetric.
-        return new AesCtrTransform(rgbKey, rgbIV ?? BlockOfZeros);
+        return CreateTransform(rgbKey, rgbIV);
     }
 
     /// <inheritdoc cref="AesManaged.CreateEncryptor(byte[], byte[])" />
     public override ICryptoTransform CreateEncryptor(byte[] rgbKey, byte[]? rgbIV)
     {
-        // CTR.Encrypt === CTR.Decrypt; the transform is entirely symmetric.
-        return new AesCtrTransform(rgbKey, rgbIV ?? BlockOfZeros);
+        return CreateTransform(rgbKey, rgbIV);
     }
 
     /// <inheritdoc cref="AesManaged.GenerateIV" />
@@ -130,14 +134,14 @@ public sealed class AesCtr
     }
 
     #region Modern_SymmetricAlgorithm
-    bool TryTransformCtr(ReadOnlySpan<byte> input, Span<byte> destination, out int bytesWritten)
+    bool TryTransformCtr(ReadOnlySpan<byte> input, ReadOnlySpan<byte> iv, Span<byte> destination, out int bytesWritten)
     {
         if (destination.Length < input.Length)
         {
             bytesWritten = 0;
             return false;
         }
-        using var transform = new AesCtrTransform(Key, IVValue ?? BlockOfZeros);
+        using var transform = new AesCtrTransform(Key, iv);
         var inputSlice = input;
         var destinationSlice = destination;
         while (inputSlice.Length >= BLOCKSIZE)
@@ -160,16 +164,16 @@ public sealed class AesCtr
         return true;
     }
 
-    byte[] TransformCtr(ReadOnlySpan<byte> input)
+    byte[] TransformCtr(ReadOnlySpan<byte> input, ReadOnlySpan<byte> iv)
     {
         var output = new byte[input.Length];
-        _ = TryTransformCtr(input, output, out _);
+        _ = TryTransformCtr(input, iv, output, out _);
         return output;
     }
 
-    int TransformCtr(ReadOnlySpan<byte> plaintext, Span<byte> destination)
+    int TransformCtr(ReadOnlySpan<byte> plaintext, ReadOnlySpan<byte> iv, Span<byte> destination)
     {
-        return TryTransformCtr(plaintext, destination, out var bytesWritten) ? bytesWritten
+        return TryTransformCtr(plaintext, iv, destination, out var bytesWritten) ? bytesWritten
             : throw new ArgumentException("Destination is too short.");
     }
 
@@ -177,86 +181,94 @@ public sealed class AesCtr
     /// TODO
     /// </summary>
     /// <param name="plaintext">TODO</param>
+    /// <param name="iv">TODO</param>
     /// <returns>TODO</returns>
-    public byte[] EncryptCtr(byte[] plaintext)
+    public byte[] EncryptCtr(byte[] plaintext, byte[] iv)
     {
-        return TransformCtr(plaintext);
+        return TransformCtr(plaintext, iv);
     }
 
     /// <summary>
     /// TODO
     /// </summary>
     /// <param name="plaintext">TODO</param>
+    /// <param name="iv">TODO</param>
     /// <returns>TODO</returns>
-    public byte[] EncryptCtr(ReadOnlySpan<byte> plaintext)
+    public byte[] EncryptCtr(ReadOnlySpan<byte> plaintext, ReadOnlySpan<byte> iv)
     {
-        return TransformCtr(plaintext);
+        return TransformCtr(plaintext, iv);
     }
 
     /// <summary>
     /// TODO
     /// </summary>
     /// <param name="plaintext">TODO</param>
+    /// <param name="iv">TODO</param>
     /// <param name="destination">TODO</param>
     /// <returns>TODO</returns>
-    public int EncryptCtr(ReadOnlySpan<byte> plaintext, Span<byte> destination)
+    public int EncryptCtr(ReadOnlySpan<byte> plaintext, ReadOnlySpan<byte> iv, Span<byte> destination)
     {
-        return TransformCtr(plaintext, destination);
+        return TransformCtr(plaintext, iv, destination);
     }
 
     /// <summary>
     /// TODO
     /// </summary>
     /// <param name="plaintext">TODO</param>
+    /// <param name="iv">TODO</param>
     /// <param name="destination">TODO</param>
     /// <param name="bytesWritten">TODO</param>
     /// <returns>TODO</returns>
-    public bool TryEncryptCtr(ReadOnlySpan<byte> plaintext, Span<byte> destination, out int bytesWritten)
+    public bool TryEncryptCtr(ReadOnlySpan<byte> plaintext, ReadOnlySpan<byte> iv, Span<byte> destination, out int bytesWritten)
     {
-        return TryTransformCtr(plaintext, destination, out bytesWritten);
+        return TryTransformCtr(plaintext, iv, destination, out bytesWritten);
     }
 
     /// <summary>
     /// TODO
     /// </summary>
     /// <param name="ciphertext">TODO</param>
+    /// <param name="iv">TODO</param>
     /// <returns>TODO</returns>
-    public byte[] DecryptCtr(byte[] ciphertext)
+    public byte[] DecryptCtr(byte[] ciphertext, byte[] iv)
     {
-        return TransformCtr(ciphertext);
+        return TransformCtr(ciphertext, iv);
     }
 
     /// <summary>
     /// TODO
     /// </summary>
     /// <param name="ciphertext">TODO</param>
+    /// <param name="iv">TODO</param>
     /// <returns>TODO</returns>
-    public byte[] DecryptCtr(ReadOnlySpan<byte> ciphertext)
+    public byte[] DecryptCtr(ReadOnlySpan<byte> ciphertext, ReadOnlySpan<byte> iv)
     {
-        return TransformCtr(ciphertext);
+        return TransformCtr(ciphertext, iv);
     }
 
     /// <summary>
     /// TODO
     /// </summary>
     /// <param name="ciphertext">TODO</param>
+    /// <param name="iv">TODO</param>
     /// <param name="destination">TODO</param>
     /// <returns>TODO</returns>
-    public int DecryptCtr(ReadOnlySpan<byte> ciphertext, Span<byte> destination)
+    public int DecryptCtr(ReadOnlySpan<byte> ciphertext, ReadOnlySpan<byte> iv, Span<byte> destination)
     {
-        return TransformCtr(ciphertext, destination);
+        return TransformCtr(ciphertext, iv, destination);
     }
 
     /// <summary>
     /// TODO
     /// </summary>
     /// <param name="ciphertext">TODO</param>
+    /// <param name="iv">TODO</param>
     /// <param name="destination">TODO</param>
     /// <param name="bytesWritten">TODO</param>
     /// <returns>TODO</returns>
-    public bool TryDecryptCtr(ReadOnlySpan<byte> ciphertext, Span<byte> destination, out int bytesWritten)
+    public bool TryDecryptCtr(ReadOnlySpan<byte> ciphertext, ReadOnlySpan<byte> iv, Span<byte> destination, out int bytesWritten)
     {
-        return TryTransformCtr(ciphertext, destination, out bytesWritten);
+        return TryTransformCtr(ciphertext, iv, destination, out bytesWritten);
     }
     #endregion
 }
