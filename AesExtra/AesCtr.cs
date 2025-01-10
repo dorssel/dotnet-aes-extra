@@ -97,23 +97,18 @@ public sealed class AesCtr
         }
     }
 
-    static AesCtrTransform CreateTransform(byte[] rgbKey, byte[]? rgbIV)
-    {
-        // ECB.Encrypt === ECB.Decrypt; the transform is entirely symmetric.
-        // ECB does not use an IV; the IV we received is actually the initial counter for AES-CTR.
-        return new(rgbKey, rgbIV ?? BlockOfZeros);
-    }
-
     /// <inheritdoc cref="AesManaged.CreateDecryptor(byte[], byte[])" />
     public override ICryptoTransform CreateDecryptor(byte[] rgbKey, byte[]? rgbIV)
     {
-        return CreateTransform(rgbKey, rgbIV);
+        // CTR.Encrypt === CTR.Decrypt; the transform is entirely symmetric.
+        return new AesCtrTransform(rgbKey, rgbIV ?? BlockOfZeros);
     }
 
     /// <inheritdoc cref="AesManaged.CreateEncryptor(byte[], byte[])" />
     public override ICryptoTransform CreateEncryptor(byte[] rgbKey, byte[]? rgbIV)
     {
-        return CreateTransform(rgbKey, rgbIV);
+        // CTR.Encrypt === CTR.Decrypt; the transform is entirely symmetric.
+        return new AesCtrTransform(rgbKey, rgbIV ?? BlockOfZeros);
     }
 
     /// <inheritdoc cref="AesManaged.GenerateIV" />
@@ -142,7 +137,7 @@ public sealed class AesCtr
             bytesWritten = 0;
             return false;
         }
-        using var transform = new AesCtrTransform(Key, IV);
+        using var transform = new AesCtrTransform(Key, IVValue ?? BlockOfZeros);
         var inputSlice = input;
         var destinationSlice = destination;
         while (inputSlice.Length >= BLOCKSIZE)
