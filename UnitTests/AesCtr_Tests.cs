@@ -198,6 +198,21 @@ sealed class AesCtr_Tests
     }
 
     [TestMethod]
+    public void EncryptCtr_WithDefaultIV()
+    {
+        using var aes = AesCtr.Create();
+        aes.Key = new byte[128 / 8];
+
+        var fromDefaultIV = aes.EncryptCtr([1, 2, 3]);
+
+        aes.IV = new byte[16];
+
+        var fromExplicitIV = aes.EncryptCtr([1, 2, 3]);
+
+        CollectionAssert.AreEqual(fromExplicitIV, fromDefaultIV);
+    }
+
+    [TestMethod]
     public void EncryptCtr_DestinationShort()
     {
         using var aes = AesCtr.Create();
