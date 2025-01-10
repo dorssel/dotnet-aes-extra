@@ -274,5 +274,17 @@ public sealed class AesCtr
     {
         return TransformCtr(ciphertext, destination);
     }
+
+    /// <summary>
+    /// TODO
+    /// </summary>
+    /// <param name="ciphertext">TODO</param>
+    /// <param name="destination">TODO</param>
+    /// <param name="bytesWritten">TODO</param>
+    /// <returns>TODO</returns>
+    public bool TryDecryptCtr(ReadOnlySpan<byte> ciphertext, Span<byte> destination, out int bytesWritten)
+    {
+        return TryTransformCtr(ciphertext, destination, out bytesWritten);
+    }
     #endregion
 }

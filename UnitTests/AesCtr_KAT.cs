@@ -28,18 +28,6 @@ sealed class AesCtr_KAT
     [TestMethod]
     [TestCategory("NIST")]
     [NistAesCtrSampleDataSource]
-    public void EncryptCtr(NistAesCtrSampleTestVector testVector)
-    {
-        using var aes = AesCtr.Create();
-        aes.Key = testVector.Key.ToArray();
-        aes.IV = testVector.InitialCounter.ToArray();
-        var ciphertext = aes.EncryptCtr(testVector.Plaintext.Span);
-        CollectionAssert.AreEqual(testVector.Ciphertext.ToArray(), ciphertext);
-    }
-
-    [TestMethod]
-    [TestCategory("NIST")]
-    [NistAesCtrSampleDataSource]
     public void Encrypt_Read(NistAesCtrSampleTestVector testVector)
     {
         using var aes = AesCtr.Create();
@@ -53,6 +41,44 @@ sealed class AesCtr_KAT
             encryptorStream.CopyTo(ciphertextStream);
         }
         CollectionAssert.AreEqual(testVector.Ciphertext.ToArray(), ciphertextStream.ToArray());
+    }
+
+    [TestMethod]
+    [TestCategory("NIST")]
+    [NistAesCtrSampleDataSource]
+    public void EncryptCtr_Bytes(NistAesCtrSampleTestVector testVector)
+    {
+        using var aes = AesCtr.Create();
+        aes.Key = testVector.Key.ToArray();
+        aes.IV = testVector.InitialCounter.ToArray();
+        var ciphertext = aes.EncryptCtr(testVector.Plaintext.ToArray());
+        CollectionAssert.AreEqual(testVector.Ciphertext.ToArray(), ciphertext);
+    }
+
+    [TestMethod]
+    [TestCategory("NIST")]
+    [NistAesCtrSampleDataSource]
+    public void EncryptCtr_Span(NistAesCtrSampleTestVector testVector)
+    {
+        using var aes = AesCtr.Create();
+        aes.Key = testVector.Key.ToArray();
+        aes.IV = testVector.InitialCounter.ToArray();
+        var ciphertext = aes.EncryptCtr(testVector.Plaintext.Span);
+        CollectionAssert.AreEqual(testVector.Ciphertext.ToArray(), ciphertext);
+    }
+
+    [TestMethod]
+    [TestCategory("NIST")]
+    [NistAesCtrSampleDataSource]
+    public void EncryptCtr_Destination(NistAesCtrSampleTestVector testVector)
+    {
+        using var aes = AesCtr.Create();
+        aes.Key = testVector.Key.ToArray();
+        aes.IV = testVector.InitialCounter.ToArray();
+        var ciphertext = new byte[testVector.Plaintext.Length];
+        var count = aes.EncryptCtr(testVector.Plaintext.Span, ciphertext);
+        CollectionAssert.AreEqual(testVector.Ciphertext.ToArray(), ciphertext.ToArray());
+        Assert.AreEqual(testVector.Plaintext.Length, count);
     }
 
     [TestMethod]
@@ -89,5 +115,43 @@ sealed class AesCtr_KAT
             decryptorStream.CopyTo(plaintextStream);
         }
         CollectionAssert.AreEqual(testVector.Plaintext.ToArray(), plaintextStream.ToArray());
+    }
+
+    [TestMethod]
+    [TestCategory("NIST")]
+    [NistAesCtrSampleDataSource]
+    public void DecryptCtr_Bytes(NistAesCtrSampleTestVector testVector)
+    {
+        using var aes = AesCtr.Create();
+        aes.Key = testVector.Key.ToArray();
+        aes.IV = testVector.InitialCounter.ToArray();
+        var plaintext = aes.DecryptCtr(testVector.Ciphertext.ToArray());
+        CollectionAssert.AreEqual(testVector.Plaintext.ToArray(), plaintext);
+    }
+
+    [TestMethod]
+    [TestCategory("NIST")]
+    [NistAesCtrSampleDataSource]
+    public void DecryptCtr_Span(NistAesCtrSampleTestVector testVector)
+    {
+        using var aes = AesCtr.Create();
+        aes.Key = testVector.Key.ToArray();
+        aes.IV = testVector.InitialCounter.ToArray();
+        var plaintext = aes.DecryptCtr(testVector.Ciphertext.Span);
+        CollectionAssert.AreEqual(testVector.Plaintext.ToArray(), plaintext);
+    }
+
+    [TestMethod]
+    [TestCategory("NIST")]
+    [NistAesCtrSampleDataSource]
+    public void DecryptCtr_Destination(NistAesCtrSampleTestVector testVector)
+    {
+        using var aes = AesCtr.Create();
+        aes.Key = testVector.Key.ToArray();
+        aes.IV = testVector.InitialCounter.ToArray();
+        var plaintext = new byte[testVector.Ciphertext.Length];
+        var count = aes.DecryptCtr(testVector.Ciphertext.Span, plaintext);
+        CollectionAssert.AreEqual(testVector.Plaintext.ToArray(), plaintext.ToArray());
+        Assert.AreEqual(testVector.Ciphertext.Length, count);
     }
 }

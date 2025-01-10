@@ -24,7 +24,7 @@ sealed class AesCmac_Tests
     [TestMethod]
     public void Create_NullNameFails()
     {
-        _ = Assert.ThrowsException<ArgumentNullException>(() =>
+        Assert.ThrowsException<ArgumentNullException>(() =>
         {
             using var keyedHashAlgorithm = AesCmac.Create(null!);
         });
@@ -55,7 +55,7 @@ sealed class AesCmac_Tests
     [TestMethod]
     public void Constructor_WithInvalidKeySize()
     {
-        _ = Assert.ThrowsException<CryptographicException>(() =>
+        Assert.ThrowsException<CryptographicException>(() =>
         {
             using var aesCmac = new AesCmac(new byte[42]);
         });
@@ -64,7 +64,7 @@ sealed class AesCmac_Tests
     [TestMethod]
     public void Constructor_WithNullKey()
     {
-        _ = Assert.ThrowsException<ArgumentNullException>(() =>
+        Assert.ThrowsException<ArgumentNullException>(() =>
         {
             using var aesCmac = new AesCmac(null!);
         });
@@ -110,7 +110,7 @@ sealed class AesCmac_Tests
         var pos = 0;
         void Transfer(int count)
         {
-            _ = aesCmac.TransformBlock(testVector.PT.ToArray(), pos, count, null, 0);
+            aesCmac.TransformBlock(testVector.PT.ToArray(), pos, count, null, 0);
             pos += count;
         }
 
@@ -127,7 +127,7 @@ sealed class AesCmac_Tests
         // remainder
         Transfer(testVector.PT.Length - pos);
 
-        _ = aesCmac.TransformFinalBlock([], 0, 0);
+        aesCmac.TransformFinalBlock([], 0, 0);
 
         CollectionAssert.AreEqual(testVector.Tag.ToArray(), aesCmac.Hash);
     }

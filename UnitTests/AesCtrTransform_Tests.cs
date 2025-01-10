@@ -37,7 +37,7 @@ sealed class AesCtrTransform_Tests
     [DataRow(BLOCKSIZE * 8)]
     public void Constructor_InvalidIVSize(int ivSize)
     {
-        _ = Assert.ThrowsException<ArgumentException>(() =>
+        Assert.ThrowsException<ArgumentException>(() =>
         {
             using var transform = new AesCtrTransform(new byte[ivSize], AesEcbTransform);
         });
@@ -47,10 +47,10 @@ sealed class AesCtrTransform_Tests
     public void Constructor_TransformInvalidInputBlockSize()
     {
         var mockTransform = new Mock<ICryptoTransform>();
-        _ = mockTransform.SetupGet(m => m.InputBlockSize).Returns(BLOCKSIZE + 1);
-        _ = mockTransform.SetupGet(m => m.OutputBlockSize).Returns(BLOCKSIZE);
+        mockTransform.SetupGet(m => m.InputBlockSize).Returns(BLOCKSIZE + 1);
+        mockTransform.SetupGet(m => m.OutputBlockSize).Returns(BLOCKSIZE);
 
-        _ = Assert.ThrowsException<CryptographicException>(() =>
+        Assert.ThrowsException<CryptographicException>(() =>
         {
             using var transform = new AesCtrTransform(InitialCounter, mockTransform.Object);
         });
@@ -60,10 +60,10 @@ sealed class AesCtrTransform_Tests
     public void Constructor_TransformInvalidOutputBlockSize()
     {
         var mockTransform = new Mock<ICryptoTransform>();
-        _ = mockTransform.SetupGet(m => m.InputBlockSize).Returns(BLOCKSIZE);
-        _ = mockTransform.SetupGet(m => m.OutputBlockSize).Returns(BLOCKSIZE + 1);
+        mockTransform.SetupGet(m => m.InputBlockSize).Returns(BLOCKSIZE);
+        mockTransform.SetupGet(m => m.OutputBlockSize).Returns(BLOCKSIZE + 1);
 
-        _ = Assert.ThrowsException<CryptographicException>(() =>
+        Assert.ThrowsException<CryptographicException>(() =>
         {
             using var transform = new AesCtrTransform(InitialCounter, mockTransform.Object);
         });
@@ -131,10 +131,10 @@ sealed class AesCtrTransform_Tests
     [DataRow(BLOCKSIZE + 1)]
     public void TransformBlock_InvalidSizeFails(int size)
     {
-        _ = Assert.ThrowsException<ArgumentException>(() =>
+        Assert.ThrowsException<ArgumentException>(() =>
         {
             using ICryptoTransform transform = new AesCtrTransform(InitialCounter, AesEcbTransform);
-            _ = transform.TransformBlock(new byte[size], 0, size, new byte[size], 0);
+            transform.TransformBlock(new byte[size], 0, size, new byte[size], 0);
         });
     }
 
@@ -142,10 +142,10 @@ sealed class AesCtrTransform_Tests
     public void TransformBlock_AfterFinalFails()
     {
         using ICryptoTransform transform = new AesCtrTransform(InitialCounter, AesEcbTransform);
-        _ = transform.TransformFinalBlock([], 0, 0);
-        _ = Assert.ThrowsException<InvalidOperationException>(() =>
+        transform.TransformFinalBlock([], 0, 0);
+        Assert.ThrowsException<InvalidOperationException>(() =>
         {
-            _ = transform.TransformBlock(new byte[BLOCKSIZE], 0, BLOCKSIZE, new byte[BLOCKSIZE], 0);
+            transform.TransformBlock(new byte[BLOCKSIZE], 0, BLOCKSIZE, new byte[BLOCKSIZE], 0);
         });
     }
 
@@ -153,11 +153,11 @@ sealed class AesCtrTransform_Tests
     public void TransformBlock_AfterDisposeFails()
     {
         ICryptoTransform transform = new AesCtrTransform(InitialCounter, AesEcbTransform);
-        _ = transform.TransformBlock(new byte[BLOCKSIZE], 0, BLOCKSIZE, new byte[BLOCKSIZE], 0);
+        transform.TransformBlock(new byte[BLOCKSIZE], 0, BLOCKSIZE, new byte[BLOCKSIZE], 0);
         transform.Dispose();
-        _ = Assert.ThrowsException<ObjectDisposedException>(() =>
+        Assert.ThrowsException<ObjectDisposedException>(() =>
         {
-            _ = transform.TransformBlock(new byte[BLOCKSIZE], 0, BLOCKSIZE, new byte[BLOCKSIZE], 0);
+            transform.TransformBlock(new byte[BLOCKSIZE], 0, BLOCKSIZE, new byte[BLOCKSIZE], 0);
         });
     }
 
@@ -165,17 +165,17 @@ sealed class AesCtrTransform_Tests
     public void TransformBlock_TransformInvalidReturn()
     {
         var mockTransform = new Mock<ICryptoTransform>();
-        _ = mockTransform.SetupGet(m => m.InputBlockSize).Returns(BLOCKSIZE);
-        _ = mockTransform.SetupGet(m => m.OutputBlockSize).Returns(BLOCKSIZE);
-        _ = mockTransform.SetupSequence(m => m.TransformBlock(It.IsAny<byte[]>(), It.IsAny<int>(), It.IsAny<int>(), It.IsAny<byte[]>(), It.IsAny<int>()))
+        mockTransform.SetupGet(m => m.InputBlockSize).Returns(BLOCKSIZE);
+        mockTransform.SetupGet(m => m.OutputBlockSize).Returns(BLOCKSIZE);
+        mockTransform.SetupSequence(m => m.TransformBlock(It.IsAny<byte[]>(), It.IsAny<int>(), It.IsAny<int>(), It.IsAny<byte[]>(), It.IsAny<int>()))
             .Returns(BLOCKSIZE)
             .Returns(BLOCKSIZE + 1);
 
         using ICryptoTransform transform = new AesCtrTransform(InitialCounter, mockTransform.Object);
-        _ = transform.TransformBlock(new byte[BLOCKSIZE], 0, BLOCKSIZE, new byte[BLOCKSIZE], 0);
-        _ = Assert.ThrowsException<CryptographicException>(() =>
+        transform.TransformBlock(new byte[BLOCKSIZE], 0, BLOCKSIZE, new byte[BLOCKSIZE], 0);
+        Assert.ThrowsException<CryptographicException>(() =>
         {
-            _ = transform.TransformBlock(new byte[BLOCKSIZE], 0, BLOCKSIZE, new byte[BLOCKSIZE], 0);
+            transform.TransformBlock(new byte[BLOCKSIZE], 0, BLOCKSIZE, new byte[BLOCKSIZE], 0);
         });
     }
 
@@ -196,10 +196,10 @@ sealed class AesCtrTransform_Tests
     [DataRow(2 * BLOCKSIZE)]
     public void TransformFinalBlock_InvalidSizeFails(int size)
     {
-        _ = Assert.ThrowsException<ArgumentOutOfRangeException>(() =>
+        Assert.ThrowsException<ArgumentOutOfRangeException>(() =>
         {
             using ICryptoTransform transform = new AesCtrTransform(InitialCounter, AesEcbTransform);
-            _ = transform.TransformFinalBlock(new byte[size], 0, size);
+            transform.TransformFinalBlock(new byte[size], 0, size);
         });
     }
 
@@ -207,10 +207,10 @@ sealed class AesCtrTransform_Tests
     public void TransformFinalBlock_AfterFinalFails()
     {
         using ICryptoTransform transform = new AesCtrTransform(InitialCounter, AesEcbTransform);
-        _ = transform.TransformFinalBlock([], 0, 0);
-        _ = Assert.ThrowsException<InvalidOperationException>(() =>
+        transform.TransformFinalBlock([], 0, 0);
+        Assert.ThrowsException<InvalidOperationException>(() =>
         {
-            _ = transform.TransformFinalBlock([], 0, 0);
+            transform.TransformFinalBlock([], 0, 0);
         });
     }
 
@@ -218,11 +218,11 @@ sealed class AesCtrTransform_Tests
     public void TransformFinalBlock_AfterDisposeFails()
     {
         ICryptoTransform transform = new AesCtrTransform(InitialCounter, AesEcbTransform);
-        _ = transform.TransformBlock(new byte[BLOCKSIZE], 0, BLOCKSIZE, new byte[BLOCKSIZE], 0);
+        transform.TransformBlock(new byte[BLOCKSIZE], 0, BLOCKSIZE, new byte[BLOCKSIZE], 0);
         transform.Dispose();
-        _ = Assert.ThrowsException<ObjectDisposedException>(() =>
+        Assert.ThrowsException<ObjectDisposedException>(() =>
         {
-            _ = transform.TransformFinalBlock([], 0, 0);
+            transform.TransformFinalBlock([], 0, 0);
         });
     }
 
@@ -230,14 +230,14 @@ sealed class AesCtrTransform_Tests
     public void TransformFinalBlock_TransformInvalidReturn()
     {
         var mockTransform = new Mock<ICryptoTransform>();
-        _ = mockTransform.SetupGet(m => m.InputBlockSize).Returns(BLOCKSIZE);
-        _ = mockTransform.SetupGet(m => m.OutputBlockSize).Returns(BLOCKSIZE);
-        _ = mockTransform.Setup(m => m.TransformFinalBlock(It.IsAny<byte[]>(), It.IsAny<int>(), It.IsAny<int>())).Returns(new byte[BLOCKSIZE + 1]);
+        mockTransform.SetupGet(m => m.InputBlockSize).Returns(BLOCKSIZE);
+        mockTransform.SetupGet(m => m.OutputBlockSize).Returns(BLOCKSIZE);
+        mockTransform.Setup(m => m.TransformFinalBlock(It.IsAny<byte[]>(), It.IsAny<int>(), It.IsAny<int>())).Returns(new byte[BLOCKSIZE + 1]);
 
         using ICryptoTransform transform = new AesCtrTransform(InitialCounter, mockTransform.Object);
-        _ = Assert.ThrowsException<CryptographicException>(() =>
+        Assert.ThrowsException<CryptographicException>(() =>
         {
-            _ = transform.TransformFinalBlock(new byte[BLOCKSIZE], 0, BLOCKSIZE);
+            transform.TransformFinalBlock(new byte[BLOCKSIZE], 0, BLOCKSIZE);
         });
     }
 }
