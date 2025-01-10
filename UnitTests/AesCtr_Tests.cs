@@ -24,7 +24,7 @@ sealed class AesCtr_Tests
     [TestMethod]
     public void Create_NullNameFails()
     {
-        _ = Assert.ThrowsException<ArgumentNullException>(() =>
+        Assert.ThrowsException<ArgumentNullException>(() =>
         {
             using var aes = AesCtr.Create(null!);
         });
@@ -66,7 +66,7 @@ sealed class AesCtr_Tests
     {
         using var aes = AesCtr.Create();
         Assert.AreEqual(CipherMode.ECB, aes.Mode); // DevSkim: ignore DS187371
-        _ = Assert.ThrowsException<CryptographicException>(() =>
+        Assert.ThrowsException<CryptographicException>(() =>
         {
             aes.Mode = CipherMode.CBC;
         });
@@ -88,7 +88,7 @@ sealed class AesCtr_Tests
         using var aes = AesCtr.Create();
         var padding = aes.Padding;
         Assert.AreEqual(PaddingMode.None, padding);
-        _ = Assert.ThrowsException<CryptographicException>(() =>
+        Assert.ThrowsException<CryptographicException>(() =>
         {
             aes.Padding = PaddingMode.PKCS7;
         });
@@ -109,7 +109,7 @@ sealed class AesCtr_Tests
     {
         using var aes = AesCtr.Create();
         Assert.AreEqual(aes.BlockSize, aes.FeedbackSize);
-        _ = Assert.ThrowsException<CryptographicException>(() =>
+        Assert.ThrowsException<CryptographicException>(() =>
         {
             aes.FeedbackSize = 8;
         });
@@ -195,5 +195,57 @@ sealed class AesCtr_Tests
     {
         using var aes = AesCtr.Create();
         using var _ = aes.CreateDecryptor(new byte[16], null);
+    }
+
+    [TestMethod]
+    public void EncryptCtr_DestinationShort()
+    {
+        using var aes = AesCtr.Create();
+        Assert.ThrowsException<ArgumentException>(() =>
+        {
+            aes.EncryptCtr([3, 3, 3], new byte[2]);
+        });
+    }
+
+    [TestMethod]
+    public void DecryptCtr_DestinationShort()
+    {
+        using var aes = AesCtr.Create();
+        Assert.ThrowsException<ArgumentException>(() =>
+        {
+            aes.DecryptCtr([3, 3, 3], new byte[2]);
+        });
+    }
+
+    [TestMethod]
+    public void TryEncryptCtr_DestinationShort()
+    {
+        using var aes = AesCtr.Create();
+        Assert.IsFalse(aes.TryEncryptCtr([3, 3, 3], new byte[2], out var bytesWritten));
+        Assert.AreEqual(0, bytesWritten);
+    }
+
+    [TestMethod]
+    public void TryDecryptCtr_DestinationShort()
+    {
+        using var aes = AesCtr.Create();
+        Assert.IsFalse(aes.TryEncryptCtr([3, 3, 3], new byte[2], out var bytesWritten));
+        Assert.AreEqual(0, bytesWritten);
+    }
+
+    [TestMethod]
+    public void TryEncryptCtr_PartialBlock()
+    {
+        using var aes = AesCtr.Create();
+        Assert.IsTrue(aes.TryEncryptCtr([5, 5, 5, 5, 5], new byte[5], out var bytesWritten));
+        Assert.AreEqual(5, bytesWritten);
+    }
+
+    [TestMethod]
+    public void TryDecryptCtr_PartialBlock()
+    {
+        using var aes = AesCtr.Create();
+        Assert.IsTrue(aes.TryDecryptCtr([5, 5, 5, 5, 5], new byte[5], out var bytesWritten));
+        Assert.AreEqual(5, bytesWritten);
     }
 }

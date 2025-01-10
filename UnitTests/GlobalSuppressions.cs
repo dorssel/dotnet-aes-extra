@@ -14,3 +14,4 @@ using System.Diagnostics.CodeAnalysis;
     Justification = "Required for Known-Answer-Tests (KAT)")]
 [assembly: SuppressMessage("Performance", "CA1812:Internal class is never instantiated", Justification = "We use internal test classes")]
 [assembly: SuppressMessage("Style", "IDE0053:Use expression body for lambda expression", Justification = "Better readability for Assert.ThrowsException")]
+[assembly: SuppressMessage("Style", "IDE0058:Expression value is never used", Justification = "Not useful for tests")]

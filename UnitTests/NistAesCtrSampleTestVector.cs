@@ -57,19 +57,19 @@ sealed partial record NistAesCtrSampleTestVector
                 var hex = match.Groups[1].Value;
                 if (line.StartsWith("Key") || line == hex)
                 {
-                    _ = keyHex.Append(hex);
+                    keyHex.Append(hex);
                 }
                 else if (line.StartsWith("Init. Counter"))
                 {
-                    _ = initialCounterHex.Append(hex);
+                    initialCounterHex.Append(hex);
                 }
                 else if (line.StartsWith("Plaintext"))
                 {
-                    _ = plaintextHex.Append(hex);
+                    plaintextHex.Append(hex);
                 }
                 else if (line.StartsWith("Ciphertext"))
                 {
-                    _ = ciphertextHex.Append(hex);
+                    ciphertextHex.Append(hex);
                 }
             }
         }
