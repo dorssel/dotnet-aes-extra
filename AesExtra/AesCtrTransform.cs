@@ -9,29 +9,25 @@ namespace Dorssel.Security.Cryptography;
 sealed class AesCtrTransform
     : ICryptoTransform
 {
-    const int BLOCKSIZE = AesCtr.FixedBlockSize; // bytes
+    const int BLOCKSIZE = 16;  // bytes
+    const int BitsPerByte = 8;
 
     readonly ICryptoTransform AesEcbTransform;
     readonly byte[] Counter;
 
-    static void ThrowUnexpectedAesFailure()
+    // The key must be passed to CreateEncryptor(), which only accepts a byte[], which it will make a copy of.
+    internal AesCtrTransform(byte[] key, ReadOnlySpan<byte> initialCounter)
     {
-        throw new CryptographicException("Unexpected failure in the underlying AES implementation.");
-    }
-
-    internal AesCtrTransform(byte[] initialCounter, ICryptoTransform aesEcbTransform)
-    {
-        AesEcbTransform = aesEcbTransform;
-        if ((AesEcbTransform.InputBlockSize != BLOCKSIZE) || (AesEcbTransform.OutputBlockSize != BLOCKSIZE))
-        {
-            ThrowUnexpectedAesFailure();
-        }
-
         if (initialCounter.Length != BLOCKSIZE)
         {
             throw new ArgumentException("Specified initial counter (IV) does not match the block size for this algorithm.", nameof(initialCounter));
         }
-        Counter = initialCounter;
+
+        using var aes = Aes.Create();
+        aes.Mode = CipherMode.ECB;  // DevSkim: ignore DS187371
+        aes.BlockSize = BLOCKSIZE * BitsPerByte;
+        AesEcbTransform = aes.CreateEncryptor(key, null!);
+        Counter = initialCounter.ToArray();
     }
 
     void Purge()
@@ -72,8 +68,20 @@ sealed class AesCtrTransform
         }
     }
 
-    void IncrementCounter()
+    readonly byte[] XorBlock = new byte[BLOCKSIZE];
+
+    internal void TransformBlock(ReadOnlySpan<byte> inputBlock, Span<byte> destination)
     {
+        // CIPH_K(X)
+        // See: NIST SP 800-38A, Section 4.2.2
+        _ = AesEcbTransform.TransformBlock(Counter, 0, BLOCKSIZE, XorBlock, 0);
+
+        for (var i = 0; i < BLOCKSIZE; ++i)
+        {
+            destination[i] = (byte)(inputBlock[i] ^ XorBlock[i]);
+        }
+
+        // Increment counter
         for (var i = Counter.Length - 1; i >= 0; --i)
         {
             if (unchecked(++Counter[i]) != 0)
@@ -81,27 +89,6 @@ sealed class AesCtrTransform
                 break;
             }
         }
-    }
-
-    // See: NIST SP 800-38A, Section 4.2.2
-    void CIPH_K(byte[] X, byte[] output)
-    {
-        if (AesEcbTransform.TransformBlock(X, 0, BLOCKSIZE, output, 0) != BLOCKSIZE)
-        {
-            ThrowUnexpectedAesFailure();
-        }
-    }
-
-    readonly byte[] XorBlock = new byte[BLOCKSIZE];
-
-    internal void TransformBlock(ReadOnlySpan<byte> inputBlock, Span<byte> destination)
-    {
-        CIPH_K(Counter, XorBlock);
-        for (var i = 0; i < BLOCKSIZE; ++i)
-        {
-            destination[i] = (byte)(inputBlock[i] ^ XorBlock[i]);
-        }
-        IncrementCounter();
     }
 
     #region ICryptoTransform
