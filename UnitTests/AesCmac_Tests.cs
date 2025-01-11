@@ -17,7 +17,9 @@ sealed class AesCmac_Tests
     [TestMethod]
     public void Create_Name()
     {
+#pragma warning disable CS0618 // Type or member is obsolete
         using var keyedHashAlgorithm = AesCmac.Create("AesCmac");
+#pragma warning restore CS0618 // Type or member is obsolete
         Assert.IsNotNull(keyedHashAlgorithm);
     }
 
@@ -26,14 +28,18 @@ sealed class AesCmac_Tests
     {
         Assert.ThrowsException<ArgumentNullException>(() =>
         {
+#pragma warning disable CS0618 // Type or member is obsolete
             using var keyedHashAlgorithm = AesCmac.Create(null!);
+#pragma warning restore CS0618 // Type or member is obsolete
         });
     }
 
     [TestMethod]
     public void Create_OtherNameReturnsNull()
     {
+#pragma warning disable CS0618 // Type or member is obsolete
         using var keyedHashAlgorithm = AesCmac.Create("SomeOtherName");
+#pragma warning restore CS0618 // Type or member is obsolete
         Assert.IsNull(keyedHashAlgorithm);
     }
 

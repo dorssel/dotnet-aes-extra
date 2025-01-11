@@ -2,6 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 
+using System.Diagnostics.CodeAnalysis;
 using System.Security.Cryptography;
 
 namespace Dorssel.Security.Cryptography;
@@ -25,10 +26,13 @@ public sealed class AesCtr
     }
 
     /// <inheritdoc cref="Aes.Create(string)" />
+    [Obsolete("Cryptographic factory methods accepting an algorithm name are obsolete. Use the parameterless Create factory method on the algorithm type instead.")]
+#if !NETSTANDARD2_0
+    [RequiresUnreferencedCode("The default algorithm implementations might be removed, use strong type references like 'RSA.Create()' instead.")]
+#endif
     public static new Aes? Create(string algorithmName)
     {
-        return algorithmName != null ? algorithmName == nameof(AesCtr) ? Create() : null
-            : throw new ArgumentNullException(nameof(algorithmName));
+        return algorithmName == nameof(AesCtr) ? Create() : Aes.Create(algorithmName);
     }
 
     AesCtr()

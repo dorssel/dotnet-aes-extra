@@ -2,6 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 
+using System.Diagnostics.CodeAnalysis;
 using System.Security.Cryptography;
 
 namespace Dorssel.Security.Cryptography;
@@ -14,18 +15,21 @@ public sealed class AesCmac
 {
     const int BLOCKSIZE = 16; // bytes
 
-    /// <inheritdoc cref="KeyedHashAlgorithm.Create()" />
-    /// <remarks>This static override defaults to <see cref="AesCmac" />.</remarks>
-    public static new KeyedHashAlgorithm Create()
+    /// <inheritdoc cref="KeyedHashAlgorithm.Create()" path="/summary" />
+    /// <returns>A new <see cref="AesCmac" /> instance.</returns>
+    public static new AesCmac Create()
     {
         return new AesCmac();
     }
 
     /// <inheritdoc cref="KeyedHashAlgorithm.Create(string)" />
+    [Obsolete("Cryptographic factory methods accepting an algorithm name are obsolete. Use the parameterless Create factory method on the algorithm type instead.")]
+#if !NETSTANDARD2_0
+    [RequiresUnreferencedCode("The default algorithm implementations might be removed, use strong type references like 'RSA.Create()' instead.")]
+#endif
     public static new KeyedHashAlgorithm? Create(string algorithmName)
     {
-        return algorithmName != null ? algorithmName == nameof(AesCmac) ? Create() : null
-            : throw new ArgumentNullException(nameof(algorithmName));
+        return algorithmName == nameof(AesCmac) ? Create() : KeyedHashAlgorithm.Create(algorithmName);
     }
 
     /// <summary>
