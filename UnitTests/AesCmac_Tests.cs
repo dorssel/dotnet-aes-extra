@@ -8,26 +8,14 @@ namespace UnitTests;
 sealed class AesCmac_Tests
 {
     const int BLOCKSIZE = 16;  // bytes
+    const int BitsPerByte = 8;
 
-    static readonly byte[] TestKey =
-        [
-            31, 32, 33, 34, 35, 36, 37, 38,
-            41, 42, 43, 44, 45, 46, 47, 48,
-            51, 52, 53, 54, 55, 56, 57, 58
-        ];
+    static readonly NistAesCmacSampleTestVector TestVector = NistAesCmacSampleTestVector.All.First(
+        v => v.Key.Length == 192 / BitsPerByte && v.PT.Length > BLOCKSIZE);
 
-    static readonly byte[] TestMessage = [1, 2, 3, 4, 5];
-
-    static readonly byte[] TestTag = InitializeTestTag();
-
-    static byte[] InitializeTestTag()
-    {
-        // This is "known good", in the sense that ComputeHash is tested with the SIV vectors.
-        // This value is subsequently used to verify the one-shot functions.
-
-        using var cmac = new AesCmac(TestKey);
-        return cmac.ComputeHash(TestMessage);
-    }
+    static byte[] TestKey => TestVector.Key.ToArray();
+    static byte[] TestMessage => TestVector.PT.ToArray();
+    static byte[] TestTag => TestVector.Tag.ToArray();
 
     [TestMethod]
     public void Create()
@@ -218,7 +206,7 @@ sealed class AesCmac_Tests
     }
 
     [TestMethod]
-    public void HashData_ReadOnlySpan_Span()
+    public void HashData_ReadOnlySpan_ReadOnlySpan()
     {
         using var stream = new MemoryStream(TestMessage);
 
