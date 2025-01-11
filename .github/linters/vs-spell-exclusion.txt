@@ -1,6 +1,6 @@
 accum
 bitand
-CMAC
+Cmac
 Codecov
 Decryptor
 Dorssel

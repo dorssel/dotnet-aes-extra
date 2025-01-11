@@ -23,6 +23,7 @@ SPDX-License-Identifier: MIT
   </ItemGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
+    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" />
     <PackageReference Include="Microsoft.Bcl.Memory" />
   </ItemGroup>
 

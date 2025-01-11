@@ -178,7 +178,7 @@ public sealed class AesCtr
     int TransformCtr(ReadOnlySpan<byte> plaintext, ReadOnlySpan<byte> iv, Span<byte> destination)
     {
         return TryTransformCtr(plaintext, iv, destination, out var bytesWritten) ? bytesWritten
-            : throw new ArgumentException("Destination is too short.");
+            : throw new ArgumentException("Destination is too short.", nameof(destination));
     }
 
     /// <summary>
