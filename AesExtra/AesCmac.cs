@@ -1,7 +1,10 @@
 ﻿// SPDX-FileCopyrightText: 2022 Frans van Dorsselaer
+// SPDX-FileCopyrightText: .NET Foundation
 //
 // SPDX-License-Identifier: MIT
 
+using System.Buffers;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
@@ -192,8 +195,6 @@ public sealed class AesCmac
 #endif
     void HashCore(ReadOnlySpan<byte> source)
     {
-        State = 1;
-
         if (source.Length == 0)
         {
             return;
@@ -240,9 +241,9 @@ public sealed class AesCmac
     /// <inheritdoc cref="HashAlgorithm.HashFinal" />
     protected override byte[] HashFinal()
     {
-        var result = new byte[BLOCKSIZE];
-        _ = TryHashFinal(result, out _);
-        return result;
+        var destination = new byte[BLOCKSIZE];
+        _ = TryHashFinal(destination, out _);
+        return destination;
     }
 
     /// <inheritdoc/>
@@ -272,10 +273,264 @@ public sealed class AesCmac
         AddBlock(Partial);
 
         C.CopyTo(destination);
-
-        Initialize();
-
         bytesWritten = BLOCKSIZE;
         return true;
     }
+
+    #region Modern_KeyedHashAlgorithm
+    // Helper with a byte[] as key, which is required since we need to pass it as such.
+    static void OneShot(byte[] key, ReadOnlySpan<byte> source, Span<byte> destination)
+    {
+        Debug.Assert(destination.Length >= BLOCKSIZE);
+
+        using var cmac = new AesCmac(key);
+        cmac.HashCore(source);
+        _ = cmac.TryHashFinal(destination, out _);
+    }
+
+    // Helper with a byte[] as key, which is required since we need to pass it as such.
+    // see https://github.com/dotnet/runtime/blob/main/src/libraries/System.Security.Cryptography/src/System/Security/Cryptography/LiteHashProvider.cs
+    static void OneShot(byte[] key, Stream source, Span<byte> destination)
+    {
+        Debug.Assert(destination.Length >= BLOCKSIZE);
+
+        using var cmac = new AesCmac(key);
+        var maxRead = 0;
+        int read;
+        var rented = ArrayPool<byte>.Shared.Rent(4096);
+        try
+        {
+            while ((read = source.Read(rented, 0, 4096)) > 0)
+            {
+                maxRead = Math.Max(maxRead, read);
+                cmac.HashCore(rented.AsSpan(0, read));
+            }
+            _ = cmac.TryHashFinal(destination, out _);
+        }
+        finally
+        {
+            CryptographicOperations.ZeroMemory(rented.AsSpan(0, maxRead));
+            ArrayPool<byte>.Shared.Return(rented, false);
+        }
+    }
+
+    // Helper with a byte[] as key, which is required since we need to pass it as such.
+    // see https://github.com/dotnet/runtime/blob/main/src/libraries/System.Security.Cryptography/src/System/Security/Cryptography/LiteHashProvider.cs
+    static async ValueTask OneShotAsync(byte[] key, Stream source, Memory<byte> destination, CancellationToken cancellationToken)
+    {
+        Debug.Assert(destination.Length >= BLOCKSIZE);
+
+        using var cmac = new AesCmac(key);
+        var maxRead = 0;
+        int read;
+        var rented = ArrayPool<byte>.Shared.Rent(4096);
+        try
+        {
+            while ((read = await source.ReadAsync(rented, 0, 4096, cancellationToken).ConfigureAwait(false)) > 0)
+            {
+                maxRead = Math.Max(maxRead, read);
+                cmac.HashCore(rented.AsSpan(0, read));
+            }
+            _ = cmac.TryHashFinal(destination.Span, out _);
+        }
+        finally
+        {
+            CryptographicOperations.ZeroMemory(rented.AsSpan(0, maxRead));
+            ArrayPool<byte>.Shared.Return(rented, false);
+        }
+    }
+
+    /// <summary>
+    /// TODO
+    /// </summary>
+    /// <param name="key">TODO</param>
+    /// <param name="source">TODO</param>
+    /// <param name="destination">TODO</param>
+    /// <param name="bytesWritten">TODO</param>
+    /// <returns>TODO</returns>
+    public static bool TryHashData(ReadOnlySpan<byte> key, ReadOnlySpan<byte> source, Span<byte> destination, out int bytesWritten)
+    {
+        if (destination.Length < BLOCKSIZE)
+        {
+            bytesWritten = 0;
+            return false;
+        }
+
+        using var keyCopy = new SecureByteArray(key);
+        OneShot(keyCopy, source, destination);
+        bytesWritten = BLOCKSIZE;
+        return true;
+    }
+
+    /// <summary>
+    /// TODO
+    /// </summary>
+    /// <param name="key">TODO</param>
+    /// <param name="source">TODO</param>
+    /// <returns>TODO</returns>
+    public static byte[] HashData(byte[] key, byte[] source)
+    {
+        var destination = new byte[BLOCKSIZE];
+        OneShot(key, source, destination);
+        return destination;
+    }
+
+    /// <summary>
+    /// TODO
+    /// </summary>
+    /// <param name="key">TODO</param>
+    /// <param name="source">TODO</param>
+    /// <returns>TODO</returns>
+    public static byte[] HashData(ReadOnlySpan<byte> key, ReadOnlySpan<byte> source)
+    {
+        using var keyCopy = new SecureByteArray(key);
+        var destination = new byte[BLOCKSIZE];
+        OneShot(keyCopy, source, destination);
+        return destination;
+    }
+
+    /// <summary>
+    /// TODO
+    /// </summary>
+    /// <param name="key">TODO</param>
+    /// <param name="source">TODO</param>
+    /// <param name="destination">TODO</param>
+    /// <returns>TODO</returns>
+    public static int HashData(ReadOnlySpan<byte> key, ReadOnlySpan<byte> source, Span<byte> destination)
+    {
+        if (destination.Length < BLOCKSIZE)
+        {
+            throw new ArgumentException("Destination is too short.", nameof(destination));
+        }
+
+        using var keyCopy = new SecureByteArray(key);
+        OneShot(keyCopy, source, destination);
+        return BLOCKSIZE;
+    }
+
+    /// <summary>
+    /// TODO
+    /// </summary>
+    /// <param name="key">TODO</param>
+    /// <param name="source">TODO</param>
+    /// <returns>TODO</returns>
+    public static byte[] HashData(byte[] key, Stream source)
+    {
+        if (source is null)
+        {
+            throw new ArgumentNullException(nameof(source));
+        }
+
+        var destination = new byte[BLOCKSIZE];
+        OneShot(key, source, destination);
+        return destination;
+    }
+
+    /// <summary>
+    /// TODO
+    /// </summary>
+    /// <param name="key">TODO</param>
+    /// <param name="source">TODO</param>
+    /// <returns>TODO</returns>
+    public static byte[] HashData(ReadOnlySpan<byte> key, Stream source)
+    {
+        if (source is null)
+        {
+            throw new ArgumentNullException(nameof(source));
+        }
+
+        using var keyCopy = new SecureByteArray(key);
+        var destination = new byte[BLOCKSIZE];
+        OneShot(keyCopy, source, destination);
+        return destination;
+    }
+
+    /// <summary>
+    /// TODO
+    /// </summary>
+    /// <param name="key">TODO</param>
+    /// <param name="source">TODO</param>
+    /// <param name="destination">TODO</param>
+    /// <returns>TODO</returns>
+    public static int HashData(ReadOnlySpan<byte> key, Stream source, Span<byte> destination)
+    {
+        if (source is null)
+        {
+            throw new ArgumentNullException(nameof(source));
+        }
+        if (destination.Length < BLOCKSIZE)
+        {
+            throw new ArgumentException("Destination is too short.", nameof(destination));
+        }
+
+        using var keyCopy = new SecureByteArray(key);
+        OneShot(keyCopy, source, destination);
+        return BLOCKSIZE;
+    }
+
+    /// <summary>
+    /// TODO
+    /// </summary>
+    /// <param name="key">TODO</param>
+    /// <param name="source">TODO</param>
+    /// <param name="cancellationToken">TODO</param>
+    /// <returns>TODO</returns>
+    /// <exception cref="ArgumentNullException">TODO</exception>
+    public static async ValueTask<byte[]> HashDataAsync(byte[] key, Stream source, CancellationToken cancellationToken = default)
+    {
+        if (source is null)
+        {
+            throw new ArgumentNullException(nameof(source));
+        }
+
+        var destination = new byte[BLOCKSIZE];
+        await OneShotAsync(key, source, destination, cancellationToken).ConfigureAwait(false);
+        return destination;
+    }
+
+    /// <summary>
+    /// TODO
+    /// </summary>
+    /// <param name="key">TODO</param>
+    /// <param name="source">TODO</param>
+    /// <param name="cancellationToken">TODO</param>
+    /// <returns>TODO</returns>
+    public static async ValueTask<byte[]> HashDataAsync(ReadOnlyMemory<byte> key, Stream source, CancellationToken cancellationToken = default)
+    {
+        if (source is null)
+        {
+            throw new ArgumentNullException(nameof(source));
+        }
+
+        using var keyCopy = new SecureByteArray(key);
+        var destination = new byte[BLOCKSIZE];
+        await OneShotAsync(keyCopy, source, destination, cancellationToken).ConfigureAwait(false);
+        return destination;
+    }
+
+    /// <summary>
+    /// TODO
+    /// </summary>
+    /// <param name="key">TODO</param>
+    /// <param name="source">TODO</param>
+    /// <param name="destination">TODO</param>
+    /// <param name="cancellationToken">TODO</param>
+    /// <returns>TODO</returns>
+    public static async ValueTask<int> HashDataAsync(ReadOnlyMemory<byte> key, Stream source, Memory<byte> destination,
+        CancellationToken cancellationToken = default)
+    {
+        if (source is null)
+        {
+            throw new ArgumentNullException(nameof(source));
+        }
+        if (destination.Length < BLOCKSIZE)
+        {
+            throw new ArgumentException("Destination is too short.", nameof(destination));
+        }
+
+        using var keyCopy = new SecureByteArray(key);
+        await OneShotAsync(keyCopy, source, destination, cancellationToken).ConfigureAwait(false);
+        return BLOCKSIZE;
+    }
+#endregion
 }
