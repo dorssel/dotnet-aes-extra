@@ -106,6 +106,86 @@ sealed class AesCmac_Tests
         }
     }
 
+    sealed class TestStream() : Stream
+    {
+        public ManualResetEventSlim IsWaitingToEnd = new();
+        public ManualResetEventSlim EndStream = new();
+
+        long _Position;
+
+        protected override void Dispose(bool disposing)
+        {
+            IsWaitingToEnd.Dispose();
+            EndStream.Dispose();
+            base.Dispose(disposing);
+        }
+
+        public override bool CanRead => true;
+
+        public override bool CanSeek => false;
+
+        public override bool CanWrite => false;
+
+        public override long Length => throw new NotImplementedException();
+
+        public override long Position { get => _Position; set => throw new NotImplementedException(); }
+
+        public override void Flush()
+        {
+            throw new NotImplementedException();
+        }
+
+        public override int Read(byte[] buffer, int offset, int count)
+        {
+            if (_Position >= 64)
+            {
+                IsWaitingToEnd.Set();
+                EndStream.Wait();
+                return 0;
+            }
+            buffer.AsSpan(offset, count).Clear();
+            _Position += count;
+            return count;
+        }
+
+        public override long Seek(long offset, SeekOrigin origin)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void SetLength(long value)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void Write(byte[] buffer, int offset, int count)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    [TestMethod]
+    public void Key_ChangeWhileBusy()
+    {
+        using var aesCmac = new AesCmac();
+        using var allowRead = new ManualResetEventSlim();
+        using var testStream = new TestStream();
+        var task = aesCmac.ComputeHashAsync(testStream);
+        testStream.IsWaitingToEnd.Wait();
+        // hashing has begun, and the stream is blocking
+
+        Assert.ThrowsException<InvalidOperationException>(() =>
+        {
+            aesCmac.Key = new byte[aesCmac.Key.Length];
+        });
+
+        // continue with the existing operation
+        testStream.EndStream.Set();
+        task.Wait();
+
+        Assert.IsTrue(task.IsCompletedSuccessfully);
+    }
+
     [TestMethod]
     public void ComputeHash_Segmented()
     {

@@ -7,7 +7,7 @@ Dorssel
 dotnet
 Encryptor
 inliner
-IntelliSense
+Intelli
 netstandard
 NIST
 xorend

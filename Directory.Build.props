@@ -48,7 +48,7 @@ SPDX-License-Identifier: MIT
     <!-- NuGet metadata -->
     <Title>$(Product)</Title>
     <Authors>$(Company)</Authors>
-    <Description>.NET Standard 2.0 implementation of AES-CTR, AES-CMAC, and SIV-AES.</Description>
+    <Description>Provides types for additional cryptographic algorithms: AES-CTR, AES-CMAC, and SIV-AES.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <UseFullSemVerForNuGet>false</UseFullSemVerForNuGet>

@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: MIT
 
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 
 namespace Dorssel.Security.Cryptography;
@@ -14,6 +15,7 @@ public sealed class AesCmac
     : KeyedHashAlgorithm
 {
     const int BLOCKSIZE = 16; // bytes
+    const int BitsPerByte = 8;
 
     /// <inheritdoc cref="KeyedHashAlgorithm.Create()" path="/summary" />
     /// <returns>A new <see cref="AesCmac" /> instance.</returns>
@@ -35,12 +37,13 @@ public sealed class AesCmac
     /// <summary>
     /// Initializes a new instance of the <see cref="AesCmac" /> class with a randomly generated key.
     /// </summary>
-    public AesCmac()
+    /// <param name="keySize">The size, in bits, of the randomly generated key.</param>
+    public AesCmac(int keySize = 256)
     {
         AesEcb = Aes.Create();
         AesEcb.Mode = CipherMode.ECB;  // DevSkim: ignore DS187371
-        AesEcb.Padding = PaddingMode.None;
-        CryptoTransform = AesEcb.CreateEncryptor();
+        AesEcb.BlockSize = BLOCKSIZE * BitsPerByte;
+        AesEcb.KeySize = keySize;
         HashSizeValue = BLOCKSIZE * 8;
     }
 
@@ -54,102 +57,144 @@ public sealed class AesCmac
         Key = key;
     }
 
-    void Purge()
-    {
-        CryptographicOperations.ZeroMemory(C);
-        CryptographicOperations.ZeroMemory(Partial);
-    }
-
     #region IDisposable
-    bool IsDisposed;
-
     /// <inheritdoc cref="KeyedHashAlgorithm.Dispose(bool)" />
     protected override void Dispose(bool disposing)
     {
-        if (!IsDisposed)
+        if (disposing)
         {
-            if (disposing)
-            {
-                CryptoTransform.Dispose();
-                AesEcb.Dispose();
-                Purge();
-            }
-            IsDisposed = true;
+            CryptographicOperations.ZeroMemory(KeyValue);
+            CryptographicOperations.ZeroMemory(K1Value);
+            CryptographicOperations.ZeroMemory(K2Value);
+            CryptographicOperations.ZeroMemory(C);
+            CryptographicOperations.ZeroMemory(Partial);
+            AesEcb.Dispose();
+            CryptoTransformValue?.Dispose();
+            CryptoTransformValue = null;
+            K1Value = null;
+            K2Value = null;
+            PartialLength = 0;
+            State = 0;
         }
         base.Dispose(disposing);
     }
     #endregion
 
-    /// <inheritdoc cref="KeyedHashAlgorithm.Key" />
+    /// <inheritdoc />
     public override byte[] Key
     {
         get => AesEcb.Key;
         set
         {
-            CryptoTransform.Dispose();
+            if (State != 0)
+            {
+                throw new InvalidOperationException("Key cannot be changed during a computation.");
+            }
             AesEcb.Key = value;
-            CryptoTransform = AesEcb.CreateEncryptor();
+            CryptographicOperations.ZeroMemory(K1Value);
+            CryptographicOperations.ZeroMemory(K2Value);
+            CryptoTransformValue?.Dispose();
+            CryptoTransformValue = null;
+            K1Value = null;
+            K2Value = null;
         }
     }
 
     readonly Aes AesEcb;
-    ICryptoTransform CryptoTransform;
+    ICryptoTransform? CryptoTransformValue;
+
+    ICryptoTransform CryptoTransform
+    {
+        get
+        {
+            CryptoTransformValue ??= AesEcb.CreateEncryptor();
+            return CryptoTransformValue;
+        }
+    }
 
     // See: NIST SP 800-38B, Section 6.2, Step 5
     readonly byte[] C = new byte[BLOCKSIZE];
 
-    // See: NIST SP 800-38B, Section 4.2.2
-    //
-    // In-place: X = CIPH_K(X)
-    void CIPH_K_InPlace(byte[] X_Base, int X_Offset = 0)
-    {
-        _ = CryptoTransform.TransformBlock(X_Base, X_Offset, BLOCKSIZE, X_Base, X_Offset);
+    byte[]? K1Value;
+    byte[]? K2Value;
+
+    // See: NIST SP 800-38B, Section 6.1
+    byte[] K1 {
+        get
+        {
+            if (K1Value is null)
+            {
+                // Step 1: K1Value has the role of L
+                K1Value = new byte[BLOCKSIZE];
+                CIPH_K_InPlace(K1Value);
+                // Step 2: K1Value has the role of K1
+                K1Value.dbl_InPlace();
+            }
+            // Step 4: return K1
+            return K1Value;
+        }
     }
 
     // See: NIST SP 800-38B, Section 6.1
-    //
-    // Returns: first ? K1 : K2
-    byte[] SUBK(bool first)
+    byte[] K2
     {
-        var X = new byte[BLOCKSIZE];
-        // Step 1: X has the role of L
-        CIPH_K_InPlace(X);
-        // Step 2: X has the role of K1
-        X.dbl_InPlace();
-        if (first)
+        get
         {
-            // Step 4: return K1
-            return X;
+            if (K2Value is null)
+            {
+                // Step 3: K2Value has the role of K1
+                K2Value = (byte[])K1.Clone();
+                K2Value.dbl_InPlace();
+            }
+            // Step 4: return K2
+            return K2Value;
         }
-        // Step 3: X has the role of K1
-        X.dbl_InPlace();
-        // Step 4: return K2
-        return X;
+    }
+
+    // See: NIST SP 800-38B, Section 4.2.2
+    //
+    // In-place: X = CIPH_K(X)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    void CIPH_K_InPlace(byte[] X)
+    {
+        _ = CryptoTransform.TransformBlock(X, 0, BLOCKSIZE, X, 0);
     }
 
     /// <inheritdoc cref="HashAlgorithm.Initialize" />
     public override void Initialize()
     {
         // See: NIST SP 800-38B, Section 6.2, Step 5
-        Purge();
-
+        C.AsSpan().Clear();
         PartialLength = 0;
+        State = 0;
     }
 
     readonly byte[] Partial = new byte[BLOCKSIZE];
     int PartialLength;
 
     // See: NIST SP 800-38B, Section 6.2, Step 6
-    void AddBlock(byte[] blockBase, int blockOffset = 0)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    void AddBlock(ReadOnlySpan<byte> block)
     {
-        C.xor_InPlace(0, blockBase, blockOffset, BLOCKSIZE);
+        C.xor_InPlace(block);
         CIPH_K_InPlace(C);
     }
 
-    /// <inheritdoc cref="HashAlgorithm.HashCore(byte[], int, int)" />
+    /// <inheritdoc />
     protected override void HashCore(byte[] array, int ibStart, int cbSize)
     {
-        if (cbSize == 0)
+        HashCore(array.AsSpan(ibStart, cbSize));
+    }
+
+    /// <inheritdoc/>
+#if !NETSTANDARD2_0
+    protected override
+#endif
+    void HashCore(ReadOnlySpan<byte> source)
+    {
+        State = 1;
+
+        if (source.Length == 0)
         {
             return;
         }
@@ -157,17 +202,16 @@ public sealed class AesCmac
         // If we have a non-empty && non-full Partial block already -> append to that first.
         if (PartialLength is > 0 and < BLOCKSIZE)
         {
-            var count = Math.Min(cbSize, BLOCKSIZE - PartialLength);
-            Array.Copy(array, ibStart, Partial, PartialLength, count);
+            var count = Math.Min(source.Length, BLOCKSIZE - PartialLength);
+            source[..count].CopyTo(Partial.AsSpan(PartialLength));
             PartialLength += count;
-            if (count == cbSize)
+            if (count == source.Length)
             {
                 // No more data supplied, we're done. Even if we filled up Partial completely,
                 // because we don't know if it will be the final block.
                 return;
             }
-            ibStart += count;
-            cbSize -= count;
+            source = source[count..];
         }
 
         // We get here only if Partial is either empty or full (i.e. we are block-aligned) && there is more to "hash".
@@ -181,54 +225,57 @@ public sealed class AesCmac
 
         // We get here only if Partial is empty && there is more to "hash".
         // Add complete, non-final blocks. Never add the last block given in this call since we don't know if that will be the final block.
-        for (int i = 0, nonFinalBlockCount = (cbSize - 1) / BLOCKSIZE; i < nonFinalBlockCount; i++)
+        for (int i = 0, nonFinalBlockCount = (source.Length - 1) / BLOCKSIZE; i < nonFinalBlockCount; i++)
         {
             // See: NIST SP 800-38B, Section 6.2, Steps 3 and 6
-            AddBlock(array, ibStart);
-            ibStart += BLOCKSIZE;
-            cbSize -= BLOCKSIZE;
+            AddBlock(source[..BLOCKSIZE]);
+            source = source[BLOCKSIZE..];
         }
 
         // Save what we have left (we always have some, by construction).
-        Array.Copy(array, ibStart, Partial, 0, cbSize);
-        PartialLength = cbSize;
+        source.CopyTo(Partial);
+        PartialLength = source.Length;
     }
 
     /// <inheritdoc cref="HashAlgorithm.HashFinal" />
     protected override byte[] HashFinal()
     {
+        var result = new byte[BLOCKSIZE];
+        _ = TryHashFinal(result, out _);
+        return result;
+    }
+
+    /// <inheritdoc/>
+#if !NETSTANDARD2_0
+    protected override
+#endif
+    bool TryHashFinal(Span<byte> destination, out int bytesWritten)
+    {
+        // See: NIST SP 800-38B, Section 6.2, Step 4
         // Partial now has the role of Mn*
         if (PartialLength == BLOCKSIZE)
         {
             // See: NIST SP 800-38B, Section 6.2, Step 1: K1
-            var K1 = SUBK(true);
-            Partial.xor_InPlace(0, K1, 0, BLOCKSIZE);
+            Partial.xor_InPlace(K1);
             // Partial now has the role of Mn
         }
         else
         {
             // Add padding
             Partial[PartialLength] = 0x80;
-            for (var i = PartialLength + 1; i < BLOCKSIZE; ++i)
-            {
-                Partial[i] = 0x00;
-            }
+            Partial.AsSpan(PartialLength + 1).Clear();
             // See: NIST SP 800-38B, Section 6.2, Step 1: K2
-            var K2 = SUBK(false);
-            Partial.xor_InPlace(0, K2, 0, BLOCKSIZE);
+            Partial.xor_InPlace(K2);
             // Partial now has the role of Mn
         }
-        // See: NIST SP 800-38B, Section 6.2, Steps 4 and 6
+        // See: NIST SP 800-38B, Section 6.2, Step 6
         AddBlock(Partial);
-        PartialLength = 0;
 
-        // NOTE: KeyedHashAlgorithm exposes the returned array reference as the
-        // Hash property, so we must *not* return C itself as it may be reused.
-        var cmac = new byte[BLOCKSIZE];
-        C.CopyTo(cmac, 0);
+        C.CopyTo(destination);
 
-        Purge();
+        Initialize();
 
-        return cmac;
+        bytesWritten = BLOCKSIZE;
+        return true;
     }
 }
