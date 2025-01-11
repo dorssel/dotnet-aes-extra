@@ -55,12 +55,12 @@ public sealed class AesSiv
         foreach (var S in associatedData)
         {
             D.dbl_InPlace();
-            D.xor_InPlace(0, Cmac.ComputeHash(S), 0, BLOCKSIZE);
+            D.xor_InPlace(Cmac.ComputeHash(S));
         }
         if (plaintext.Length >= BLOCKSIZE)
         {
             // D takes the role of the "end" in "xorend"
-            D.xor_InPlace(0, plaintext, plaintext.Length - BLOCKSIZE, BLOCKSIZE);
+            D.xor_InPlace(plaintext.AsSpan(plaintext.Length - BLOCKSIZE));
             // Using Transform instead of Compute prevents cloning plaintext.
             _ = Cmac.TransformBlock(plaintext, 0, plaintext.Length - BLOCKSIZE, null, 0);
             _ = Cmac.TransformBlock(D, 0, BLOCKSIZE, null, 0);
@@ -71,7 +71,7 @@ public sealed class AesSiv
         {
             D.dbl_InPlace();
             // This implements pad() as well.
-            D.xor_InPlace(0, plaintext, 0, plaintext.Length);
+            D.AsSpan(0, plaintext.Length).xor_InPlace(plaintext);
             D[plaintext.Length] ^= 0x80;
             return Cmac.ComputeHash(D);
         }

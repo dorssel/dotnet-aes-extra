@@ -2,6 +2,9 @@
 //
 // SPDX-License-Identifier: MIT
 
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
+
 namespace Dorssel.Security.Cryptography;
 
 static class ExtensionMethods
@@ -51,12 +54,24 @@ static class ExtensionMethods
     //
     // In place: X = (X xor Y)
 #pragma warning disable IDE1006 // Naming Styles
-    public static void xor_InPlace(this byte[] X_Base, int X_Offset, byte[] Y_Base, int Y_Offset, int count)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void xor_InPlace(this byte[] X, ReadOnlySpan<byte> Y)
 #pragma warning restore IDE1006 // Naming Styles
     {
-        for (var i = 0; i < count; ++i)
+        X.AsSpan().xor_InPlace(Y);
+    }
+
+    // See: NIST SP 800-38B, Section 4.2.2
+    //
+    // In place: X = (X xor Y)
+#pragma warning disable IDE1006 // Naming Styles
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void xor_InPlace(this Span<byte> X, ReadOnlySpan<byte> Y)
+#pragma warning restore IDE1006 // Naming Styles
+    {
+        for (var i = 0; i < X.Length; ++i)
         {
-            X_Base[X_Offset + i] ^= Y_Base[Y_Offset + i];
+            X[i] ^= Y[i];
         }
     }
 }
