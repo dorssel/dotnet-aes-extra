@@ -32,7 +32,9 @@ sealed class AesCtr_Tests
     [TestMethod]
     public void Create_Name()
     {
+#pragma warning disable CS0618 // Type or member is obsolete
         using var aes = AesCtr.Create("AesCtr");
+#pragma warning restore CS0618 // Type or member is obsolete
         Assert.IsNotNull(aes);
     }
 
@@ -41,14 +43,18 @@ sealed class AesCtr_Tests
     {
         Assert.ThrowsException<ArgumentNullException>(() =>
         {
+#pragma warning disable CS0618 // Type or member is obsolete
             using var aes = AesCtr.Create(null!);
+#pragma warning restore CS0618 // Type or member is obsolete
         });
     }
 
     [TestMethod]
     public void Create_OtherNameReturnsNull()
     {
+#pragma warning disable CS0618 // Type or member is obsolete
         using var aes = AesCtr.Create("SomeOtherName");
+#pragma warning restore CS0618 // Type or member is obsolete
         Assert.IsNull(aes);
     }
 
