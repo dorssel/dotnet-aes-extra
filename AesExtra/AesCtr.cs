@@ -2,6 +2,7 @@
 //
 // SPDX-License-Identifier: MIT
 
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Security.Cryptography;
 
@@ -138,13 +139,11 @@ public sealed class AesCtr
     }
 
     #region Modern_SymmetricAlgorithm
-    bool TryTransformCtr(ReadOnlySpan<byte> input, ReadOnlySpan<byte> iv, Span<byte> destination, out int bytesWritten)
+    void OneShot(ReadOnlySpan<byte> input, ReadOnlySpan<byte> iv, Span<byte> destination)
     {
-        if (destination.Length < input.Length)
-        {
-            bytesWritten = 0;
-            return false;
-        }
+        Debug.Assert(iv.Length == BLOCKSIZE);
+        Debug.Assert(destination.Length >= input.Length);
+
         using var transform = new AesCtrTransform(Key, iv);
         var inputSlice = input;
         var destinationSlice = destination;
@@ -164,115 +163,98 @@ public sealed class AesCtr
             block[0..inputSlice.Length].CopyTo(destinationSlice);
             CryptographicOperations.ZeroMemory(block);
         }
-        bytesWritten = input.Length;
-        return true;
     }
 
-    byte[] TransformCtr(ReadOnlySpan<byte> input, ReadOnlySpan<byte> iv)
+    /// <summary>
+    /// TODO
+    /// </summary>
+    /// <param name="input">TODO</param>
+    /// <param name="iv">TODO</param>
+    /// <returns>TODO</returns>
+    public byte[] TransformCtr(byte[] input, byte[] iv)
     {
+        if (input is null)
+        {
+            throw new ArgumentNullException(nameof(input));
+        }
+        if (iv is null)
+        {
+            throw new ArgumentNullException(nameof(input));
+        }
+        if (iv.Length != BLOCKSIZE)
+        {
+            throw new ArgumentException("Specified initial counter (IV) does not match the block size for this algorithm.", nameof(iv));
+        }
+
         var output = new byte[input.Length];
-        _ = TryTransformCtr(input, iv, output, out _);
+        OneShot(input, iv, output);
         return output;
     }
 
-    int TransformCtr(ReadOnlySpan<byte> plaintext, ReadOnlySpan<byte> iv, Span<byte> destination)
-    {
-        return TryTransformCtr(plaintext, iv, destination, out var bytesWritten) ? bytesWritten
-            : throw new ArgumentException("Destination is too short.", nameof(destination));
-    }
-
     /// <summary>
     /// TODO
     /// </summary>
-    /// <param name="plaintext">TODO</param>
+    /// <param name="input">TODO</param>
     /// <param name="iv">TODO</param>
     /// <returns>TODO</returns>
-    public byte[] EncryptCtr(byte[] plaintext, byte[] iv)
+    public byte[] TransformCtr(ReadOnlySpan<byte> input, ReadOnlySpan<byte> iv)
     {
-        return TransformCtr(plaintext, iv);
+        if (iv.Length != BLOCKSIZE)
+        {
+            throw new ArgumentException("Specified initial counter (IV) does not match the block size for this algorithm.", nameof(iv));
+        }
+
+        var output = new byte[input.Length];
+        OneShot(input, iv, output);
+        return output;
     }
 
     /// <summary>
     /// TODO
     /// </summary>
-    /// <param name="plaintext">TODO</param>
-    /// <param name="iv">TODO</param>
-    /// <returns>TODO</returns>
-    public byte[] EncryptCtr(ReadOnlySpan<byte> plaintext, ReadOnlySpan<byte> iv)
-    {
-        return TransformCtr(plaintext, iv);
-    }
-
-    /// <summary>
-    /// TODO
-    /// </summary>
-    /// <param name="plaintext">TODO</param>
+    /// <param name="input">TODO</param>
     /// <param name="iv">TODO</param>
     /// <param name="destination">TODO</param>
     /// <returns>TODO</returns>
-    public int EncryptCtr(ReadOnlySpan<byte> plaintext, ReadOnlySpan<byte> iv, Span<byte> destination)
+    public int TransformCtr(ReadOnlySpan<byte> input, ReadOnlySpan<byte> iv, Span<byte> destination)
     {
-        return TransformCtr(plaintext, iv, destination);
+        if (iv.Length != BLOCKSIZE)
+        {
+            throw new ArgumentException("Specified initial counter (IV) does not match the block size for this algorithm.", nameof(iv));
+        }
+        if (destination.Length < input.Length)
+        {
+            throw new ArgumentException("Destination is too short.", nameof(destination));
+        }
+
+        OneShot(input, iv, destination);
+        return input.Length;
     }
 
     /// <summary>
     /// TODO
     /// </summary>
-    /// <param name="plaintext">TODO</param>
-    /// <param name="iv">TODO</param>
-    /// <param name="destination">TODO</param>
-    /// <param name="bytesWritten">TODO</param>
-    /// <returns>TODO</returns>
-    public bool TryEncryptCtr(ReadOnlySpan<byte> plaintext, ReadOnlySpan<byte> iv, Span<byte> destination, out int bytesWritten)
-    {
-        return TryTransformCtr(plaintext, iv, destination, out bytesWritten);
-    }
-
-    /// <summary>
-    /// TODO
-    /// </summary>
-    /// <param name="ciphertext">TODO</param>
-    /// <param name="iv">TODO</param>
-    /// <returns>TODO</returns>
-    public byte[] DecryptCtr(byte[] ciphertext, byte[] iv)
-    {
-        return TransformCtr(ciphertext, iv);
-    }
-
-    /// <summary>
-    /// TODO
-    /// </summary>
-    /// <param name="ciphertext">TODO</param>
-    /// <param name="iv">TODO</param>
-    /// <returns>TODO</returns>
-    public byte[] DecryptCtr(ReadOnlySpan<byte> ciphertext, ReadOnlySpan<byte> iv)
-    {
-        return TransformCtr(ciphertext, iv);
-    }
-
-    /// <summary>
-    /// TODO
-    /// </summary>
-    /// <param name="ciphertext">TODO</param>
-    /// <param name="iv">TODO</param>
-    /// <param name="destination">TODO</param>
-    /// <returns>TODO</returns>
-    public int DecryptCtr(ReadOnlySpan<byte> ciphertext, ReadOnlySpan<byte> iv, Span<byte> destination)
-    {
-        return TransformCtr(ciphertext, iv, destination);
-    }
-
-    /// <summary>
-    /// TODO
-    /// </summary>
-    /// <param name="ciphertext">TODO</param>
+    /// <param name="input">TODO</param>
     /// <param name="iv">TODO</param>
     /// <param name="destination">TODO</param>
     /// <param name="bytesWritten">TODO</param>
     /// <returns>TODO</returns>
-    public bool TryDecryptCtr(ReadOnlySpan<byte> ciphertext, ReadOnlySpan<byte> iv, Span<byte> destination, out int bytesWritten)
+    public bool TryTransformCtr(ReadOnlySpan<byte> input, ReadOnlySpan<byte> iv, Span<byte> destination, out int bytesWritten)
     {
-        return TryTransformCtr(ciphertext, iv, destination, out bytesWritten);
+        if (iv.Length != BLOCKSIZE)
+        {
+            throw new ArgumentException("Specified initial counter (IV) does not match the block size for this algorithm.", nameof(iv));
+        }
+
+        if (destination.Length < input.Length)
+        {
+            bytesWritten = 0;
+            return false;
+        }
+
+        OneShot(input, iv, destination);
+        bytesWritten = input.Length;
+        return true;
     }
     #endregion
 }
