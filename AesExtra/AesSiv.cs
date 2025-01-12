@@ -18,21 +18,33 @@ public sealed class AesSiv
     /// <param name="key">The secret key to use for this instance.</param>
     /// <exception cref="ArgumentNullException" />
     public AesSiv(byte[] key)
+        : this(new ReadOnlySpan<byte>(key ?? throw new ArgumentNullException(nameof(key))))
     {
-        _ = key ?? throw new ArgumentNullException(nameof(key));
+    }
 
-        Cmac.Key = key.Take(key.Length / 2).ToArray();
-        Ctr.Key = key.Skip(key.Length / 2).ToArray();
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AesSiv"/> class with a provided key.
+    /// </summary>
+    /// <param name="key">The secret key to use for this instance.</param>
+    public AesSiv(ReadOnlySpan<byte> key)
+    {
+        if (key.Length is not (32 or 48 or 64))
+        {
+            throw new CryptographicException("Specified key is not a valid size for this algorithm.", nameof(key));
+        }
+
+        using var cmacKey = new SecureByteArray(key[..(key.Length / 2)]);
+        using var ctrKey = new SecureByteArray(key[(key.Length / 2)..]);
+        Cmac = new(cmacKey);
+        Ctr = new(ctrKey, new byte[BLOCKSIZE]);
     }
 
     const int BLOCKSIZE = 16; // bytes
     // See: RFC 5297, Section 7
     const int MaximumAssociatedDataCount = 126;
 
-    static readonly byte[] zero = new byte[BLOCKSIZE];
-
-    readonly Aes Ctr = AesCtr.Create();
-    readonly KeyedHashAlgorithm Cmac = new AesCmac();
+    readonly AesCmac Cmac;
+    readonly AesCtrTransform Ctr;
 
     #region IDisposable
     bool IsDisposed;
@@ -42,51 +54,75 @@ public sealed class AesSiv
     {
         if (!IsDisposed)
         {
-            Ctr.Dispose();
             Cmac.Dispose();
+            Ctr.Dispose();
+            CryptographicOperations.ZeroMemory(InitialD);
+            InitialD = null;
             IsDisposed = true;
         }
     }
     #endregion
 
-    byte[] S2V(byte[][] associatedData, byte[] plaintext)
+    void ThrowIfDisposed()
     {
-        var D = Cmac.ComputeHash(zero);
-        foreach (var S in associatedData)
+        if (IsDisposed)
         {
-            D.dbl_InPlace();
-            D.xor_InPlace(Cmac.ComputeHash(S));
-        }
-        if (plaintext.Length >= BLOCKSIZE)
-        {
-            // D takes the role of the "end" in "xorend"
-            D.xor_InPlace(plaintext.AsSpan(plaintext.Length - BLOCKSIZE));
-            // Using Transform instead of Compute prevents cloning plaintext.
-            _ = Cmac.TransformBlock(plaintext, 0, plaintext.Length - BLOCKSIZE, null, 0);
-            _ = Cmac.TransformBlock(D, 0, BLOCKSIZE, null, 0);
-            _ = Cmac.TransformFinalBlock([], 0, 0);
-            return Cmac.Hash!;
-        }
-        else
-        {
-            D.dbl_InPlace();
-            // This implements pad() as well.
-            D.AsSpan(0, plaintext.Length).xor_InPlace(plaintext);
-            D[plaintext.Length] ^= 0x80;
-            return Cmac.ComputeHash(D);
+            throw new ObjectDisposedException(nameof(AesCtrTransform));
         }
     }
 
-    // RFC 5297, Section 2.6 and 2.7
-    //
-    // Q = V bitand (1^64 || 0^1 || 1^31 || 0^1 || 1^31)
-    static byte[] InitializationVectorToInitialCounter(byte[] V)
+    byte[]? InitialD;
+
+    // See: RFC 5297, Section 2.4
+    void S2V_Init(Span<byte> V)
     {
-        var Q = new byte[BLOCKSIZE];
-        V.CopyTo(Q, 0);
-        Q[8] &= 0x7f;
-        Q[12] &= 0x7f;
-        return Q;
+        // V starts out with the role of D
+        if (InitialD is null)
+        {
+            // we cache this value
+            InitialD = new byte[BLOCKSIZE];
+            Cmac.Initialize();
+            Cmac.UncheckedHashCore(InitialD);
+            Cmac.UncheckedHashFinal(InitialD);
+        }
+        InitialD.CopyTo(V);
+    }
+
+    // See: RFC 5297, Section 2.4
+    void S2V_AddAssociatedDataItem(ReadOnlySpan<byte> associatedDataItem, Span<byte> V)
+    {
+        // associatedDataItem === Si
+        // V still has the role of D
+        V.dbl_InPlace();
+        Span<byte> mac = stackalloc byte[BLOCKSIZE];
+        Cmac.Initialize();
+        Cmac.UncheckedHashCore(associatedDataItem);
+        Cmac.UncheckedHashFinal(mac);
+        V.xor_InPlace(mac);
+    }
+
+    // See: RFC 5297, Section 2.4
+    void S2V_Final(ReadOnlySpan<byte> plaintext, Span<byte> V)
+    {
+        // plaintext === Sn
+        // V still has the role of D
+        Cmac.Initialize();
+        if (plaintext.Length >= BLOCKSIZE)
+        {
+            // V takes the role of the "end" in "xorend"
+            V.xor_InPlace(plaintext[(plaintext.Length - BLOCKSIZE)..]);
+            Cmac.UncheckedHashCore(plaintext[0..(plaintext.Length - BLOCKSIZE)]);
+        }
+        else
+        {
+            V.dbl_InPlace();
+            // This implements pad() as well.
+            V[..plaintext.Length].xor_InPlace(plaintext);
+            V[plaintext.Length] ^= 0x80;
+        }
+        Cmac.UncheckedHashCore(V);
+        Cmac.UncheckedHashFinal(V);
+        // V is now final
     }
 
     /// <summary>
@@ -101,42 +137,130 @@ public sealed class AesSiv
     {
         // Input validation
 
-        _ = plaintext ?? throw new ArgumentNullException(nameof(plaintext));
-        _ = ciphertext ?? throw new ArgumentNullException(nameof(plaintext));
-        _ = associatedData ?? throw new ArgumentNullException(nameof(plaintext));
-        if (associatedData.Length > MaximumAssociatedDataCount)
+        if (plaintext is null)
         {
-            throw new ArgumentException("Too many associated data items.");
+            throw new ArgumentNullException(nameof(plaintext));
         }
-        foreach (var ad in associatedData)
+        if (ciphertext is null)
         {
-            _ = ad ?? throw new ArgumentException("Associated data items must not be null.", nameof(associatedData));
+            throw new ArgumentNullException(nameof(ciphertext));
         }
-
         if (ciphertext.Length != BLOCKSIZE + plaintext.Length)
         {
-            throw new ArgumentException($"Ciphertext must be larger than plaintext by exactly BlockSize ({BLOCKSIZE} bytes).", nameof(ciphertext));
+            throw new ArgumentException("Ciphertext must be exactly one block larger than plaintext.", nameof(ciphertext));
         }
+        if (associatedData is null)
+        {
+            throw new ArgumentNullException(nameof(associatedData));
+        }
+        if (associatedData.Length > MaximumAssociatedDataCount)
+        {
+            throw new ArgumentException("Too many associated data items.", nameof(associatedData));
+        }
+        foreach (var associatedDataItem in associatedData)
+        {
+            if (associatedDataItem is null)
+            {
+                throw new ArgumentException("Associated data items must not be null.", nameof(associatedData));
+            }
+        }
+
+        // State validation
+
+        ThrowIfDisposed();
 
         // RFC 5297, Section 2.6
 
-        var V = S2V(associatedData, plaintext);
+        var V = ciphertext.AsSpan(0, BLOCKSIZE);
+        S2V_Init(V);
+        foreach (var associatedDataItem in associatedData)
+        {
+            S2V_AddAssociatedDataItem(associatedDataItem, V);
+        }
+        S2V_Final(plaintext, V);
         if (plaintext.Length > 0)
         {
-            Ctr.IV = InitializationVectorToInitialCounter(V);
-            using var encryptor = Ctr.CreateEncryptor();
-            var fullBlocksByteCount = plaintext.Length / BLOCKSIZE * BLOCKSIZE;
-            var ciphertextOffset = BLOCKSIZE;
-            if (fullBlocksByteCount > 0)
-            {
-                ciphertextOffset += encryptor.TransformBlock(plaintext, 0, fullBlocksByteCount, ciphertext, ciphertextOffset);
-            }
-            if (plaintext.Length > fullBlocksByteCount)
-            {
-                encryptor.TransformFinalBlock(plaintext, fullBlocksByteCount, plaintext.Length - fullBlocksByteCount).CopyTo(ciphertext, ciphertextOffset);
-            }
+            Ctr.ResetSivCounter(V);
+            Ctr.UncheckedTransform(plaintext, ciphertext.AsSpan(BLOCKSIZE));
         }
-        V.CopyTo(ciphertext, 0);
+    }
+
+    /// <summary>
+    /// Encrypts the plaintext into the ciphertext destination buffer, prepending the synthetic IV.
+    /// </summary>
+    /// <remarks>
+    /// This method adds exactly one associated data item, possibly of zero length, which differs from adding no associated data items at all.
+    /// </remarks>
+    /// <param name="plaintext">The content to encrypt.</param>
+    /// <param name="ciphertext">The byte array to receive the encrypted contents, prepended with the synthetic IV.</param>
+    /// <param name="associatedData">Extra data associated with this message, which must also be provided during decryption.</param>
+    /// <exception cref="ArgumentNullException" />
+    /// <exception cref="ArgumentException" />
+    public void Encrypt(ReadOnlySpan<byte> plaintext, Span<byte> ciphertext, ReadOnlySpan<byte> associatedData)
+    {
+        // Input validation
+
+        if (ciphertext.Length != BLOCKSIZE + plaintext.Length)
+        {
+            throw new ArgumentException("Ciphertext must be exactly one block larger than plaintext.", nameof(ciphertext));
+        }
+
+        // State validation
+
+        ThrowIfDisposed();
+
+        // RFC 5297, Section 2.6
+
+        var V = ciphertext[..BLOCKSIZE];
+        S2V_Init(V);
+        S2V_AddAssociatedDataItem(associatedData, V);
+        S2V_Final(plaintext, V);
+        if (plaintext.Length > 0)
+        {
+            Ctr.ResetSivCounter(V);
+            Ctr.UncheckedTransform(plaintext, ciphertext[BLOCKSIZE..]);
+        }
+    }
+
+    /// <summary>
+    /// Encrypts the plaintext into the ciphertext destination buffer, prepending the synthetic IV.
+    /// </summary>
+    /// <param name="plaintext">The content to encrypt.</param>
+    /// <param name="ciphertext">The byte array to receive the encrypted contents, prepended with the synthetic IV.</param>
+    /// <param name="associatedData">Extra data associated with this message, which must also be provided during decryption.</param>
+    /// <exception cref="ArgumentNullException" />
+    /// <exception cref="ArgumentException" />
+    public void Encrypt(ReadOnlySpan<byte> plaintext, Span<byte> ciphertext, params ReadOnlySpan<ReadOnlyMemory<byte>> associatedData)
+    {
+        // Input validation
+
+        if (ciphertext.Length != BLOCKSIZE + plaintext.Length)
+        {
+            throw new ArgumentException("Ciphertext must be exactly one block larger than plaintext.", nameof(ciphertext));
+        }
+        if (associatedData.Length > MaximumAssociatedDataCount)
+        {
+            throw new ArgumentException("Too many associated data items.", nameof(associatedData));
+        }
+
+        // State validation
+
+        ThrowIfDisposed();
+
+        // RFC 5297, Section 2.6
+
+        var V = ciphertext[..BLOCKSIZE];
+        S2V_Init(V);
+        foreach (var associatedDataItem in associatedData)
+        {
+            S2V_AddAssociatedDataItem(associatedDataItem.Span, V);
+        }
+        S2V_Final(plaintext, V);
+        if (plaintext.Length > 0)
+        {
+            Ctr.ResetSivCounter(V);
+            Ctr.UncheckedTransform(plaintext, ciphertext[BLOCKSIZE..]);
+        }
     }
 
     /// <summary>
@@ -152,47 +276,157 @@ public sealed class AesSiv
     {
         // Input validation
 
-        _ = ciphertext ?? throw new ArgumentNullException(nameof(ciphertext));
-        _ = plaintext ?? throw new ArgumentNullException(nameof(plaintext));
-        _ = associatedData ?? throw new ArgumentNullException(nameof(associatedData));
-        if (associatedData.Length > MaximumAssociatedDataCount)
+        if (ciphertext is null)
         {
-            throw new ArgumentException("Too many associated data items.");
+            throw new ArgumentNullException(nameof(ciphertext));
         }
-        foreach (var ad in associatedData)
-        {
-            _ = ad ?? throw new ArgumentException("Associated data items must not be null.", nameof(associatedData));
-        }
-
         if (ciphertext.Length < BLOCKSIZE)
         {
-            throw new ArgumentException("Ciphertext too short.", nameof(ciphertext));
+            throw new ArgumentException("Ciphertext is too short.", nameof(ciphertext));
         }
-
+        if (plaintext is null)
+        {
+            throw new ArgumentNullException(nameof(plaintext));
+        }
         if (plaintext.Length != ciphertext.Length - BLOCKSIZE)
         {
-            throw new ArgumentException($"Plaintext must be shorter than ciphertext by exactly BlockSize ({BLOCKSIZE} bytes).", nameof(plaintext));
+            throw new ArgumentException("Plaintext must be exactly one block smaller than ciphertext.", nameof(plaintext));
         }
+        if (associatedData is null)
+        {
+            throw new ArgumentNullException(nameof(associatedData));
+        }
+        if (associatedData.Length > MaximumAssociatedDataCount)
+        {
+            throw new ArgumentException("Too many associated data items.", nameof(associatedData));
+        }
+        foreach (var associatedDataItem in associatedData)
+        {
+            if (associatedDataItem is null)
+            {
+                throw new ArgumentException("Associated data items must not be null.", nameof(associatedData));
+            }
+        }
+
+        // State validation
+
+        ThrowIfDisposed();
 
         // RFC 5297, Section 2.7
 
-        var V = ciphertext.Take(BLOCKSIZE).ToArray();
+        var V = ciphertext.AsSpan(0, BLOCKSIZE);
         if (plaintext.Length > 0)
         {
-            Ctr.IV = InitializationVectorToInitialCounter(V);
-            using var decryptor = Ctr.CreateDecryptor();
-            var fullBlocksByteCount = plaintext.Length / BLOCKSIZE * BLOCKSIZE;
-            var plaintextOffset = 0;
-            if (fullBlocksByteCount > 0)
-            {
-                plaintextOffset += decryptor.TransformBlock(ciphertext, BLOCKSIZE, fullBlocksByteCount, plaintext, plaintextOffset);
-            }
-            if (plaintext.Length > fullBlocksByteCount)
-            {
-                decryptor.TransformFinalBlock(ciphertext, BLOCKSIZE + fullBlocksByteCount, plaintext.Length - fullBlocksByteCount).CopyTo(plaintext, plaintextOffset);
-            }
+            Ctr.ResetSivCounter(V);
+            Ctr.UncheckedTransform(ciphertext.AsSpan(BLOCKSIZE), plaintext);
         }
-        var T = S2V(associatedData, plaintext);
+        Span<byte> T = stackalloc byte[BLOCKSIZE];
+        S2V_Init(T);
+        foreach (var associatedDataItem in associatedData)
+        {
+            S2V_AddAssociatedDataItem(associatedDataItem, T);
+        }
+        S2V_Final(plaintext, T);
+        if (!CryptographicOperations.FixedTimeEquals(T, V))
+        {
+            CryptographicOperations.ZeroMemory(plaintext);
+            throw new CryptographicException("Authentication failed.");
+        }
+    }
+
+    /// <summary>
+    /// Decrypts the ciphertext into the provided destination buffer if the data can be validated.
+    /// </summary>
+    /// <remarks>
+    /// This method expects exactly one associated data item, possibly of zero length, which differs from expecting no associated data items at all.
+    /// </remarks>
+    /// <param name="ciphertext">The encrypted content to decrypt, including the prepended IV.</param>
+    /// <param name="plaintext">The byte array to receive the decrypted contents.</param>
+    /// <param name="associatedData">Extra data associated with this message, which must match the value provided during encryption.</param>
+    /// <exception cref="ArgumentNullException" />
+    /// <exception cref="ArgumentException" />
+    /// <exception cref="CryptographicException" />
+    public void Decrypt(ReadOnlySpan<byte> ciphertext, Span<byte> plaintext, ReadOnlySpan<byte> associatedData)
+    {
+        // Input validation
+
+        if (ciphertext.Length < BLOCKSIZE)
+        {
+            throw new ArgumentException("Ciphertext is too short.", nameof(ciphertext));
+        }
+        if (plaintext.Length != ciphertext.Length - BLOCKSIZE)
+        {
+            throw new ArgumentException("Plaintext must be exactly one block smaller than ciphertext.", nameof(plaintext));
+        }
+
+        // State validation
+
+        ThrowIfDisposed();
+
+        // RFC 5297, Section 2.7
+
+        var V = ciphertext[..BLOCKSIZE];
+        if (plaintext.Length > 0)
+        {
+            Ctr.ResetSivCounter(V);
+            Ctr.UncheckedTransform(ciphertext[BLOCKSIZE..], plaintext);
+        }
+        Span<byte> T = stackalloc byte[BLOCKSIZE];
+        S2V_Init(T);
+        S2V_AddAssociatedDataItem(associatedData, T);
+        S2V_Final(plaintext, T);
+        if (!CryptographicOperations.FixedTimeEquals(T, V))
+        {
+            CryptographicOperations.ZeroMemory(plaintext);
+            throw new CryptographicException("Authentication failed.");
+        }
+    }
+
+    /// <summary>
+    /// Decrypts the ciphertext into the provided destination buffer if the data can be validated.
+    /// </summary>
+    /// <param name="ciphertext">The encrypted content to decrypt, including the prepended IV.</param>
+    /// <param name="plaintext">The byte array to receive the decrypted contents.</param>
+    /// <param name="associatedData">Extra data associated with this message, which must match the value provided during encryption.</param>
+    /// <exception cref="ArgumentNullException" />
+    /// <exception cref="ArgumentException" />
+    /// <exception cref="CryptographicException" />
+    public void Decrypt(ReadOnlySpan<byte> ciphertext, Span<byte> plaintext, params ReadOnlySpan<ReadOnlyMemory<byte>> associatedData)
+    {
+        // Input validation
+
+        if (ciphertext.Length < BLOCKSIZE)
+        {
+            throw new ArgumentException("Ciphertext is too short.", nameof(ciphertext));
+        }
+        if (plaintext.Length != ciphertext.Length - BLOCKSIZE)
+        {
+            throw new ArgumentException("Plaintext must be exactly one block smaller than ciphertext.", nameof(plaintext));
+        }
+        if (associatedData.Length > MaximumAssociatedDataCount)
+        {
+            throw new ArgumentException("Too many associated data items.", nameof(associatedData));
+        }
+
+        // State validation
+
+        ThrowIfDisposed();
+
+        // RFC 5297, Section 2.7
+
+        var V = ciphertext[..BLOCKSIZE];
+        if (plaintext.Length > 0)
+        {
+            Ctr.ResetSivCounter(V);
+            Ctr.UncheckedTransform(ciphertext[BLOCKSIZE..], plaintext);
+        }
+        Span<byte> T = stackalloc byte[BLOCKSIZE];
+        S2V_Init(T);
+        foreach (var associatedDataItem in associatedData)
+        {
+            S2V_AddAssociatedDataItem(associatedDataItem.Span, T);
+        }
+        S2V_Final(plaintext, T);
         if (!CryptographicOperations.FixedTimeEquals(T, V))
         {
             CryptographicOperations.ZeroMemory(plaintext);

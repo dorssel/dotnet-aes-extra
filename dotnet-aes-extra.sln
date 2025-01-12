@@ -12,6 +12,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		.gitignore = .gitignore
 		Directory.Build.props = Directory.Build.props
 		Directory.Packages.props = Directory.Packages.props
+		.config\dotnet-tools.json = .config\dotnet-tools.json
 		GitVersion.yml = GitVersion.yml
 		global.json = global.json
 		nuget.config = nuget.config
@@ -19,6 +20,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UnitTests", "UnitTests\UnitTests.csproj", "{1C01A078-D5F8-4551-88CD-916B02060EFF}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UnitTests8", "UnitTests8\UnitTests8.csproj", "{2110E495-3D1F-4720-A3E8-F18DC50CDAD6}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Documentation", "Documentation\Documentation.csproj", "{D6E6BF39-629B-4A1D-B888-B0A8A32B99D1}"
 EndProject
@@ -36,6 +39,10 @@ Global
 		{1C01A078-D5F8-4551-88CD-916B02060EFF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1C01A078-D5F8-4551-88CD-916B02060EFF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1C01A078-D5F8-4551-88CD-916B02060EFF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2110E495-3D1F-4720-A3E8-F18DC50CDAD6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2110E495-3D1F-4720-A3E8-F18DC50CDAD6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2110E495-3D1F-4720-A3E8-F18DC50CDAD6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2110E495-3D1F-4720-A3E8-F18DC50CDAD6}.Release|Any CPU.Build.0 = Release|Any CPU
 		{D6E6BF39-629B-4A1D-B888-B0A8A32B99D1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{D6E6BF39-629B-4A1D-B888-B0A8A32B99D1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 	EndGlobalSection

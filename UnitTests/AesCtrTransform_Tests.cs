@@ -232,9 +232,9 @@ sealed class AesCtrTransform_Tests
     [DataRow(1)]
     [DataRow(1 * BLOCKSIZE)]
     [DataRow(2 * BLOCKSIZE)]
-    [DataRow(10 * BLOCKSIZE - 1)]
+    [DataRow((10 * BLOCKSIZE) - 1)]
     [DataRow(10 * BLOCKSIZE)]
-    [DataRow(10 * BLOCKSIZE + 1)]
+    [DataRow((10 * BLOCKSIZE) + 1)]
     public void TransformFinalBlock(int inputCount)
     {
         using ICryptoTransform transform = new AesCtrTransform(TestKey, TestInitialCounter);

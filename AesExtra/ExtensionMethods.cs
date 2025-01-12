@@ -2,7 +2,6 @@
 //
 // SPDX-License-Identifier: MIT
 
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
 namespace Dorssel.Security.Cryptography;
@@ -15,7 +14,7 @@ static class ExtensionMethods
     //
     // In place: X = (X << 1)
     // Returns final carry.
-    static bool LeftShiftOne_InPlace(this byte[] X)
+    static bool LeftShiftOne_InPlace(this Span<byte> X)
     {
         var carry = false;
         for (var i = X.Length - 1; i >= 0; --i)
@@ -36,7 +35,7 @@ static class ExtensionMethods
     //
     // In place: S = dbl(S)
 #pragma warning disable IDE1006 // Naming Styles
-    public static void dbl_InPlace(this byte[] S)
+    public static void dbl_InPlace(this Span<byte> S)
 #pragma warning restore IDE1006 // Naming Styles
     {
         // See: NIST SP 800-38B, Section 5.3
@@ -48,17 +47,6 @@ static class ExtensionMethods
         {
             S[BLOCKSIZE - 1] ^= Rb;
         }
-    }
-
-    // See: NIST SP 800-38B, Section 4.2.2
-    //
-    // In place: X = (X xor Y)
-#pragma warning disable IDE1006 // Naming Styles
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void xor_InPlace(this byte[] X, ReadOnlySpan<byte> Y)
-#pragma warning restore IDE1006 // Naming Styles
-    {
-        X.AsSpan().xor_InPlace(Y);
     }
 
     // See: NIST SP 800-38B, Section 4.2.2

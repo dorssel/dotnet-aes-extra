@@ -30,6 +30,16 @@ sealed class AesCtrTransform
         Counter = initialCounter.ToArray();
     }
 
+    // RFC 5297, Section 2.6 and 2.7
+    //
+    // Q = V bitand (1^64 || 0^1 || 1^31 || 0^1 || 1^31)
+    internal void ResetSivCounter(ReadOnlySpan<byte> V)
+    {
+        V.CopyTo(Counter);
+        Counter[8] &= 0x7f;
+        Counter[12] &= 0x7f;
+    }
+
     #region IDisposable
     bool IsDisposed;
 
