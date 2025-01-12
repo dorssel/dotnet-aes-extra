@@ -7,6 +7,8 @@ namespace UnitTests;
 [TestClass]
 sealed class AesCtr_Tests
 {
+    const int BLOCKSIZE = 16;  // bytes
+
     static readonly byte[] TestKey =
         [
             31, 32, 33, 34, 35, 36, 37, 38,
@@ -21,6 +23,8 @@ sealed class AesCtr_Tests
         ];
 
     static readonly byte[] TestMessage = [1, 2, 3, 4, 5];
+
+    static readonly byte[] TestInvalidIV = new byte[BLOCKSIZE - 1];
 
     [TestMethod]
     public void Create()
@@ -225,54 +229,128 @@ sealed class AesCtr_Tests
     }
 
     [TestMethod]
-    public void EncryptCtr_DestinationShort()
+    public void TransformCtr_Array_Array()
     {
         using var aes = AesCtr.Create();
-        Assert.ThrowsException<ArgumentException>(() =>
+
+        aes.TransformCtr(TestMessage, TestIV);
+    }
+
+    [TestMethod]
+    public void TransformCtr_Null_Array()
+    {
+        using var aes = AesCtr.Create();
+
+        Assert.ThrowsException<ArgumentNullException>(() =>
         {
-            aes.EncryptCtr(TestMessage, TestIV, new byte[TestMessage.Length - 1]);
+            aes.TransformCtr(null!, TestIV);
         });
     }
 
     [TestMethod]
-    public void DecryptCtr_DestinationShort()
+    public void TransformCtr_Array_Null()
     {
         using var aes = AesCtr.Create();
-        Assert.ThrowsException<ArgumentException>(() =>
+
+        Assert.ThrowsException<ArgumentNullException>(() =>
         {
-            aes.DecryptCtr(TestMessage, TestIV, new byte[TestMessage.Length - 1]);
+            aes.TransformCtr(TestMessage, null!);
         });
     }
 
     [TestMethod]
-    public void TryEncryptCtr_DestinationShort()
+    public void TransformCtr_Array_Array_InvalidIV()
     {
         using var aes = AesCtr.Create();
-        Assert.IsFalse(aes.TryEncryptCtr(TestMessage, TestIV, new byte[TestMessage.Length - 1], out var bytesWritten));
+
+        Assert.ThrowsException<ArgumentException>(() =>
+        {
+            aes.TransformCtr(TestMessage, TestInvalidIV);
+        });
+    }
+
+    [TestMethod]
+    public void TransformCtr_ReadOnlySpan_ReadOnlySpan()
+    {
+        using var aes = AesCtr.Create();
+
+        aes.TransformCtr(TestMessage.AsSpan(), TestIV.AsSpan());
+    }
+
+    [TestMethod]
+    public void TransformCtr_ReadOnlySpan_ReadOnlySpan_InvalidIV()
+    {
+        using var aes = AesCtr.Create();
+
+        Assert.ThrowsException<ArgumentException>(() =>
+        {
+            aes.TransformCtr(TestMessage.AsSpan(), TestInvalidIV.AsSpan());
+        });
+    }
+
+    [TestMethod]
+    public void TransformCtr_ReadOnlySpan_ReadOnlySpan_Span()
+    {
+        using var aes = AesCtr.Create();
+        var destination = new byte[TestMessage.Length];
+
+        aes.TransformCtr(TestMessage.AsSpan(), TestIV.AsSpan(), destination);
+    }
+
+    [TestMethod]
+    public void TransformCtr_ReadOnlySpan_ReadOnlySpan_Span_InvalidIV()
+    {
+        using var aes = AesCtr.Create();
+        var destination = new byte[TestMessage.Length];
+
+        Assert.ThrowsException<ArgumentException>(() =>
+        {
+            aes.TransformCtr(TestMessage, TestInvalidIV, destination);
+        });
+    }
+
+    [TestMethod]
+    public void TransformCtr_ReadOnlySpan_ReadOnlySpan_Span_Short()
+    {
+        using var aes = AesCtr.Create();
+        var destination = new byte[TestMessage.Length - 1];
+
+        Assert.ThrowsException<ArgumentException>(() =>
+        {
+            aes.TransformCtr(TestMessage, TestIV, destination);
+        });
+    }
+
+    [TestMethod]
+    public void TryTransformCtr()
+    {
+        using var aes = AesCtr.Create();
+        var destination = new byte[TestMessage.Length];
+
+        aes.TryTransformCtr(TestMessage.AsSpan(), TestIV.AsSpan(), destination, out _);
+    }
+
+    [TestMethod]
+    public void TryTransformCtr_InvalidIV()
+    {
+        using var aes = AesCtr.Create();
+        var destination = new byte[TestMessage.Length];
+
+        Assert.ThrowsException<ArgumentException>(() =>
+        {
+            aes.TryTransformCtr(TestMessage.AsSpan(), TestInvalidIV, destination, out _);
+        });
+    }
+
+    [TestMethod]
+    public void TryTransformCtr_Short()
+    {
+        using var aes = AesCtr.Create();
+        var destination = new byte[TestMessage.Length - 1];
+
+        var success = aes.TryTransformCtr(TestMessage, TestIV, destination, out var bytesWritten);
+
+        Assert.IsFalse(success);
         Assert.AreEqual(0, bytesWritten);
-    }
-
-    [TestMethod]
-    public void TryDecryptCtr_DestinationShort()
-    {
-        using var aes = AesCtr.Create();
-        Assert.IsFalse(aes.TryEncryptCtr(TestMessage, TestIV, new byte[TestMessage.Length - 1], out var bytesWritten));
-        Assert.AreEqual(0, bytesWritten);
-    }
-
-    [TestMethod]
-    public void TryEncryptCtr_PartialBlock()
-    {
-        using var aes = AesCtr.Create();
-        Assert.IsTrue(aes.TryEncryptCtr(TestMessage, TestIV, new byte[TestMessage.Length], out var bytesWritten));
-        Assert.AreEqual(5, bytesWritten);
-    }
-
-    [TestMethod]
-    public void TryDecryptCtr_PartialBlock()
-    {
-        using var aes = AesCtr.Create();
-        Assert.IsTrue(aes.TryDecryptCtr(TestMessage, TestIV, new byte[TestMessage.Length], out var bytesWritten));
-        Assert.AreEqual(5, bytesWritten);
     }
 }
