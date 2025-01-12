@@ -30,12 +30,6 @@ sealed class AesCtrTransform
         Counter = initialCounter.ToArray();
     }
 
-    void Purge()
-    {
-        CryptographicOperations.ZeroMemory(XorBlock);
-        CryptographicOperations.ZeroMemory(Counter);
-    }
-
     #region IDisposable
     bool IsDisposed;
 
@@ -44,7 +38,8 @@ sealed class AesCtrTransform
         if (!IsDisposed)
         {
             AesEcbTransform.Dispose();
-            Purge();
+            CryptographicOperations.ZeroMemory(XorBlock);
+            CryptographicOperations.ZeroMemory(Counter);
             IsDisposed = true;
         }
     }
@@ -70,7 +65,7 @@ sealed class AesCtrTransform
 
     readonly byte[] XorBlock = new byte[BLOCKSIZE];
 
-    internal void TransformBlock(ReadOnlySpan<byte> inputBlock, Span<byte> destination)
+    void UncheckedTransformSingleBlock(ReadOnlySpan<byte> inputBlock, Span<byte> destination)
     {
         // CIPH_K(X)
         // See: NIST SP 800-38A, Section 4.2.2
@@ -91,6 +86,28 @@ sealed class AesCtrTransform
         }
     }
 
+    internal void UncheckedTransform(ReadOnlySpan<byte> input, Span<byte> destination)
+    {
+        var inputSlice = input;
+        var destinationSlice = destination;
+        while (inputSlice.Length >= BLOCKSIZE)
+        {
+            // full blocks
+            UncheckedTransformSingleBlock(inputSlice, destinationSlice);
+            inputSlice = inputSlice[BLOCKSIZE..];
+            destinationSlice = destinationSlice[BLOCKSIZE..];
+        }
+        if (!inputSlice.IsEmpty)
+        {
+            // final partial block (if any)
+            Span<byte> block = stackalloc byte[BLOCKSIZE];
+            inputSlice.CopyTo(block);
+            UncheckedTransformSingleBlock(block, block);
+            block[0..inputSlice.Length].CopyTo(destinationSlice);
+            CryptographicOperations.ZeroMemory(block);
+        }
+    }
+
     #region ICryptoTransform
     bool ICryptoTransform.CanReuseTransform => false;
 
@@ -102,26 +119,60 @@ sealed class AesCtrTransform
 
     int ICryptoTransform.TransformBlock(byte[] inputBuffer, int inputOffset, int inputCount, byte[] outputBuffer, int outputOffset)
     {
+        // Input validation
+        if (inputBuffer is null)
+        {
+            throw new ArgumentNullException(nameof(inputBuffer));
+        }
+        if (inputOffset < 0 || inputOffset > inputBuffer.Length)
+        {
+            throw new ArgumentOutOfRangeException(nameof(inputOffset));
+        }
+        if (inputCount < 0 || inputCount > (inputBuffer.Length - inputOffset))
+        {
+            throw new ArgumentOutOfRangeException(nameof(inputCount));
+        }
+        if (inputCount % BLOCKSIZE != 0)
+        {
+            throw new ArgumentException("TransformBlock may only process bytes in block sized increments.", nameof(inputCount));
+        }
+        if (outputBuffer is null)
+        {
+            throw new ArgumentNullException(nameof(outputBuffer));
+        }
+        if (outputOffset < 0 || outputOffset > outputBuffer.Length)
+        {
+            throw new ArgumentOutOfRangeException(nameof(outputOffset));
+        }
+        if (outputBuffer.Length - outputOffset < inputCount)
+        {
+            throw new ArgumentException("Output buffer is too small.", nameof(outputBuffer));
+        }
+
         // State validation.
         ThrowIfDisposed();
         ThrowIfProcessedFinal();
 
-        // Input validation.
-        // NOTE: All other validation is implicitly done by the array access itself.
-        if (inputCount % BLOCKSIZE != 0)
-        {
-            throw new ArgumentException("Input must be a multiple of the block size.", nameof(inputCount));
-        }
-
-        for (var i = 0; i < inputCount / BLOCKSIZE; ++i)
-        {
-            TransformBlock(inputBuffer.AsSpan(inputOffset + (i * BLOCKSIZE), BLOCKSIZE), outputBuffer.AsSpan(outputOffset + (i * BLOCKSIZE)));
-        }
+        UncheckedTransform(inputBuffer.AsSpan(inputOffset, inputCount), outputBuffer.AsSpan(outputOffset));
         return inputCount;
     }
 
     byte[] ICryptoTransform.TransformFinalBlock(byte[] inputBuffer, int inputOffset, int inputCount)
     {
+        // Input validation
+        if (inputBuffer is null)
+        {
+            throw new ArgumentNullException(nameof(inputBuffer));
+        }
+        if (inputOffset < 0 || inputOffset > inputBuffer.Length)
+        {
+            throw new ArgumentOutOfRangeException(nameof(inputOffset));
+        }
+        if (inputCount < 0 || inputCount > (inputBuffer.Length - inputOffset))
+        {
+            throw new ArgumentOutOfRangeException(nameof(inputCount));
+        }
+
         // State validation.
         ThrowIfDisposed();
         ThrowIfProcessedFinal();
@@ -133,21 +184,10 @@ sealed class AesCtrTransform
             return [];
         }
 
-        // Input validation.
-        if (inputCount > BLOCKSIZE)
-        {
-            throw new ArgumentOutOfRangeException(nameof(inputCount));
-        }
-
-        var block = new byte[BLOCKSIZE];
-        Array.Copy(inputBuffer, inputOffset, block, 0, inputCount);
-        TransformBlock(block, block);
-        Array.Resize(ref block, inputCount);
+        var output = new byte[inputCount];
+        UncheckedTransform(inputBuffer.AsSpan(inputOffset, inputCount), output);
         HasProcessedFinal = true;
-
-        Purge();
-
-        return block;
+        return output;
     }
     #endregion
 }
