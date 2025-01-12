@@ -139,32 +139,6 @@ public sealed class AesCtr
     }
 
     #region Modern_SymmetricAlgorithm
-    void OneShot(ReadOnlySpan<byte> input, ReadOnlySpan<byte> iv, Span<byte> destination)
-    {
-        Debug.Assert(iv.Length == BLOCKSIZE);
-        Debug.Assert(destination.Length >= input.Length);
-
-        using var transform = new AesCtrTransform(Key, iv);
-        var inputSlice = input;
-        var destinationSlice = destination;
-        while (inputSlice.Length >= BLOCKSIZE)
-        {
-            // full blocks
-            transform.TransformBlock(inputSlice, destinationSlice);
-            inputSlice = inputSlice[BLOCKSIZE..];
-            destinationSlice = destinationSlice[BLOCKSIZE..];
-        }
-        if (!inputSlice.IsEmpty)
-        {
-            // final partial block (if any)
-            Span<byte> block = stackalloc byte[BLOCKSIZE];
-            inputSlice.CopyTo(block);
-            transform.TransformBlock(block, block);
-            block[0..inputSlice.Length].CopyTo(destinationSlice);
-            CryptographicOperations.ZeroMemory(block);
-        }
-    }
-
     /// <summary>
     /// TODO
     /// </summary>
@@ -187,7 +161,8 @@ public sealed class AesCtr
         }
 
         var output = new byte[input.Length];
-        OneShot(input, iv, output);
+        using var transform = new AesCtrTransform(Key, iv);
+        transform.UncheckedTransform(input, output);
         return output;
     }
 
@@ -205,7 +180,8 @@ public sealed class AesCtr
         }
 
         var output = new byte[input.Length];
-        OneShot(input, iv, output);
+        using var transform = new AesCtrTransform(Key, iv);
+        transform.UncheckedTransform(input, output);
         return output;
     }
 
@@ -227,7 +203,8 @@ public sealed class AesCtr
             throw new ArgumentException("Destination is too short.", nameof(destination));
         }
 
-        OneShot(input, iv, destination);
+        using var transform = new AesCtrTransform(Key, iv);
+        transform.UncheckedTransform(input, destination);
         return input.Length;
     }
 
@@ -252,7 +229,8 @@ public sealed class AesCtr
             return false;
         }
 
-        OneShot(input, iv, destination);
+        using var transform = new AesCtrTransform(Key, iv);
+        transform.UncheckedTransform(input, destination);
         bytesWritten = input.Length;
         return true;
     }
