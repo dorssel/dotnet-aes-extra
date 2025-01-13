@@ -8,7 +8,7 @@ namespace UnitTests;
 
 [AttributeUsage(AttributeTargets.Method)]
 sealed class RfcAesSivTestVectorSourceAttribute(bool SingleAssociatedDataItem = false)
-        : Attribute
+    : Attribute
     , ITestDataSource
 {
     public bool SingleAssociatedDataItem { get; } = SingleAssociatedDataItem;

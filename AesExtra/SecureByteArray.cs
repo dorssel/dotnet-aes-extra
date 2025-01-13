@@ -10,6 +10,11 @@ sealed class SecureByteArray : IDisposable
 {
     byte[] _Data = [];
 
+    public SecureByteArray(int size)
+    {
+        _Data = new byte[size];
+    }
+
     public SecureByteArray(ReadOnlySpan<byte> data)
     {
         _Data = data.ToArray();
@@ -21,6 +26,16 @@ sealed class SecureByteArray : IDisposable
     }
 
     public static implicit operator byte[](SecureByteArray source)
+    {
+        return source._Data;
+    }
+
+    public static implicit operator Span<byte>(SecureByteArray source)
+    {
+        return source._Data;
+    }
+
+    public static implicit operator ReadOnlySpan<byte>(SecureByteArray source)
     {
         return source._Data;
     }
