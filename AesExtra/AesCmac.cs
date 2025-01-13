@@ -131,7 +131,7 @@ public sealed class AesCmac
                 K1Value = new byte[BLOCKSIZE];
                 CIPH_K_InPlace(K1Value);
                 // Step 2: K1Value has the role of K1
-                K1Value.dbl_InPlace();
+                K1Value.AsSpan().dbl_InPlace();
             }
             // Step 4: return K1
             return K1Value;
@@ -147,7 +147,7 @@ public sealed class AesCmac
             {
                 // Step 3: K2Value has the role of K1
                 K2Value = (byte[])K1.Clone();
-                K2Value.dbl_InPlace();
+                K2Value.AsSpan().dbl_InPlace();
             }
             // Step 4: return K2
             return K2Value;
@@ -179,14 +179,14 @@ public sealed class AesCmac
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     void AddBlock(ReadOnlySpan<byte> block)
     {
-        C.xor_InPlace(block);
+        C.AsSpan().xor_InPlace(block);
         CIPH_K_InPlace(C);
     }
 
     /// <inheritdoc />
     protected override void HashCore(byte[] array, int ibStart, int cbSize)
     {
-        HashCore(array.AsSpan(ibStart, cbSize));
+        UncheckedHashCore(array.AsSpan(ibStart, cbSize));
     }
 
     /// <inheritdoc/>
@@ -194,6 +194,11 @@ public sealed class AesCmac
     protected override
 #endif
     void HashCore(ReadOnlySpan<byte> source)
+    {
+        UncheckedHashCore(source);
+    }
+
+    internal void UncheckedHashCore(ReadOnlySpan<byte> source)
     {
         if (source.Length == 0)
         {
@@ -242,7 +247,7 @@ public sealed class AesCmac
     protected override byte[] HashFinal()
     {
         var destination = new byte[BLOCKSIZE];
-        _ = TryHashFinal(destination, out _);
+        UncheckedHashFinal(destination);
         return destination;
     }
 
@@ -252,12 +257,19 @@ public sealed class AesCmac
 #endif
     bool TryHashFinal(Span<byte> destination, out int bytesWritten)
     {
+        UncheckedHashFinal(destination);
+        bytesWritten = BLOCKSIZE;
+        return true;
+    }
+
+    internal void UncheckedHashFinal(Span<byte> destination)
+    {
         // See: NIST SP 800-38B, Section 6.2, Step 4
         // Partial now has the role of Mn*
         if (PartialLength == BLOCKSIZE)
         {
             // See: NIST SP 800-38B, Section 6.2, Step 1: K1
-            Partial.xor_InPlace(K1);
+            Partial.AsSpan().xor_InPlace(K1);
             // Partial now has the role of Mn
         }
         else
@@ -266,26 +278,22 @@ public sealed class AesCmac
             Partial[PartialLength] = 0x80;
             Partial.AsSpan(PartialLength + 1).Clear();
             // See: NIST SP 800-38B, Section 6.2, Step 1: K2
-            Partial.xor_InPlace(K2);
+            Partial.AsSpan().xor_InPlace(K2);
             // Partial now has the role of Mn
         }
         // See: NIST SP 800-38B, Section 6.2, Step 6
         AddBlock(Partial);
 
         C.CopyTo(destination);
-        bytesWritten = BLOCKSIZE;
-        return true;
     }
 
     #region Modern_KeyedHashAlgorithm
     // Helper with a byte[] as key, which is required since we need to pass it as such.
     static void OneShot(byte[] key, ReadOnlySpan<byte> source, Span<byte> destination)
     {
-        Debug.Assert(destination.Length >= BLOCKSIZE);
-
         using var cmac = new AesCmac(key);
-        cmac.HashCore(source);
-        _ = cmac.TryHashFinal(destination, out _);
+        cmac.UncheckedHashCore(source);
+        cmac.UncheckedHashFinal(destination);
     }
 
     // Helper with a byte[] as key, which is required since we need to pass it as such.
@@ -303,9 +311,9 @@ public sealed class AesCmac
             while ((read = source.Read(rented, 0, 4096)) > 0)
             {
                 maxRead = Math.Max(maxRead, read);
-                cmac.HashCore(rented.AsSpan(0, read));
+                cmac.UncheckedHashCore(rented.AsSpan(0, read));
             }
-            _ = cmac.TryHashFinal(destination, out _);
+            cmac.UncheckedHashFinal(destination);
         }
         finally
         {
@@ -329,9 +337,9 @@ public sealed class AesCmac
             while ((read = await source.ReadAsync(rented, 0, 4096, cancellationToken).ConfigureAwait(false)) > 0)
             {
                 maxRead = Math.Max(maxRead, read);
-                cmac.HashCore(rented.AsSpan(0, read));
+                cmac.UncheckedHashCore(rented.AsSpan(0, read));
             }
-            _ = cmac.TryHashFinal(destination.Span, out _);
+            cmac.UncheckedHashFinal(destination.Span);
         }
         finally
         {

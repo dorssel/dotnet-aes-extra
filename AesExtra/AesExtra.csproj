@@ -11,6 +11,9 @@ SPDX-License-Identifier: MIT
     <RootNamespace>Dorssel.Security.Cryptography</RootNamespace>
     <AssemblyName>Dorssel.Security.Cryptography.AesExtra</AssemblyName>
 
+    <!-- Fixup for docfx -->
+    <LangVersion Condition=" '$(DocFx)' == 'true' ">preview</LangVersion>
+
     <IsPackable>true</IsPackable>
     <PackageId>Dorssel.Security.Cryptography.AesExtra</PackageId>
     <!-- See: https://learn.microsoft.com/en-us/dotnet/standard/library-guidance/strong-naming#create-strong-named-net-libraries -->

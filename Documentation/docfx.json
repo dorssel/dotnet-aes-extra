@@ -9,7 +9,10 @@
         }
       ],
       "noRestore": true,
-      "dest": "api"
+      "dest": "api",
+      "properties": {
+        "DocFx": "true"
+      }
     }
   ],
   "build": {

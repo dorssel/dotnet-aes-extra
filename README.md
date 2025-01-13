@@ -17,6 +17,7 @@ SPDX-License-Identifier: MIT
 
 - AES-CTR, as defined by [NIST SP 800-38A](https://csrc.nist.gov/publications/detail/sp/800-38a/final)
 - AES-CMAC, as defined by [NIST SP 800-38B](https://csrc.nist.gov/publications/detail/sp/800-38b/final)
+  and [RFC 4493](https://datatracker.ietf.org/doc/html/rfc4493)
 - SIV-AES, as defined by [RFC 5297](https://datatracker.ietf.org/doc/html/rfc5297) \
   (Note: this is often referred to as AES-SIV, but the original RFC specification uses the name SIV-AES)
 
