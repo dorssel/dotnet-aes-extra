@@ -16,8 +16,7 @@ SPDX-License-Identifier: MIT
 
     <IsPackable>true</IsPackable>
     <PackageId>Dorssel.Security.Cryptography.AesExtra</PackageId>
-    <!-- See: https://learn.microsoft.com/en-us/dotnet/standard/library-guidance/strong-naming#create-strong-named-net-libraries -->
-    <SignAssembly Condition=" '$(TargetFramework)' == 'netstandard2.0' ">True</SignAssembly>
+    <SignAssembly>True</SignAssembly>
   </PropertyGroup>
 
   <ItemGroup>

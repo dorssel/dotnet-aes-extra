@@ -24,3 +24,6 @@ updates:
       mstest:
         patterns:
           - 'MSTest.*'
+      bcl:
+        patterns:
+          - 'Microsoft.Bcl.*'
