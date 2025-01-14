@@ -9,6 +9,7 @@ SPDX-License-Identifier: MIT
   <PropertyGroup>
     <TargetFramework>$(MainTargetFramework)</TargetFramework>
     <CheckForOverflowUnderflow>True</CheckForOverflowUnderflow>
+    <SignAssembly>true</SignAssembly>
   </PropertyGroup>
 
   <ItemGroup>
