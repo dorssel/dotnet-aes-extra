@@ -69,19 +69,47 @@ sealed class AesCmac_Tests
     }
 
     [TestMethod]
+    public void RegisterWithCryptoConfig()
+    {
+        AesCmac.RegisterWithCryptoConfig();
+        using var aesCmac = (AesCmac?)CryptoConfig.CreateFromName("AesCmac");
+        Assert.IsNotNull(aesCmac);
+    }
+
+    [TestMethod]
+    public void RegisterWithCryptoConfig_Twice()
+    {
+        AesCmac.RegisterWithCryptoConfig();
+        AesCmac.RegisterWithCryptoConfig();
+        using var aesCmac = (AesCmac?)CryptoConfig.CreateFromName("Dorssel.Security.Cryptography.AesCmac");
+        Assert.IsNotNull(aesCmac);
+    }
+
+    [TestMethod]
     public void Create()
     {
-        using var keyedHashAlgorithm = AesCmac.Create();
-        Assert.IsNotNull(keyedHashAlgorithm);
+#pragma warning disable CS0618 // Type or member is obsolete
+        using var aesCmac = AesCmac.Create();
+#pragma warning restore CS0618 // Type or member is obsolete
+        Assert.IsNotNull(aesCmac);
     }
 
     [TestMethod]
     public void Create_Name()
     {
 #pragma warning disable CS0618 // Type or member is obsolete
-        using var keyedHashAlgorithm = AesCmac.Create("AesCmac");
+        using var aesCmac = AesCmac.Create("AesCmac");
 #pragma warning restore CS0618 // Type or member is obsolete
-        Assert.IsNotNull(keyedHashAlgorithm);
+        Assert.IsNotNull(aesCmac);
+    }
+
+    [TestMethod]
+    public void Create_FullName()
+    {
+#pragma warning disable CS0618 // Type or member is obsolete
+        using var aesCmac = AesCmac.Create("Dorssel.Security.Cryptography.AesCmac");
+#pragma warning restore CS0618 // Type or member is obsolete
+        Assert.IsNotNull(aesCmac);
     }
 
     [TestMethod]
@@ -90,7 +118,7 @@ sealed class AesCmac_Tests
         Assert.ThrowsException<ArgumentNullException>(() =>
         {
 #pragma warning disable CS0618 // Type or member is obsolete
-            using var keyedHashAlgorithm = AesCmac.Create(null!);
+            using var aesCmac = AesCmac.Create(null!);
 #pragma warning restore CS0618 // Type or member is obsolete
         });
     }
@@ -99,41 +127,96 @@ sealed class AesCmac_Tests
     public void Create_OtherNameReturnsNull()
     {
 #pragma warning disable CS0618 // Type or member is obsolete
-        using var keyedHashAlgorithm = AesCmac.Create("SomeOtherName");
+        using var aesCmac = AesCmac.Create("SomeOtherName");
 #pragma warning restore CS0618 // Type or member is obsolete
-        Assert.IsNull(keyedHashAlgorithm);
+        Assert.IsNull(aesCmac);
     }
 
     [TestMethod]
     public void Constructor_Default()
     {
         using var aesCmac = new AesCmac();
+
+        Assert.AreEqual(256, aesCmac.Key.Length * 8);
+        CollectionAssert.AreNotEqual(new byte[aesCmac.Key.Length], aesCmac.Key);
     }
 
     [TestMethod]
     [DataRow(128)]
     [DataRow(192)]
     [DataRow(256)]
-    public void Constructor_WithKey(int keySize)
+    public void Constructor_Int(int keySize)
+    {
+        using var aesCmac = new AesCmac(keySize);
+
+        Assert.AreEqual(keySize, aesCmac.Key.Length * 8);
+        CollectionAssert.AreNotEqual(new byte[aesCmac.Key.Length], aesCmac.Key);
+    }
+
+    [TestMethod]
+    [DataRow(0)]
+    [DataRow(1)]
+    [DataRow(16)]
+    [DataRow(24)]
+    [DataRow(32)]
+    public void Constructor_Int_Invalid(int keySize)
+    {
+        Assert.ThrowsException<CryptographicException>(() =>
+        {
+            using var aesCmac = new AesCmac(keySize);
+        });
+    }
+
+    [TestMethod]
+    [DataRow(128)]
+    [DataRow(192)]
+    [DataRow(256)]
+    public void Constructor_Array(int keySize)
     {
         using var aesCmac = new AesCmac(new byte[keySize / 8]);
     }
 
     [TestMethod]
-    public void Constructor_WithInvalidKeySize()
+    [DataRow(0)]
+    [DataRow(16)]
+    [DataRow(24)]
+    [DataRow(32)]
+    public void Constructor_Array_Invalid(int keySize)
     {
         Assert.ThrowsException<CryptographicException>(() =>
         {
-            using var aesCmac = new AesCmac(new byte[42]);
+            using var aesCmac = new AesCmac(new byte[keySize / 8]);
         });
     }
 
     [TestMethod]
-    public void Constructor_WithNullKey()
+    public void Constructor_Array_Null()
     {
         Assert.ThrowsException<ArgumentNullException>(() =>
         {
             using var aesCmac = new AesCmac(TestKeyNull);
+        });
+    }
+
+    [TestMethod]
+    [DataRow(128)]
+    [DataRow(192)]
+    [DataRow(256)]
+    public void Constructor_ReadOnlySpan(int keySize)
+    {
+        using var aesCmac = new AesCmac(new byte[keySize / 8].AsSpan());
+    }
+
+    [TestMethod]
+    [DataRow(0)]
+    [DataRow(16)]
+    [DataRow(24)]
+    [DataRow(32)]
+    public void Constructor_ReadOnlySpan_Invalid(int keySize)
+    {
+        Assert.ThrowsException<CryptographicException>(() =>
+        {
+            using var aesCmac = new AesCmac(new byte[keySize / 8].AsSpan());
         });
     }
 
@@ -176,6 +259,18 @@ sealed class AesCmac_Tests
         Assert.ThrowsException<InvalidOperationException>(() =>
         {
             aesCmac.Key = new byte[aesCmac.Key.Length];
+        });
+    }
+
+    [TestMethod]
+    public void Key_ChangeAfterDispose()
+    {
+        using var aesCmac = new AesCmac();
+        aesCmac.Dispose();
+
+        Assert.ThrowsException<ObjectDisposedException>(() =>
+        {
+            aesCmac.Key = TestKey;
         });
     }
 

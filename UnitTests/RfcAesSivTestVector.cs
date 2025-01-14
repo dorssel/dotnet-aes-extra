@@ -74,41 +74,41 @@ sealed partial record RfcAesSivTestVector
         var testVectors = new List<RfcAesSivTestVector>
         {
             new("Deterministic", @"
-                    fffefdfc fbfaf9f8 f7f6f5f4 f3f2f1f0
-                    f0f1f2f3 f4f5f6f7 f8f9fafb fcfdfeff
+                    FFFEFDFC FBFAF9F8 F7F6F5F4 F3F2F1F0
+                    F0F1F2F3 F4F5F6F7 F8F9FAFB FCFDFEFF
                 ", [ @"
-                        10111213 14151617 18191a1b 1c1d1e1f
+                        10111213 14151617 18191A1B 1C1D1E1F
                         20212223 24252627
                 " ],
                 null
                 , @"
-                    11223344 55667788 99aabbcc ddee
+                    11223344 55667788 99AABBCC DDEE
                 ", @"
-                    85632d07 c6e8f37f 950acd32 0a2ecc93
-                    40c02b96 90c4dc04 daef7f6a fe5c
+                    85632D07 C6E8F37F 950ACD32 0A2ECC93
+                    40C02B96 90C4DC04 DAEF7F6A FE5C
                 "
             ),
 
             new("Nonce-Based", @"
-                    7f7e7d7c 7b7a7978 77767574 73727170
-                    40414243 44454647 48494a4b 4c4d4e4f
+                    7F7E7D7C 7B7A7978 77767574 73727170
+                    40414243 44454647 48494A4B 4C4D4E4F
                 ", [ @"
-                        00112233 44556677 8899aabb ccddeeff
-                        deaddada deaddada ffeeddcc bbaa9988
+                        00112233 44556677 8899AABB CCDDEEFF
+                        DEADDADA DEADDADA FFEEDDCC BBAA9988
                         77665544 33221100
                     ", @"
-                        10203040 50607080 90a0
+                        10203040 50607080 90A0
                 " ], @"
-                    09f91102 9d74e35b d84156c5 635688c0
+                    09F91102 9D74E35B D84156C5 635688C0
                 ", @"
-                    74686973 20697320 736f6d65 20706c61
-                    696e7465 78742074 6f20656e 63727970
-                    74207573 696e6720 5349562d 414553
+                    74686973 20697320 736F6D65 20706C61
+                    696E7465 78742074 6F20656E 63727970
+                    74207573 696E6720 5349562D 414553
                 ", @"
-                    7bdb6e3b 432667eb 06f4d14b ff2fbd0f
-                    cb900f2f ddbe4043 26601965 c889bf17
-                    dba77ceb 094fa663 b7a3f748 ba8af829
-                    ea64ad54 4a272e9c 485b62a3 fd5c0d
+                    7BDB6E3B 432667EB 06F4D14B FF2FBD0F
+                    CB900F2F DDBE4043 26601965 C889BF17
+                    DBA77CEB 094FA663 B7A3F748 BA8AF829
+                    EA64AD54 4A272E9C 485B62A3 FD5C0D
                 "
             ),
         };

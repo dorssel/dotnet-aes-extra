@@ -2,8 +2,8 @@
 //
 // SPDX-License-Identifier: MIT
 
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.Versioning;
 using System.Security.Cryptography;
 
 namespace Dorssel.Security.Cryptography;
@@ -21,7 +21,34 @@ public sealed class AesCtr
     const PaddingMode FixedPaddingValue = PaddingMode.None;
     const int FixedFeedbackSizeValue = BLOCKSIZE * BitsPerByte;
 
+    #region CryptoConfig
+    static readonly object RegistrationLock = new();
+    static bool TriedRegisterOnce;
+
+    /// <summary>
+    /// Registers the <see cref="AesCtr"/> class with <see cref="CryptoConfig"/>, such that it can be created by name.
+    /// </summary>
+    /// <seealso cref="CryptoConfig.CreateFromName(string)"/>
+    /// <remarks>
+    /// <see cref="CryptoConfig"/> is not supported in browsers.
+    /// </remarks>
+#if !NETSTANDARD2_0
+    [UnsupportedOSPlatform("browser")]
+#endif
+    public static void RegisterWithCryptoConfig()
+    {
+        lock (RegistrationLock)
+        {
+            if (!TriedRegisterOnce)
+            {
+                TriedRegisterOnce = true;
+                CryptoConfig.AddAlgorithm(typeof(AesCtr), nameof(AesCtr), typeof(AesCtr).FullName!);
+            }
+        }
+    }
+
     /// <inheritdoc cref="Aes.Create()" />
+    [Obsolete("Use one of the constructors instead.")]
     public static new AesCtr Create()
     {
         return new AesCtr();
@@ -32,14 +59,72 @@ public sealed class AesCtr
 #if !NETSTANDARD2_0
     [RequiresUnreferencedCode("The default algorithm implementations might be removed, use strong type references like 'RSA.Create()' instead.")]
 #endif
-    public static new Aes? Create(string algorithmName)
+    public static new AesCtr? Create(string algorithmName)
     {
-        return algorithmName == nameof(AesCtr) ? Create() : Aes.Create(algorithmName);
+        if (algorithmName is null)
+        {
+            throw new ArgumentNullException(nameof(algorithmName));
+        }
+        // Our class is sealed, so there definitely is no other implementation.
+        return algorithmName == nameof(AesCtr) || algorithmName == typeof(AesCtr).FullName! ? new AesCtr() : null;
+    }
+    #endregion
+
+    /// <exception cref="CryptographicException"><paramref name="keySize"/> is other than 128, 192, or 256 bits.</exception>
+    static void ThrowIfInvalidKeySize(int keySize)
+    {
+        if (keySize is not (128 or 192 or 256))
+        {
+            throw new CryptographicException("Specified key size is valid for this algorithm.");
+        }
     }
 
-    AesCtr()
+    /// <exception cref="CryptographicException">The <paramref name="key"/> length is other than 16, 24, or 32 bytes (128, 192, or 256 bits).</exception>
+    static void ThrowIfInvalidKey(ReadOnlySpan<byte> key)
     {
-        KeySizeValue = 256;
+        if (key.Length is not (16 or 24 or 32))
+        {
+            throw new CryptographicException("Specified key is not a valid size for this algorithm.");
+        }
+    }
+
+    /// <exception cref="ArgumentNullException"><paramref name="key"/> is <see langword="null"/>.</exception>
+    /// <inheritdoc cref="ThrowIfInvalidKey(ReadOnlySpan{byte})"/>
+    static void ThrowIfInvalidKey(byte[] key, string argumentName = "key")
+    {
+        if (key is null)
+        {
+            throw new ArgumentNullException(argumentName);
+        }
+        ThrowIfInvalidKey(key.AsSpan());
+    }
+
+    /// <exception cref="ArgumentNullException"><paramref name="iv"/> is <see langword="null"/>.</exception>
+    /// <inheritdoc cref="ThrowIfInvalidIV(ReadOnlySpan{byte},string)"/>
+    static void ThrowIfInvalidIV(byte[] iv, string argumentName = "iv")
+    {
+        if (iv is null)
+        {
+            throw new ArgumentNullException(argumentName);
+        }
+        ThrowIfInvalidIV(iv.AsSpan());
+    }
+
+    /// <exception cref="ArgumentException">
+    /// <paramref name="iv"/> is the incorrect length.
+    /// Callers are expected to pass an initialization vector that is exactly <see cref="SymmetricAlgorithm.BlockSize"/> in length,
+    /// converted to bytes (`BlockSize / 8`).
+    /// </exception>
+    static void ThrowIfInvalidIV(ReadOnlySpan<byte> iv, string argumentName = "iv")
+    {
+        if (iv.Length != BLOCKSIZE)
+        {
+            throw new ArgumentException("Specified initial counter (IV) does not match the block size for this algorithm.", argumentName);
+        }
+    }
+
+    void InitializeFixedValues()
+    {
         ModeValue = FixedModeValue;
         PaddingValue = FixedPaddingValue;
         FeedbackSizeValue = FixedFeedbackSizeValue;
@@ -48,17 +133,210 @@ public sealed class AesCtr
         LegalKeySizesValue = [new(128, 256, 64)];
     }
 
-    #region IDisposable
-    /// <inheritdoc cref="SymmetricAlgorithm.Dispose(bool)" />
-    protected override void Dispose(bool disposing)
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AesCtr" /> class with a randomly generated 256-bit key and an initial counter of zero.
+    /// </summary>
+    public AesCtr()
+        : this(256)
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AesCtr" /> class with a randomly generated key and an initial counter of zero.
+    /// </summary>
+    /// <param name="keySize">The size, in bits, of the randomly generated key.</param>
+    /// <inheritdoc cref="ThrowIfInvalidKeySize(int)"/>
+    public AesCtr(int keySize)
+    {
+        ThrowIfInvalidKeySize(keySize);
+
+        InitializeFixedValues();
+
+        KeySizeValue = keySize;
+        IVValue = new byte[BLOCKSIZE];
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AesCtr" /> class with the specified key data and a randomly generated initial counter.
+    /// </summary>
+    /// <param name="key">The secret key for the AES-CTR algorithm.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="key"/> is <see langword="null"/>.</exception>
+    /// <inheritdoc cref="AesCtr(ReadOnlySpan{byte})" path="/exception"/>
+    public AesCtr(byte[] key)
+        : this(new ReadOnlySpan<byte>(key ?? throw new ArgumentNullException(nameof(key))))
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AesCtr" /> class with the specified key data and a randomly generated initial counter.
+    /// </summary>
+    /// <param name="key">The secret key for the AES-CTR algorithm.</param>
+    public AesCtr(ReadOnlySpan<byte> key)
+    {
+        ThrowIfInvalidKey(key);
+
+        InitializeFixedValues();
+
+        KeyValue = key.ToArray();
+        KeySizeValue = key.Length * BitsPerByte;
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AesCtr" /> class with the specified key data and initial counter.
+    /// </summary>
+    /// <param name="key">The secret key for the AES-CTR algorithm.</param>
+    /// <param name="iv">The initialization vector (initial counter).</param>
+    /// <exception cref="ArgumentNullException"><paramref name="key"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="iv"/> is <see langword="null"/>.</exception>
+    /// <inheritdoc cref="AesCtr(ReadOnlySpan{byte}, ReadOnlySpan{byte})" path="/exception"/>
+    public AesCtr(byte[] key, byte[] iv) :
+        this(new ReadOnlySpan<byte>(key ?? throw new ArgumentNullException(nameof(key))),
+            new ReadOnlySpan<byte>(iv ?? throw new ArgumentNullException(nameof(iv))))
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AesCtr" /> class with the specified key data and initial counter.
+    /// </summary>
+    /// <param name="key">The secret key for the AES-CTR algorithm.</param>
+    /// <param name="iv">The initialization vector (initial counter).</param>
+    /// <inheritdoc cref="ThrowIfInvalidKey(ReadOnlySpan{byte})"/>
+    /// <inheritdoc cref="ThrowIfInvalidIV(ReadOnlySpan{byte},string)"/>
+    public AesCtr(ReadOnlySpan<byte> key, ReadOnlySpan<byte> iv)
+    {
+        ThrowIfInvalidKey(key);
+        ThrowIfInvalidIV(iv);
+
+        InitializeFixedValues();
+
+        KeyValue = key.ToArray();
+        KeySizeValue = key.Length * BitsPerByte;
+        IVValue = iv.ToArray();
+    }
+
+    void PurgeKeyValue()
     {
         CryptographicOperations.ZeroMemory(KeyValue);
         KeyValue = null;
+    }
+
+    void PurgeIVValue()
+    {
         CryptographicOperations.ZeroMemory(IVValue);
         IVValue = null;
+    }
+
+    #region IDisposable
+    bool IsDisposed;
+
+    /// <inheritdoc cref="SymmetricAlgorithm.Dispose(bool)" />
+    protected override void Dispose(bool disposing)
+    {
+        if (IsDisposed)
+        {
+            return;
+        }
+
+        PurgeKeyValue();
+        PurgeIVValue();
+        IsDisposed = true;
+
         base.Dispose(disposing);
     }
     #endregion
+
+    /// <exception cref="ObjectDisposedException">The <see cref="AesCtr"/> instance has been disposed.</exception>
+    void ThrowIfDisposed()
+    {
+        if (IsDisposed)
+        {
+            throw new ObjectDisposedException(nameof(AesCtr));
+        }
+    }
+
+    /// <inheritdoc path="/summary"/>
+    /// <inheritdoc path="/returns"/>
+    /// <remarks>
+    /// Setting this property always resets the key to a new random value, even if the key size
+    /// is set to current value.
+    /// </remarks>
+    /// <inheritdoc cref="ThrowIfInvalidKeySize"/>
+    /// <inheritdoc cref="ThrowIfDisposed"/>
+    public override int KeySize
+    {
+        get
+        {
+            ThrowIfDisposed();
+
+            return KeySizeValue;
+        }
+
+        set
+        {
+            ThrowIfInvalidKeySize(value);
+
+            ThrowIfDisposed();
+
+            PurgeKeyValue();
+            KeySizeValue = value;
+        }
+    }
+
+    /// <inheritdoc path="/summary"/>
+    /// <inheritdoc path="/returns"/>
+    /// <inheritdoc cref="ThrowIfInvalidKey(byte[], string)"/>
+    /// <inheritdoc cref="ThrowIfDisposed"/>
+    public override byte[] Key
+    {
+        get
+        {
+            ThrowIfDisposed();
+
+            UncheckedGenerateKeyValueIfNull();
+            return (byte[])KeyValue!.Clone();
+        }
+
+        set
+        {
+            ThrowIfInvalidKey(value, nameof(Key));
+
+            ThrowIfDisposed();
+
+            PurgeKeyValue();
+            KeySizeValue = value.Length * 8;
+
+            KeyValue = (byte[])value.Clone();
+        }
+    }
+
+    /// <inheritdoc path="/summary"/>
+    /// <inheritdoc path="/returns"/>
+    /// <remarks>
+    /// For AES-CTR, the initialization vector (IV) is the initial counter.
+    /// </remarks>
+    /// <inheritdoc cref="ThrowIfInvalidIV(byte[], string)"/>
+    /// <inheritdoc cref="ThrowIfDisposed"/>
+    public override byte[] IV
+    {
+        get
+        {
+            ThrowIfDisposed();
+
+            UncheckedGenerateIVValueIfNull();
+            return (byte[])IVValue!.Clone();
+        }
+
+        set
+        {
+            ThrowIfInvalidIV(value, nameof(IV));
+
+            ThrowIfDisposed();
+
+            PurgeIVValue();
+
+            IVValue = (byte[])value.Clone();
+        }
+    }
 
     /// <inheritdoc cref="AesManaged.Mode" />
     /// <remarks><see cref="AesCtr"/> always pretends to use <see cref="CipherMode.CTS" />.</remarks>
@@ -102,41 +380,106 @@ public sealed class AesCtr
         }
     }
 
-    // CTR.Encrypt === CTR.Decrypt; the transform is entirely symmetric.
-    static AesCtrTransform CreateTransform(byte[] rgbKey, byte[]? rgbIV)
+    /// <inheritdoc/>
+    /// <inheritdoc cref="ThrowIfDisposed"/>
+    public override ICryptoTransform CreateDecryptor()
     {
-        return rgbIV is not null ? new(rgbKey, rgbIV)
-            : throw new CryptographicException("The cipher mode specified requires that an initialization vector(IV) be used.");
+        ThrowIfDisposed();
+
+        UncheckedGenerateKeyValueIfNull();
+        UncheckedGenerateIVValueIfNull();
+        return new AesCtrTransform(KeyValue!, IVValue!);
     }
 
-    /// <inheritdoc cref="AesManaged.CreateDecryptor(byte[], byte[])" />
+    /// <summary>
+    /// Creates a symmetric decryptor object with the specified key and initial counter (IV).
+    /// </summary>
+    /// <param name="rgbKey">The secret key to use for the symmetric algorithm.</param>
+    /// <param name="rgbIV">The initialization vector (initial counter).</param>
+    /// <returns>A symmetric decryptor object.</returns>
+    /// <inheritdoc cref="ThrowIfDisposed"/>
+    /// <inheritdoc cref="ThrowIfInvalidKey(byte[],string)"/>
+    /// <inheritdoc cref="ThrowIfInvalidIV(ReadOnlySpan{byte},string)"/>
     public override ICryptoTransform CreateDecryptor(byte[] rgbKey, byte[]? rgbIV)
     {
-        return CreateTransform(rgbKey, rgbIV);
+        ThrowIfDisposed();
+
+        ThrowIfInvalidKey(rgbKey, nameof(rgbKey));
+        ThrowIfInvalidIV(rgbIV ?? throw new CryptographicException("The cipher mode specified requires that an initialization vector (IV) be used."),
+            nameof(rgbIV));
+
+        return new AesCtrTransform(rgbKey, rgbIV);
     }
 
-    /// <inheritdoc cref="AesManaged.CreateEncryptor(byte[], byte[])" />
+    /// <inheritdoc/>
+    /// <inheritdoc cref="ThrowIfDisposed"/>
+    public override ICryptoTransform CreateEncryptor()
+    {
+        ThrowIfDisposed();
+
+        UncheckedGenerateKeyValueIfNull();
+        UncheckedGenerateIVValueIfNull();
+        return new AesCtrTransform(KeyValue!, IVValue!);
+    }
+
+    /// <summary>
+    /// Creates a symmetric encryptor object with the specified key and initial counter (IV).
+    /// </summary>
+    /// <param name="rgbKey">The secret key to use for the symmetric algorithm.</param>
+    /// <param name="rgbIV">The initialization vector (initial counter).</param>
+    /// <returns>A symmetric encryptor object.</returns>
+    /// <inheritdoc cref="ThrowIfDisposed"/>
+    /// <inheritdoc cref="ThrowIfInvalidKey(byte[],string)"/>
+    /// <inheritdoc cref="ThrowIfInvalidIV(ReadOnlySpan{byte},string)"/>
     public override ICryptoTransform CreateEncryptor(byte[] rgbKey, byte[]? rgbIV)
     {
-        return CreateTransform(rgbKey, rgbIV);
+        ThrowIfDisposed();
+
+        ThrowIfInvalidKey(rgbKey, nameof(rgbKey));
+        ThrowIfInvalidIV(rgbIV ?? throw new CryptographicException("The cipher mode specified requires that an initialization vector (IV) be used."),
+            nameof(rgbIV));
+
+        return new AesCtrTransform(rgbKey, rgbIV);
+    }
+
+    void UncheckedGenerateIVValueIfNull()
+    {
+        if (IVValue is null)
+        {
+            IVValue = new byte[BLOCKSIZE];
+            using var randomNumberGenerator = RandomNumberGenerator.Create();
+            randomNumberGenerator.GetBytes(IVValue);
+        }
     }
 
     /// <inheritdoc cref="AesManaged.GenerateIV" />
+    /// <inheritdoc cref="ThrowIfDisposed"/>
     public override void GenerateIV()
     {
-        CryptographicOperations.ZeroMemory(IVValue);
-        using var randomNumberGenerator = RandomNumberGenerator.Create();
-        IVValue = new byte[BLOCKSIZE];
-        randomNumberGenerator.GetBytes(IVValue);
+        ThrowIfDisposed();
+
+        PurgeIVValue();
+        UncheckedGenerateIVValueIfNull();
+    }
+
+    void UncheckedGenerateKeyValueIfNull()
+    {
+        if (KeyValue is null)
+        {
+            KeyValue = new byte[KeySizeValue / BitsPerByte];
+            using var randomNumberGenerator = RandomNumberGenerator.Create();
+            randomNumberGenerator.GetBytes(KeyValue);
+        }
     }
 
     /// <inheritdoc cref="AesManaged.GenerateKey" />
+    /// <inheritdoc cref="ThrowIfDisposed"/>
     public override void GenerateKey()
     {
-        CryptographicOperations.ZeroMemory(KeyValue);
-        using var randomNumberGenerator = RandomNumberGenerator.Create();
-        KeyValue = new byte[KeySize / BitsPerByte];
-        randomNumberGenerator.GetBytes(KeyValue);
+        ThrowIfDisposed();
+
+        PurgeKeyValue();
+        UncheckedGenerateKeyValueIfNull();
     }
 
     #region Modern_SymmetricAlgorithm
@@ -146,30 +489,6 @@ public sealed class AesCtr
         if (input is null)
         {
             throw new ArgumentNullException(nameof(input));
-        }
-    }
-
-    /// <exception cref="ArgumentNullException"><paramref name="iv"/> is <see langword="null"/>.</exception>
-    /// <inheritdoc cref="ThrowIfInvalidIV(ReadOnlySpan{byte})"/>
-    static void ThrowIfInvalidIV(byte[] iv)
-    {
-        if (iv is null)
-        {
-            throw new ArgumentNullException(nameof(iv));
-        }
-        ThrowIfInvalidIV(iv.AsSpan());
-    }
-
-    /// <exception cref="ArgumentException">
-    /// <paramref name="iv"/> is the incorrect length.
-    /// Callers are expected to pass an initialization vector that is exactly <see cref="SymmetricAlgorithm.BlockSize"/> in length,
-    /// converted to bytes (`BlockSize / 8`).
-    /// </exception>
-    static void ThrowIfInvalidIV(ReadOnlySpan<byte> iv)
-    {
-        if (iv.Length != BLOCKSIZE)
-        {
-            throw new ArgumentException("Specified initial counter (IV) does not match the block size for this algorithm.", nameof(iv));
         }
     }
 
@@ -189,14 +508,17 @@ public sealed class AesCtr
     /// <param name="iv">The initialization vector (initial counter).</param>
     /// <returns>The transformed data.</returns>
     /// <inheritdoc cref="ThrowIfInvalidInput(byte[])"/>
-    /// <inheritdoc cref="ThrowIfInvalidIV(byte[])"/>
+    /// <inheritdoc cref="ThrowIfInvalidIV(byte[],string)"/>
     public byte[] TransformCtr(byte[] input, byte[] iv)
     {
         ThrowIfInvalidInput(input);
         ThrowIfInvalidIV(iv);
 
+        ThrowIfDisposed();
+
         var output = new byte[input.Length];
-        using var transform = new AesCtrTransform(Key, iv);
+        UncheckedGenerateKeyValueIfNull();
+        using var transform = new AesCtrTransform(KeyValue!, iv);
         transform.UncheckedTransform(input, output);
         return output;
     }
@@ -207,13 +529,16 @@ public sealed class AesCtr
     /// <param name="input">The data to transform.</param>
     /// <param name="iv">The initialization vector (initial counter).</param>
     /// <returns>The transformed data.</returns>
-    /// <inheritdoc cref="ThrowIfInvalidIV(ReadOnlySpan{byte})"/>
+    /// <inheritdoc cref="ThrowIfInvalidIV(ReadOnlySpan{byte},string)"/>
     public byte[] TransformCtr(ReadOnlySpan<byte> input, ReadOnlySpan<byte> iv)
     {
         ThrowIfInvalidIV(iv);
 
+        ThrowIfDisposed();
+
         var output = new byte[input.Length];
-        using var transform = new AesCtrTransform(Key, iv);
+        UncheckedGenerateKeyValueIfNull();
+        using var transform = new AesCtrTransform(KeyValue!, iv);
         transform.UncheckedTransform(input, output);
         return output;
     }
@@ -225,14 +550,17 @@ public sealed class AesCtr
     /// <param name="iv">The initialization vector (initial counter).</param>
     /// <param name="destination">The buffer to receive the transformed data.</param>
     /// <returns>The total number of bytes written to <paramref name="destination"/>.</returns>
-    /// <inheritdoc cref="ThrowIfInvalidIV(ReadOnlySpan{byte})"/>
+    /// <inheritdoc cref="ThrowIfInvalidIV(ReadOnlySpan{byte},string)"/>
     /// <inheritdoc cref="ThrowIfInvalidDestination(Span{byte}, int)"/>
     public int TransformCtr(ReadOnlySpan<byte> input, ReadOnlySpan<byte> iv, Span<byte> destination)
     {
         ThrowIfInvalidIV(iv);
         ThrowIfInvalidDestination(destination, input.Length);
 
-        using var transform = new AesCtrTransform(Key, iv);
+        ThrowIfDisposed();
+
+        UncheckedGenerateKeyValueIfNull();
+        using var transform = new AesCtrTransform(KeyValue!, iv);
         transform.UncheckedTransform(input, destination);
         return input.Length;
     }
@@ -247,10 +575,12 @@ public sealed class AesCtr
     /// <returns>
     /// <see langword="true"/> if <paramref name="destination"/> was large enough to receive the transformed data; otherwise, <see langword="false"/>.
     /// </returns>
-    /// <inheritdoc cref="ThrowIfInvalidIV(ReadOnlySpan{byte})"/>
+    /// <inheritdoc cref="ThrowIfInvalidIV(ReadOnlySpan{byte},string)"/>
     public bool TryTransformCtr(ReadOnlySpan<byte> input, ReadOnlySpan<byte> iv, Span<byte> destination, out int bytesWritten)
     {
         ThrowIfInvalidIV(iv);
+
+        ThrowIfDisposed();
 
         if (destination.Length < input.Length)
         {
@@ -258,7 +588,8 @@ public sealed class AesCtr
             return false;
         }
 
-        using var transform = new AesCtrTransform(Key, iv);
+        UncheckedGenerateKeyValueIfNull();
+        using var transform = new AesCtrTransform(KeyValue!, iv);
         transform.UncheckedTransform(input, destination);
         bytesWritten = input.Length;
         return true;

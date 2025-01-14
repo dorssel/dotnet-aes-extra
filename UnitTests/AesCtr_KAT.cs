@@ -12,9 +12,7 @@ sealed class AesCtr_KAT
     [NistAesCtrSampleDataSource]
     public void Encrypt_Write(NistAesCtrSampleTestVector testVector)
     {
-        using var aes = AesCtr.Create();
-        aes.Key = testVector.Key.ToArray();
-        aes.IV = testVector.InitialCounter.ToArray();
+        using var aes = new AesCtr(testVector.Key.Span, testVector.InitialCounter.Span);
         using var plaintextStream = new MemoryStream(testVector.Plaintext.ToArray());
         using var ciphertextStream = new MemoryStream();
         {
@@ -30,9 +28,7 @@ sealed class AesCtr_KAT
     [NistAesCtrSampleDataSource]
     public void Encrypt_Read(NistAesCtrSampleTestVector testVector)
     {
-        using var aes = AesCtr.Create();
-        aes.Key = testVector.Key.ToArray();
-        aes.IV = testVector.InitialCounter.ToArray();
+        using var aes = new AesCtr(testVector.Key.Span, testVector.InitialCounter.Span);
         using var plaintextStream = new MemoryStream(testVector.Plaintext.ToArray());
         using var ciphertextStream = new MemoryStream();
         {
@@ -48,9 +44,7 @@ sealed class AesCtr_KAT
     [NistAesCtrSampleDataSource]
     public void Decrypt_Write(NistAesCtrSampleTestVector testVector)
     {
-        using var aes = AesCtr.Create();
-        aes.Key = testVector.Key.ToArray();
-        aes.IV = testVector.InitialCounter.ToArray();
+        using var aes = new AesCtr(testVector.Key.Span, testVector.InitialCounter.Span);
         using var ciphertextStream = new MemoryStream(testVector.Ciphertext.ToArray());
         using var plaintextStream = new MemoryStream();
         {
@@ -66,9 +60,7 @@ sealed class AesCtr_KAT
     [NistAesCtrSampleDataSource]
     public void Decrypt_Read(NistAesCtrSampleTestVector testVector)
     {
-        using var aes = AesCtr.Create();
-        aes.Key = testVector.Key.ToArray();
-        aes.IV = testVector.InitialCounter.ToArray();
+        using var aes = new AesCtr(testVector.Key.Span, testVector.InitialCounter.Span);
         using var ciphertextStream = new MemoryStream(testVector.Ciphertext.ToArray());
         using var plaintextStream = new MemoryStream();
         {
@@ -84,8 +76,7 @@ sealed class AesCtr_KAT
     [NistAesCtrSampleDataSource]
     public void Encrypt_TransformCtr_Array_Array(NistAesCtrSampleTestVector testVector)
     {
-        using var aes = AesCtr.Create();
-        aes.Key = testVector.Key.ToArray();
+        using var aes = new AesCtr(testVector.Key.Span);
 
         var destination = aes.TransformCtr(testVector.Plaintext.ToArray(), testVector.InitialCounter.ToArray());
 
@@ -97,8 +88,7 @@ sealed class AesCtr_KAT
     [NistAesCtrSampleDataSource]
     public void Encrypt_TransformCtr_ReadOnlySpan_ReadOnlySpan(NistAesCtrSampleTestVector testVector)
     {
-        using var aes = AesCtr.Create();
-        aes.Key = testVector.Key.ToArray();
+        using var aes = new AesCtr(testVector.Key.Span);
 
         var destination = aes.TransformCtr(testVector.Plaintext.Span, testVector.InitialCounter.Span);
 
@@ -110,8 +100,7 @@ sealed class AesCtr_KAT
     [NistAesCtrSampleDataSource]
     public void Encrypt_TransformCtr_ReadOnlySpan_ReadOnlySpan_Span(NistAesCtrSampleTestVector testVector)
     {
-        using var aes = AesCtr.Create();
-        aes.Key = testVector.Key.ToArray();
+        using var aes = new AesCtr(testVector.Key.Span);
         var destination = new byte[testVector.Ciphertext.Length];
 
         var count = aes.TransformCtr(testVector.Plaintext.Span, testVector.InitialCounter.Span, destination);
@@ -125,8 +114,7 @@ sealed class AesCtr_KAT
     [NistAesCtrSampleDataSource]
     public void Encrypt_TryTransformCtr(NistAesCtrSampleTestVector testVector)
     {
-        using var aes = AesCtr.Create();
-        aes.Key = testVector.Key.ToArray();
+        using var aes = new AesCtr(testVector.Key.Span);
         var destination = new byte[testVector.Ciphertext.Length];
 
         var success = aes.TryTransformCtr(testVector.Plaintext.Span, testVector.InitialCounter.Span, destination, out var bytesWritten);
@@ -141,8 +129,7 @@ sealed class AesCtr_KAT
     [NistAesCtrSampleDataSource]
     public void Decrypt_TransformCtr_Array_Array(NistAesCtrSampleTestVector testVector)
     {
-        using var aes = AesCtr.Create();
-        aes.Key = testVector.Key.ToArray();
+        using var aes = new AesCtr(testVector.Key.Span);
 
         var destination = aes.TransformCtr(testVector.Ciphertext.ToArray(), testVector.InitialCounter.ToArray());
 
@@ -154,8 +141,7 @@ sealed class AesCtr_KAT
     [NistAesCtrSampleDataSource]
     public void Decrypt_TransformCtr_ReadOnlySpan_ReadOnlySpan(NistAesCtrSampleTestVector testVector)
     {
-        using var aes = AesCtr.Create();
-        aes.Key = testVector.Key.ToArray();
+        using var aes = new AesCtr(testVector.Key.Span);
 
         var destination = aes.TransformCtr(testVector.Ciphertext.Span, testVector.InitialCounter.Span);
 
@@ -167,8 +153,7 @@ sealed class AesCtr_KAT
     [NistAesCtrSampleDataSource]
     public void Decrypt_TransformCtr_ReadOnlySpan_ReadOnlySpan_Span(NistAesCtrSampleTestVector testVector)
     {
-        using var aes = AesCtr.Create();
-        aes.Key = testVector.Key.ToArray();
+        using var aes = new AesCtr(testVector.Key.Span);
         var destination = new byte[testVector.Plaintext.Length];
 
         var count = aes.TransformCtr(testVector.Ciphertext.Span, testVector.InitialCounter.Span, destination);
@@ -182,8 +167,7 @@ sealed class AesCtr_KAT
     [NistAesCtrSampleDataSource]
     public void Decrypt_TryTransformCtr(NistAesCtrSampleTestVector testVector)
     {
-        using var aes = AesCtr.Create();
-        aes.Key = testVector.Key.ToArray();
+        using var aes = new AesCtr(testVector.Key.Span);
         var destination = new byte[testVector.Plaintext.Length];
 
         var success = aes.TryTransformCtr(testVector.Ciphertext.Span, testVector.InitialCounter.Span, destination, out var bytesWritten);
