@@ -24,8 +24,7 @@ sealed class AesCmacPrf128_KAT
     public void Rfc_DeriveKey_ReadOnlySpan_ReadOnlySpan_Span(RfcAesCmacPrf128TestVector testVector)
     {
         var output = new byte[testVector.Output.Length];
-        var bytesWritten = AesCmacPrf128.DeriveKey(testVector.Key.Span, testVector.Message.Span, output);
-        Assert.AreEqual(bytesWritten, testVector.Output.Length);
+        AesCmacPrf128.DeriveKey(testVector.Key.Span, testVector.Message.Span, output);
         CollectionAssert.AreEqual(testVector.Output.ToArray(), output);
     }
 

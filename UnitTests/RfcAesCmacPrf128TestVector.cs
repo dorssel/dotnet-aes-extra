@@ -48,34 +48,34 @@ sealed partial record RfcAesCmacPrf128TestVector
 
     static RfcAesCmacPrf128TestVector()
     {
-        // See: RFC 5297, Appendix A
+        // See: RFC 4615, Section 4
         // Licensed under LicenseRef-IETF-Trust
         var testVectors = new List<RfcAesCmacPrf128TestVector>
         {
             new("Key Length 18", @"
-                    00010203 04050607 08090a0b 0c0d0e0f edcb
+                    00010203 04050607 08090A0B 0C0D0E0F EDCB
                 ", @"
-                    00010203 04050607 08090a0b 0c0d0e0f 10111213
+                    00010203 04050607 08090A0B 0C0D0E0F 10111213
                 ", @"
-                    84a348a4 a45d235b abfffc0d 2b4da09a
+                    84A348A4 A45D235B ABFFFC0D 2B4DA09A
                 "
             ),
 
             new("Key Length 16", @"
-                    00010203 04050607 08090a0b 0c0d0e0f
+                    00010203 04050607 08090A0B 0C0D0E0F
                 ", @"
-                    00010203 04050607 08090a0b 0c0d0e0f 10111213
+                    00010203 04050607 08090A0B 0C0D0E0F 10111213
                 ", @"
-                    980ae87b 5f4c9c52 14f5b6a8 455e4c2d
+                    980AE87B 5F4C9C52 14F5B6A8 455E4C2D
                 "
             ),
 
             new("Key Length 10", @"
                     00010203 04050607 0809
                 ", @"
-                    00010203 04050607 08090a0b 0c0d0e0f 10111213
+                    00010203 04050607 08090A0B 0C0D0E0F 10111213
                 ", @"
-                    290d9e11 2edb09ee 141fcf64 c0b72f3d
+                    290D9E11 2EDB09EE 141FCF64 C0B72F3D
                 "
             ),
         };
