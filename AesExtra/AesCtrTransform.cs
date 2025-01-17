@@ -86,14 +86,7 @@ sealed class AesCtrTransform
             destination[i] = (byte)(inputBlock[i] ^ XorBlock[i]);
         }
 
-        // Increment counter
-        for (var i = Counter.Length - 1; i >= 0; --i)
-        {
-            if (unchecked(++Counter[i]) != 0)
-            {
-                break;
-            }
-        }
+        Counter.AsSpan().BigEndianIncrement();
     }
 
     internal void UncheckedTransform(ReadOnlySpan<byte> input, Span<byte> destination)

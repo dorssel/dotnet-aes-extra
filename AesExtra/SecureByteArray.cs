@@ -35,11 +35,6 @@ sealed class SecureByteArray : IDisposable
         return source._Data;
     }
 
-    public static implicit operator ReadOnlySpan<byte>(SecureByteArray source)
-    {
-        return source._Data;
-    }
-
     public void Dispose()
     {
         CryptographicOperations.ZeroMemory(_Data);
