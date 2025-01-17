@@ -7,43 +7,50 @@ using System.Text;
 
 namespace Dorssel.Security.Cryptography;
 
-/// <summary>
-/// RFC 4615 key derivation algorithm (AES-CMAC-PRF-128) for the Internet Key Exchange Protocol (IKE).
-/// </summary>
-/// <remarks>
-/// The IANA name is PRF_AES128_CMAC.
-/// </remarks>
-/// <seealso href="https://www.rfc-editor.org/rfc/rfc4615.html"/>
-/// <seealso href="https://www.iana.org/assignments/ikev2-parameters/ikev2-parameters.xhtml"/>
-public static class AesCmacPrf128
+public static partial class AesCmacPrf128
 {
     const int BLOCKSIZE = 16;  // bytes
     readonly static byte[] BlockOfZeros = new byte[BLOCKSIZE];
 
     static AesCmac UncheckedCreateKeyedPrf(byte[] key)
     {
+        // Implementation of RFC 4615 (Section 3).
+
         var prf = new AesCmac();
-        if (key.Length != BLOCKSIZE)
+        // Step 1.
+        if (key.Length == BLOCKSIZE)
         {
+            // Step 1a.
+            prf.Key = key;
+        }
+        else
+        {
+            // Step 1b.
             using var blockSizedKey = new SecureByteArray(BLOCKSIZE);
             prf.Key = BlockOfZeros;
             prf.UncheckedHashCore(key);
             prf.UncheckedHashFinal(blockSizedKey);
             prf.Initialize();
             prf.Key = blockSizedKey;
-        }
-        else
-        {
-            prf.Key = key;
         }
         return prf;
     }
 
     static AesCmac UncheckedCreateKeyedPrf(ReadOnlySpan<byte> key)
     {
+        // Implementation of RFC 4615 (Section 3).
+
         var prf = new AesCmac();
-        if (key.Length != BLOCKSIZE)
+        // Step 1.
+        if (key.Length == BLOCKSIZE)
         {
+            // Step 1a.
+            using var blockSizedKey = new SecureByteArray(key);
+            prf.Key = blockSizedKey;
+        }
+        else
+        {
+            // Step 1b.
             using var blockSizedKey = new SecureByteArray(BLOCKSIZE);
             prf.Key = BlockOfZeros;
             prf.UncheckedHashCore(key);
@@ -51,22 +58,10 @@ public static class AesCmacPrf128
             prf.Initialize();
             prf.Key = blockSizedKey;
         }
-        else
-        {
-            using var blockSizedKey = new SecureByteArray(key);
-            prf.Key = blockSizedKey;
-        }
         return prf;
     }
 
-    /// <summary>
-    /// TODO
-    /// </summary>
-    /// <param name="inputKey">TODO</param>
-    /// <param name="message">TODO</param>
-    /// <returns>TODO</returns>
-    /// <exception cref="ArgumentNullException">TODO</exception>
-    public static byte[] DeriveKey(byte[] inputKey, byte[] message)
+    public static partial byte[] DeriveKey(byte[] inputKey, byte[] message)
     {
         if (inputKey is null)
         {
@@ -77,36 +72,37 @@ public static class AesCmacPrf128
             throw new ArgumentNullException(nameof(inputKey));
         }
 
+        // Implementation of RFC 4615 (Section 3).
+
+        // Step 1 + 1a + 1b.
         using var cmac = UncheckedCreateKeyedPrf(inputKey);
+        // Step 2.
         var destination = new byte[BLOCKSIZE];
         cmac.UncheckedHashCore(message);
         cmac.UncheckedHashFinal(destination);
         return destination;
     }
 
-    /// <summary>
-    /// TODO
-    /// </summary>
-    /// <param name="inputKey">TODO</param>
-    /// <param name="message">TODO</param>
-    /// <param name="destination">TODO</param>
-    /// <returns>TODO</returns>
-    /// <exception cref="ArgumentException">TODO</exception>
-    public static int DeriveKey(ReadOnlySpan<byte> inputKey, ReadOnlySpan<byte> message, Span<byte> destination)
+    public static partial void DeriveKey(ReadOnlySpan<byte> inputKey, ReadOnlySpan<byte> message, Span<byte> destination)
     {
-        if (destination.Length < BLOCKSIZE)
+        if (destination.Length != BLOCKSIZE)
         {
-            throw new ArgumentException("Destination is too short.");
+            throw new ArgumentException("Destination is not exactly 16-bytes long.");
         }
 
+        // Implementation of RFC 4615 (Section 3).
+
+        // Step 1 + 1a + 1b.
         using var cmac = UncheckedCreateKeyedPrf(inputKey);
+        // Step 2.
         cmac.UncheckedHashCore(message);
         cmac.UncheckedHashFinal(destination);
-        return BLOCKSIZE;
     }
 
     static void UncheckedPbkdf2(AesCmac cmac, ReadOnlySpan<byte> salt, Span<byte> destination, int iterations)
     {
+        // Implementation of RFC 8018 (Section 5.2) + RFC 4615 (Section 3).
+
         // i
         Span<byte> INT_i = [0, 0, 0, 1];
 
@@ -151,17 +147,7 @@ public static class AesCmacPrf128
         CryptographicOperations.ZeroMemory(F);
     }
 
-    /// <summary>
-    /// TODO
-    /// </summary>
-    /// <param name="password">TODO</param>
-    /// <param name="salt">TODO</param>
-    /// <param name="iterations">TODO</param>
-    /// <param name="outputLength">TODO</param>
-    /// <returns>TODO</returns>
-    /// <exception cref="ArgumentNullException">TODO</exception>
-    /// <exception cref="ArgumentOutOfRangeException">TODO</exception>
-    public static byte[] Pbkdf2(byte[] password, byte[] salt, int iterations, int outputLength)
+    public static partial byte[] Pbkdf2(byte[] password, byte[] salt, int iterations, int outputLength)
     {
         if (password == null)
         {
@@ -191,16 +177,7 @@ public static class AesCmacPrf128
         return destination;
     }
 
-    /// <summary>
-    /// TODO
-    /// </summary>
-    /// <param name="password">TODO</param>
-    /// <param name="salt">TODO</param>
-    /// <param name="iterations">TODO</param>
-    /// <param name="outputLength">TODO</param>
-    /// <returns>TODO</returns>
-    /// <exception cref="ArgumentOutOfRangeException">TODO</exception>
-    public static byte[] Pbkdf2(ReadOnlySpan<byte> password, ReadOnlySpan<byte> salt, int iterations, int outputLength)
+    public static partial byte[] Pbkdf2(ReadOnlySpan<byte> password, ReadOnlySpan<byte> salt, int iterations, int outputLength)
     {
         if (iterations <= 0)
         {
@@ -222,15 +199,7 @@ public static class AesCmacPrf128
         return destination;
     }
 
-    /// <summary>
-    /// TODO
-    /// </summary>
-    /// <param name="password">TODO</param>
-    /// <param name="salt">TODO</param>
-    /// <param name="destination">TODO</param>
-    /// <param name="iterations">TODO</param>
-    /// <exception cref="ArgumentOutOfRangeException">TODO</exception>
-    public static void Pbkdf2(ReadOnlySpan<byte> password, ReadOnlySpan<byte> salt, Span<byte> destination, int iterations)
+    public static partial void Pbkdf2(ReadOnlySpan<byte> password, ReadOnlySpan<byte> salt, Span<byte> destination, int iterations)
     {
         if (iterations <= 0)
         {
@@ -275,17 +244,7 @@ public static class AesCmacPrf128
         }
     }
 
-    /// <summary>
-    /// TODO
-    /// </summary>
-    /// <param name="password">TODO</param>
-    /// <param name="salt">TODO</param>
-    /// <param name="iterations">TODO</param>
-    /// <param name="outputLength">TODO</param>
-    /// <returns>TODO</returns>
-    /// <exception cref="ArgumentNullException">TODO</exception>
-    /// <exception cref="ArgumentOutOfRangeException">TODO</exception>
-    public static byte[] Pbkdf2(string password, byte[] salt, int iterations, int outputLength)
+    public static partial byte[] Pbkdf2(string password, byte[] salt, int iterations, int outputLength)
     {
         if (password == null)
         {
@@ -316,16 +275,7 @@ public static class AesCmacPrf128
         return destination;
     }
 
-    /// <summary>
-    /// TODO
-    /// </summary>
-    /// <param name="password">TODO</param>
-    /// <param name="salt">TODO</param>
-    /// <param name="iterations">TODO</param>
-    /// <param name="outputLength">TODO</param>
-    /// <returns>TODO</returns>
-    /// <exception cref="ArgumentOutOfRangeException">TODO</exception>
-    public static byte[] Pbkdf2(ReadOnlySpan<char> password, ReadOnlySpan<byte> salt, int iterations, int outputLength)
+    public static partial byte[] Pbkdf2(ReadOnlySpan<char> password, ReadOnlySpan<byte> salt, int iterations, int outputLength)
     {
         using var passwordAsBytes = PasswordAsBytes(password);
         if (iterations <= 0)
@@ -348,15 +298,7 @@ public static class AesCmacPrf128
         return destination;
     }
 
-    /// <summary>
-    /// TODO
-    /// </summary>
-    /// <param name="password">TODO</param>
-    /// <param name="salt">TODO</param>
-    /// <param name="destination">TODO</param>
-    /// <param name="iterations">TODO</param>
-    /// <exception cref="ArgumentOutOfRangeException">TODO</exception>
-    public static void Pbkdf2(ReadOnlySpan<char> password, ReadOnlySpan<byte> salt, Span<byte> destination, int iterations)
+    public static partial void Pbkdf2(ReadOnlySpan<char> password, ReadOnlySpan<byte> salt, Span<byte> destination, int iterations)
     {
         using var passwordAsBytes = PasswordAsBytes(password);
         if (iterations <= 0)

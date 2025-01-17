@@ -19,16 +19,16 @@ SPDX-License-Identifier: MIT
   Defined by [NIST SP 800-38A](https://csrc.nist.gov/publications/detail/sp/800-38a/final).
 - **AES-CMAC** \
   Defined by [NIST SP 800-38B](https://csrc.nist.gov/publications/detail/sp/800-38b/final)
-  and [RFC 4493](https://datatracker.ietf.org/doc/html/rfc4493).
+  and [RFC 4493](https://www.rfc-editor.org/rfc/rfc4493.html).
 - **SIV-AES** \
-  Defined by [RFC 5297](https://datatracker.ietf.org/doc/html/rfc5297). \
+  Defined by [RFC 5297](https://www.rfc-editor.org/rfc/rfc5297.html). \
   This is often referred to as AES-SIV.
 - **AES-CMAC-PRF-128** \
-  Defined by [RFC 4615](https://datatracker.ietf.org/doc/html/rfc4615). \
+  Defined by [RFC 4615](https://www.rfc-editor.org/rfc/rfc4615.html). \
   Registered by IANA as PRF_AES128_CMAC.
 - **PBKDF2-AES-CMAC-PRF-128** \
-  Defined by [RFC 8018](https://datatracker.ietf.org/doc/html/rfc8018) in combination with
-  [RFC 4615](https://datatracker.ietf.org/doc/html/rfc4615).
+  Defined by [RFC 8018](https://www.rfc-editor.org/rfc/rfc8018.html) in combination with
+  [RFC 4615](https://www.rfc-editor.org/rfc/rfc4615.html).
 
 The implementation is for AnyCPU, and works on all platforms.
 

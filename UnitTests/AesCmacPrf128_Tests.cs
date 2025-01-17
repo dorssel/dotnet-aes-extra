@@ -31,9 +31,19 @@ sealed class AesCmacPrf128_Tests
     }
 
     [TestMethod]
-    public void DeriveKey_ReadOnlySpan_ReadOnlySpan_Span_Short()
+    public void DeriveKey_ReadOnlySpan_ReadOnlySpan_Span_TooShort()
     {
         var output = new byte[BLOCKSIZE - 1];
+        Assert.ThrowsException<ArgumentException>(() =>
+        {
+            AesCmacPrf128.DeriveKey(TestKey, TestMessage, output);
+        });
+    }
+
+    [TestMethod]
+    public void DeriveKey_ReadOnlySpan_ReadOnlySpan_Span_TooLong()
+    {
+        var output = new byte[BLOCKSIZE + 1];
         Assert.ThrowsException<ArgumentException>(() =>
         {
             AesCmacPrf128.DeriveKey(TestKey, TestMessage, output);
