@@ -40,4 +40,165 @@ sealed class AesCmacPrf128_Tests
         });
     }
 
+    [TestMethod]
+    public void Pbkdf2_Array_Array_PasswordNull()
+    {
+        Assert.ThrowsException<ArgumentNullException>(() =>
+        {
+            AesCmacPrf128.Pbkdf2((byte[])null!, Array.Empty<byte>(), 1, 1);
+        });
+    }
+
+    [TestMethod]
+    public void Pbkdf2_Array_Array_SaltNull()
+    {
+        Assert.ThrowsException<ArgumentNullException>(() =>
+        {
+            AesCmacPrf128.Pbkdf2(Array.Empty<byte>(), null!, 1, 1);
+        });
+    }
+
+    [TestMethod]
+    public void Pbkdf2_Array_Array_IterationsNegative()
+    {
+        Assert.ThrowsException<ArgumentOutOfRangeException>(() =>
+        {
+            AesCmacPrf128.Pbkdf2(Array.Empty<byte>(), Array.Empty<byte>(), -1, 1);
+        });
+    }
+
+    [TestMethod]
+    public void Pbkdf2_Array_Array_OutputLengthNegative()
+    {
+        Assert.ThrowsException<ArgumentOutOfRangeException>(() =>
+        {
+            AesCmacPrf128.Pbkdf2(Array.Empty<byte>(), Array.Empty<byte>(), 1, -1);
+        });
+    }
+
+    [TestMethod]
+    public void Pbkdf2_Array_Array_OutputLengthZero()
+    {
+        AesCmacPrf128.Pbkdf2(Array.Empty<byte>(), Array.Empty<byte>(), 1, 0);
+    }
+
+    [TestMethod]
+    public void Pbkdf2_ReadOnlyBytes_ReadOnlySpan_IterationsNegative()
+    {
+        Assert.ThrowsException<ArgumentOutOfRangeException>(() =>
+        {
+            AesCmacPrf128.Pbkdf2(new Span<byte>(), new Span<byte>(), -1, 1);
+        });
+    }
+
+    [TestMethod]
+    public void Pbkdf2_ReadOnlyBytes_ReadOnlySpan_OutputLengthNegative()
+    {
+        Assert.ThrowsException<ArgumentOutOfRangeException>(() =>
+        {
+            AesCmacPrf128.Pbkdf2(new Span<byte>(), new Span<byte>(), 1, -1);
+        });
+    }
+
+    [TestMethod]
+    public void Pbkdf2_ReadOnlyBytes_ReadOnlySpan_OutputLengthZero()
+    {
+        AesCmacPrf128.Pbkdf2(new Span<byte>(), new Span<byte>(), 1, 0);
+    }
+
+    [TestMethod]
+    public void Pbkdf2_ReadOnlyBytes_ReadOnlySpan_Span_IterationsNegative()
+    {
+        Assert.ThrowsException<ArgumentOutOfRangeException>(() =>
+        {
+            AesCmacPrf128.Pbkdf2(new Span<byte>(), new Span<byte>(), new Span<byte>(), -1);
+        });
+    }
+
+    [TestMethod]
+    public void Pbkdf2_ReadOnlyBytes_ReadOnlySpan_Span_OutputLengthZero()
+    {
+        AesCmacPrf128.Pbkdf2(new Span<byte>(), new Span<byte>(), new Span<byte>(), 1);
+    }
+
+    [TestMethod]
+    public void Pbkdf2_String_Array_PasswordNull()
+    {
+        Assert.ThrowsException<ArgumentNullException>(() =>
+        {
+            AesCmacPrf128.Pbkdf2((string)null!, Array.Empty<byte>(), 1, 1);
+        });
+    }
+
+    [TestMethod]
+    public void Pbkdf2_String_Array_SaltNull()
+    {
+        Assert.ThrowsException<ArgumentNullException>(() =>
+        {
+            AesCmacPrf128.Pbkdf2(string.Empty, null!, 1, 1);
+        });
+    }
+
+    [TestMethod]
+    public void Pbkdf2_String_Array_IterationsNegative()
+    {
+        Assert.ThrowsException<ArgumentOutOfRangeException>(() =>
+        {
+            AesCmacPrf128.Pbkdf2(string.Empty, Array.Empty<byte>(), -1, 1);
+        });
+    }
+
+    [TestMethod]
+    public void Pbkdf2_String_Array_OutputLengthNegative()
+    {
+        Assert.ThrowsException<ArgumentOutOfRangeException>(() =>
+        {
+            AesCmacPrf128.Pbkdf2(string.Empty, Array.Empty<byte>(), 1, -1);
+        });
+    }
+
+    [TestMethod]
+    public void Pbkdf2_String_Array_OutputLengthZero()
+    {
+        AesCmacPrf128.Pbkdf2(string.Empty, Array.Empty<byte>(), 1, 0);
+    }
+
+    [TestMethod]
+    public void Pbkdf2_ReadOnlyChars_ReadOnlySpan_IterationsNegative()
+    {
+        Assert.ThrowsException<ArgumentOutOfRangeException>(() =>
+        {
+            AesCmacPrf128.Pbkdf2(new Span<char>(), new Span<byte>(), -1, 1);
+        });
+    }
+
+    [TestMethod]
+    public void Pbkdf2_ReadOnlyChars_ReadOnlySpan_OutputLengthNegative()
+    {
+        Assert.ThrowsException<ArgumentOutOfRangeException>(() =>
+        {
+            AesCmacPrf128.Pbkdf2(new Span<char>(), new Span<byte>(), 1, -1);
+        });
+    }
+
+    [TestMethod]
+    public void Pbkdf2_ReadOnlyChars_ReadOnlySpan_OutputLengthZero()
+    {
+        AesCmacPrf128.Pbkdf2(new Span<char>(), new Span<byte>(), 1, 0);
+    }
+
+    [TestMethod]
+    public void Pbkdf2_ReadOnlyChars_ReadOnlySpan_Span_IterationsNegative()
+    {
+        Assert.ThrowsException<ArgumentOutOfRangeException>(() =>
+        {
+            AesCmacPrf128.Pbkdf2(new Span<char>(), new Span<byte>(), new Span<byte>(), -1);
+        });
+    }
+
+    [TestMethod]
+    public void Pbkdf2_ReadOnlyChars_ReadOnlySpan_Span_OutputLengthZero()
+    {
+        AesCmacPrf128.Pbkdf2(new Span<char>(), new Span<byte>(), new Span<byte>(), 1);
+    }
 }

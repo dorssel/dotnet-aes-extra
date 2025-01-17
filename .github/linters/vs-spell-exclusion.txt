@@ -1,6 +1,6 @@
 accum
 bitand
-Cmac
+CMAC
 Codecov
 Decryptor
 Dorssel
@@ -8,6 +8,8 @@ dotnet
 Encryptor
 inliner
 Intelli
+Mbed
 netstandard
 NIST
+PBKDF
 xorend

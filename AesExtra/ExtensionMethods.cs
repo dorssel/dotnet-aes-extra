@@ -62,4 +62,16 @@ static class ExtensionMethods
             X[i] ^= Y[i];
         }
     }
+
+    public static void BigEndianIncrement(this Span<byte> counter)
+    {
+        // Increment counter
+        for (var i = counter.Length - 1; i >= 0; --i)
+        {
+            if (unchecked(++counter[i]) != 0)
+            {
+                break;
+            }
+        }
+    }
 }

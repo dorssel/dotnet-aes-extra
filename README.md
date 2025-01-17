@@ -15,13 +15,20 @@ SPDX-License-Identifier: MIT
 
 .NET Standard 2.0 implementation of the following AES modes that are not included in .NET:
 
-- AES-CTR, as defined by [NIST SP 800-38A](https://csrc.nist.gov/publications/detail/sp/800-38a/final)
-- AES-CMAC, as defined by [NIST SP 800-38B](https://csrc.nist.gov/publications/detail/sp/800-38b/final)
-  and [RFC 4493](https://datatracker.ietf.org/doc/html/rfc4493)
-- SIV-AES, as defined by [RFC 5297](https://datatracker.ietf.org/doc/html/rfc5297) \
-  (Note: this is often referred to as AES-SIV, but the original RFC specification uses the name SIV-AES)
-- AES-CMAC-PRF-128, as defined by [RFC 4615](https://datatracker.ietf.org/doc/html/rfc4615) \
-  (Note: registered at IANA as PRF_AES128_CMAC)
+- **AES-CTR** \
+  Defined by [NIST SP 800-38A](https://csrc.nist.gov/publications/detail/sp/800-38a/final).
+- **AES-CMAC** \
+  Defined by [NIST SP 800-38B](https://csrc.nist.gov/publications/detail/sp/800-38b/final)
+  and [RFC 4493](https://datatracker.ietf.org/doc/html/rfc4493).
+- **SIV-AES** \
+  Defined by [RFC 5297](https://datatracker.ietf.org/doc/html/rfc5297). \
+  This is often referred to as AES-SIV.
+- **AES-CMAC-PRF-128** \
+  Defined by [RFC 4615](https://datatracker.ietf.org/doc/html/rfc4615). \
+  Registered by IANA as PRF_AES128_CMAC.
+- **PBKDF2-AES-CMAC-PRF-128** \
+  Defined by [RFC 8018](https://datatracker.ietf.org/doc/html/rfc8018) in combination with
+  [RFC 4615](https://datatracker.ietf.org/doc/html/rfc4615).
 
 The implementation is for AnyCPU, and works on all platforms.
 
@@ -37,7 +44,19 @@ and the .NET assemblies contained therein have the following properties:
 
 All public classes are in the `Dorssel.Security.Cryptography` namespace.
 
-- `AesCtr` is modeled after .NET's `Aes`. So, instead of `Aes.Create()`, use `AesCtr.Create()`.
-- `AesCmac` is modeled after .NET's `HMACSHA256`. So, instead of `new HMACSHA256(key)`, use `new AesCmac(key)`.
-- `AesSiv` is modeled after .NET's `AesGcm`. So, instead of `new AesGcm(key)`, use `new AesSiv(key)`.
-- `AesCmacPrf128` is modeled after .NET's `HKDF`. So, instead of `HKDF.DeriveKey()`, use `AesCmacPrf128.DeriveKey()`.
+- `AesCtr` is modeled after .NET's `Aes`. \
+  Use `AesCtr.Create()` instead of `Aes.Create()`.
+
+- `AesCmac` is modeled after .NET's `HMACSHA256` \
+  Use `new AesCmac(key)` instead of `new HMACSHA256(key)`.
+
+- `AesSiv` is modeled after .NET's `AesGcm`. \
+  Use `new AesSiv(key)` instead of `new AesGcm(key)`.
+
+- For AES-CMAC-PRF-128, `AesCmacPrf128` is modeled after .NET's `HKDF`. \
+  Use `AesCmacPrf128.DeriveKey()` instead of `HKDF.DeriveKey()`.
+
+- For PBKDF2-AES-CMAC-PRF-128, `AesCmacPrf128` is modeled after .NET's `Rfc2898DeriveBytes`. \
+  Use `AesCmacPrf128.Pbkdf2()` instead of `Rfc2898DeriveBytes.Pbkdf2()`.
+
+For further information, see the [API documentation](https://dorssel.github.io/dotnet-aes-extra/).
