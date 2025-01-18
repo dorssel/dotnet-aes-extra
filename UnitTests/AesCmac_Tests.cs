@@ -17,6 +17,57 @@ sealed class AesCmac_Tests
     static byte[] TestMessage => TestVector.PT.ToArray();
     static byte[] TestTag => TestVector.Tag.ToArray();
 
+    static byte[] TestKeyNull => null!;
+    static byte[] TestKeyInvalid { get; } = new byte[11];
+
+    static byte[] TestMessageNull => null!;
+
+    static Stream TestStream => new MemoryStream(TestMessage);
+    static Stream TestStreamNull => null!;
+    static Stream TestStreamInvalid { get; } = new NonReadableStream();
+
+    static byte[] TestDestination { get; } = new byte[BLOCKSIZE];
+    static byte[] TestDestinationShort { get; } = new byte[BLOCKSIZE - 1];
+    static byte[] TestDestinationLong { get; } = new byte[BLOCKSIZE + 1];
+
+    sealed class NonReadableStream : Stream
+    {
+        public override bool CanRead => false;
+
+        public override bool CanSeek => false;
+
+        public override bool CanWrite => false;
+
+        public override long Length => throw new NotImplementedException();
+
+        public override long Position { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+
+        public override void Flush()
+        {
+            throw new NotImplementedException();
+        }
+
+        public override int Read(byte[] buffer, int offset, int count)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override long Seek(long offset, SeekOrigin origin)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void SetLength(long value)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void Write(byte[] buffer, int offset, int count)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
     [TestMethod]
     public void Create()
     {
@@ -82,7 +133,7 @@ sealed class AesCmac_Tests
     {
         Assert.ThrowsException<ArgumentNullException>(() =>
         {
-            using var aesCmac = new AesCmac(null!);
+            using var aesCmac = new AesCmac(TestKeyNull);
         });
     }
 
@@ -175,217 +226,356 @@ sealed class AesCmac_Tests
     [TestMethod]
     public void TryHashData()
     {
-        var destination = new byte[BLOCKSIZE];
-
-        var success = AesCmac.TryHashData(TestKey.AsSpan(), TestMessage, destination, out var bytesWritten);
+        var success = AesCmac.TryHashData(TestKey, TestMessage, TestDestination, out var bytesWritten);
 
         Assert.IsTrue(success);
         Assert.AreEqual(BLOCKSIZE, bytesWritten);
-        CollectionAssert.AreEqual(TestTag, destination);
+        CollectionAssert.AreEqual(TestTag, TestDestination);
     }
 
     [TestMethod]
-    public void TryHashData_short()
+    public void TryHashData_DestinationLong()
     {
-        var destination = new byte[BLOCKSIZE - 1];
+        var success = AesCmac.TryHashData(TestKey, TestMessage, TestDestinationLong, out var bytesWritten);
 
-        var success = AesCmac.TryHashData(TestKey.AsSpan(), TestMessage, destination, out var bytesWritten);
+        Assert.IsTrue(success);
+        Assert.AreEqual(BLOCKSIZE, bytesWritten);
+        CollectionAssert.AreEqual(TestTag, TestDestinationLong[..BLOCKSIZE]);
+    }
+
+    [TestMethod]
+    public void TryHashData_DestinationShort()
+    {
+        var success = AesCmac.TryHashData(TestKey, TestMessage, TestDestinationShort, out var bytesWritten);
 
         Assert.IsFalse(success);
         Assert.AreEqual(0, bytesWritten);
     }
 
     [TestMethod]
+    public void TryHashData_KeyInvalid()
+    {
+        Assert.ThrowsException<CryptographicException>(() =>
+        {
+            AesCmac.TryHashData(TestKeyInvalid, TestMessage, TestDestination, out var bytesWritten);
+        });
+    }
+
+    [TestMethod]
     public void HashData_Array_Array()
     {
-        using var stream = new MemoryStream(TestMessage);
-
         var destination = AesCmac.HashData(TestKey, TestMessage);
 
         CollectionAssert.AreEqual(TestTag, destination);
     }
 
     [TestMethod]
+    public void HashData_Array_Array_KeyNull()
+    {
+        Assert.ThrowsException<ArgumentNullException>(() =>
+        {
+            AesCmac.HashData(TestKeyNull, TestMessage);
+        });
+    }
+
+    [TestMethod]
+    public void HashData_Array_Array_KeyInvalid()
+    {
+        Assert.ThrowsException<CryptographicException>(() =>
+        {
+            AesCmac.HashData(TestKeyInvalid, TestMessage);
+        });
+    }
+
+    [TestMethod]
+    public void HashData_Array_Array_MessageNull()
+    {
+        Assert.ThrowsException<ArgumentNullException>(() =>
+        {
+            AesCmac.HashData(TestKey, TestMessageNull);
+        });
+    }
+
+    [TestMethod]
     public void HashData_ReadOnlySpan_ReadOnlySpan()
     {
-        using var stream = new MemoryStream(TestMessage);
-
         var destination = AesCmac.HashData(TestKey.AsSpan(), TestMessage.AsSpan());
 
         CollectionAssert.AreEqual(TestTag, destination);
     }
 
     [TestMethod]
-    public void HashData_ReadOnlySpan_ReadOnlySpan_Span()
+    public void HashData_ReadOnlySpan_ReadOnlySpan_KeyInvalid()
     {
-        using var stream = new MemoryStream(TestMessage);
-        var destination = new byte[BLOCKSIZE];
-
-        var bytesWritten = AesCmac.HashData(TestKey.AsSpan(), TestMessage.AsSpan(), destination);
-
-        Assert.AreEqual(BLOCKSIZE, bytesWritten);
-        CollectionAssert.AreEqual(TestTag, destination);
+        Assert.ThrowsException<CryptographicException>(() =>
+        {
+            AesCmac.HashData(TestKeyInvalid.AsSpan(), TestMessage.AsSpan());
+        });
     }
 
     [TestMethod]
-    public void HashData_ReadOnlySpan_ReadOnlySpan_Span_Short()
+    public void HashData_ReadOnlySpan_ReadOnlySpan_Span()
     {
-        using var stream = new MemoryStream(TestMessage);
-        var destination = new byte[BLOCKSIZE - 1];
+        var bytesWritten = AesCmac.HashData(TestKey.AsSpan(), TestMessage.AsSpan(), TestDestination.AsSpan());
 
+        Assert.AreEqual(BLOCKSIZE, bytesWritten);
+        CollectionAssert.AreEqual(TestTag, TestDestination);
+    }
+
+    [TestMethod]
+    public void HashData_ReadOnlySpan_ReadOnlySpan_Span_KeyInvalid()
+    {
+        Assert.ThrowsException<CryptographicException>(() =>
+        {
+            AesCmac.HashData(TestKeyInvalid.AsSpan(), TestMessage.AsSpan(), TestDestination.AsSpan());
+        });
+    }
+
+    [TestMethod]
+    public void HashData_ReadOnlySpan_ReadOnlySpan_Span_DestinationShort()
+    {
         Assert.ThrowsException<ArgumentException>(() =>
         {
-            AesCmac.HashData(TestKey.AsSpan(), TestMessage.AsSpan(), destination);
+            AesCmac.HashData(TestKey.AsSpan(), TestMessage.AsSpan(), TestDestinationShort.AsSpan());
         });
     }
 
     [TestMethod]
     public void HashData_Array_Stream()
     {
-        using var stream = new MemoryStream(TestMessage);
-
-        var destination = AesCmac.HashData(TestKey, stream);
+        var destination = AesCmac.HashData(TestKey, TestStream);
 
         CollectionAssert.AreEqual(TestTag, destination);
     }
 
     [TestMethod]
-    public void HashData_Array_Stream_Null()
+    public void HashData_Array_Stream_KeyNull()
     {
-        var destination = new byte[BLOCKSIZE];
-
         Assert.ThrowsException<ArgumentNullException>(() =>
         {
-            AesCmac.HashData(TestKey, (Stream)null!);
+            AesCmac.HashData(TestKeyNull, TestStream);
+        });
+    }
+
+    [TestMethod]
+    public void HashData_Array_Stream_KeyInvalid()
+    {
+        Assert.ThrowsException<CryptographicException>(() =>
+        {
+            AesCmac.HashData(TestKeyInvalid, TestStream);
+        });
+    }
+
+    [TestMethod]
+    public void HashData_Array_Stream_StreamNull()
+    {
+        Assert.ThrowsException<ArgumentNullException>(() =>
+        {
+            AesCmac.HashData(TestKey, TestStreamNull);
+        });
+    }
+
+    [TestMethod]
+    public void HashData_Array_Stream_StreamInvalid()
+    {
+        Assert.ThrowsException<ArgumentException>(() =>
+        {
+            AesCmac.HashData(TestKey, TestStreamInvalid);
         });
     }
 
     [TestMethod]
     public void HashData_ReadOnlySpan_Stream()
     {
-        using var stream = new MemoryStream(TestMessage);
-
-        var destination = AesCmac.HashData(TestKey.AsSpan(), stream);
+        var destination = AesCmac.HashData(TestKey.AsSpan(), TestStream);
 
         CollectionAssert.AreEqual(TestTag, destination);
     }
 
     [TestMethod]
-    public void HashData_ReadOnlySpan_Stream_Null()
+    public void HashData_ReadOnlySpan_Stream_KeyInvalid()
     {
-        var destination = new byte[BLOCKSIZE];
+        Assert.ThrowsException<CryptographicException>(() =>
+        {
+            AesCmac.HashData(TestKeyInvalid.AsSpan(), TestStream);
+        });
+    }
 
+    [TestMethod]
+    public void HashData_ReadOnlySpan_Stream_StreamNull()
+    {
         Assert.ThrowsException<ArgumentNullException>(() =>
         {
-            AesCmac.HashData(TestKey.AsSpan(), (Stream)null!);
+            AesCmac.HashData(TestKey.AsSpan(), TestStreamNull);
+        });
+    }
+
+    [TestMethod]
+    public void HashData_ReadOnlySpan_Stream_StreamInvalid()
+    {
+        Assert.ThrowsException<ArgumentException>(() =>
+        {
+            AesCmac.HashData(TestKey.AsSpan(), TestStreamInvalid);
         });
     }
 
     [TestMethod]
     public void HashData_ReadOnlySpan_Stream_Span()
     {
-        using var stream = new MemoryStream(TestMessage);
-        var destination = new byte[BLOCKSIZE];
-
-        var bytesWritten = AesCmac.HashData(TestKey.AsSpan(), stream, destination);
+        var bytesWritten = AesCmac.HashData(TestKey.AsSpan(), TestStream, TestDestination.AsSpan());
 
         Assert.AreEqual(BLOCKSIZE, bytesWritten);
-        CollectionAssert.AreEqual(TestTag, destination);
+        CollectionAssert.AreEqual(TestTag, TestDestination);
     }
 
     [TestMethod]
-    public void HashData_ReadOnlySpan_Stream_Span_Null()
+    public void HashData_ReadOnlySpan_Stream_Span_KeyInvalid()
     {
-        var destination = new byte[BLOCKSIZE];
-
-        Assert.ThrowsException<ArgumentNullException>(() =>
+        Assert.ThrowsException<CryptographicException>(() =>
         {
-            AesCmac.HashData(TestKey.AsSpan(), (Stream)null!, destination);
+            AesCmac.HashData(TestKeyInvalid.AsSpan(), TestStream, TestDestination.AsSpan());
         });
     }
 
     [TestMethod]
-    public void HashData_ReadOnlySpan_Stream_Span_Short()
+    public void HashData_ReadOnlySpan_Stream_Span_StreamNull()
     {
-        using var stream = new MemoryStream(TestMessage);
-        var destination = new byte[BLOCKSIZE - 1];
+        Assert.ThrowsException<ArgumentNullException>(() =>
+        {
+            AesCmac.HashData(TestKey.AsSpan(), TestStreamNull, TestDestination.AsSpan());
+        });
+    }
 
+    [TestMethod]
+    public void HashData_ReadOnlySpan_Stream_Span_DestinationShort()
+    {
         Assert.ThrowsException<ArgumentException>(() =>
         {
-            AesCmac.HashData(TestKey.AsSpan(), stream, destination);
+            AesCmac.HashData(TestKey.AsSpan(), TestStream, TestDestinationShort.AsSpan());
         });
     }
 
     [TestMethod]
     public async Task HashDataAsync_Array_Stream()
     {
-        using var stream = new MemoryStream(TestMessage);
-
-        var destination = await AesCmac.HashDataAsync(TestKey, stream);
+        var destination = await AesCmac.HashDataAsync(TestKey, TestStream);
 
         CollectionAssert.AreEqual(TestTag, destination);
     }
 
     [TestMethod]
-    public async Task HashDataAsync_Array_Stream_Null()
+    public async Task HashDataAsync_Array_Stream_KeyNull()
     {
         await Assert.ThrowsExceptionAsync<ArgumentNullException>(async () =>
         {
-            await AesCmac.HashDataAsync(TestKey, null!);
+            await AesCmac.HashDataAsync(TestKeyNull, TestStream);
+        });
+    }
+
+    [TestMethod]
+    public async Task HashDataAsync_Array_Stream_KeyInvalid()
+    {
+        await Assert.ThrowsExceptionAsync<CryptographicException>(async () =>
+        {
+            await AesCmac.HashDataAsync(TestKeyInvalid, TestStream);
+        });
+    }
+
+    [TestMethod]
+    public async Task HashDataAsync_Array_Stream_StreamNull()
+    {
+        await Assert.ThrowsExceptionAsync<ArgumentNullException>(async () =>
+        {
+            await AesCmac.HashDataAsync(TestKey, TestStreamNull);
+        });
+    }
+
+    [TestMethod]
+    public async Task HashDataAsync_Array_Stream_StreamInvalid()
+    {
+        await Assert.ThrowsExceptionAsync<ArgumentException>(async () =>
+        {
+            await AesCmac.HashDataAsync(TestKey, TestStreamInvalid);
         });
     }
 
     [TestMethod]
     public async Task HashDataAsync_ReadOnlyMemory_Stream()
     {
-        using var stream = new MemoryStream(TestMessage);
-
-        var destination = await AesCmac.HashDataAsync(TestKey.AsMemory(), stream);
+        var destination = await AesCmac.HashDataAsync(TestKey.AsMemory(), TestStream);
 
         CollectionAssert.AreEqual(TestTag, destination);
     }
 
     [TestMethod]
-    public async Task HashDataAsync_ReadOnlyMemory_Stream_Null()
+    public async Task HashDataAsync_ReadOnlyMemory_Stream_KeyInvalid()
+    {
+        await Assert.ThrowsExceptionAsync<CryptographicException>(async () =>
+        {
+            await AesCmac.HashDataAsync(TestKeyInvalid.AsMemory(), TestStream);
+        });
+    }
+
+    [TestMethod]
+    public async Task HashDataAsync_ReadOnlyMemory_Stream_StreamNull()
     {
         await Assert.ThrowsExceptionAsync<ArgumentNullException>(async () =>
         {
-            await AesCmac.HashDataAsync(TestKey.AsMemory(), null!);
+            await AesCmac.HashDataAsync(TestKey.AsMemory(), TestStreamNull);
+        });
+    }
+
+    [TestMethod]
+    public async Task HashDataAsync_ReadOnlyMemory_Stream_StreamInvalid()
+    {
+        await Assert.ThrowsExceptionAsync<ArgumentException>(async () =>
+        {
+            await AesCmac.HashDataAsync(TestKey.AsMemory(), TestStreamInvalid);
         });
     }
 
     [TestMethod]
     public async Task HashDataAsync_ReadOnlyMemory_Stream_Memory()
     {
-        using var stream = new MemoryStream(TestMessage);
-        var destination = new byte[BLOCKSIZE];
-
-        var bytesWritten = await AesCmac.HashDataAsync(TestKey.AsMemory(), stream, destination.AsMemory());
+        var bytesWritten = await AesCmac.HashDataAsync(TestKey.AsMemory(), TestStream, TestDestination.AsMemory());
 
         Assert.AreEqual(BLOCKSIZE, bytesWritten);
-        CollectionAssert.AreEqual(TestTag, destination);
+        CollectionAssert.AreEqual(TestTag, TestDestination);
     }
 
     [TestMethod]
-    public async Task HashDataAsync_ReadOnlyMemory_Stream_Memory_Null()
+    public async Task HashDataAsync_ReadOnlyMemory_Stream_Memory_KeyInvalid()
     {
-        var destination = new byte[BLOCKSIZE];
-
-        await Assert.ThrowsExceptionAsync<ArgumentNullException>(async () =>
+        await Assert.ThrowsExceptionAsync<CryptographicException>(async () =>
         {
-            await AesCmac.HashDataAsync(TestKey.AsMemory(), null!, destination.AsMemory());
+            await AesCmac.HashDataAsync(TestKeyInvalid.AsMemory(), TestStream, TestDestination.AsMemory());
         });
     }
 
     [TestMethod]
-    public async Task HashDataAsync_ReadOnlyMemory_Stream_Memory_Short()
+    public async Task HashDataAsync_ReadOnlyMemory_Stream_Memory_StreamNull()
     {
-        using var stream = new MemoryStream(TestMessage);
-        var destination = new byte[BLOCKSIZE - 1];
+        await Assert.ThrowsExceptionAsync<ArgumentNullException>(async () =>
+        {
+            await AesCmac.HashDataAsync(TestKey.AsMemory(), TestStreamNull, TestDestination.AsMemory());
+        });
+    }
 
+    [TestMethod]
+    public async Task HashDataAsync_ReadOnlyMemory_Stream_Memory_StreamInvalid()
+    {
         await Assert.ThrowsExceptionAsync<ArgumentException>(async () =>
         {
-            await AesCmac.HashDataAsync(TestKey.AsMemory(), stream, destination.AsMemory());
+            await AesCmac.HashDataAsync(TestKey.AsMemory(), TestStreamInvalid, TestDestination.AsMemory());
+        });
+    }
+
+    [TestMethod]
+    public async Task HashDataAsync_ReadOnlyMemory_Stream_Memory_DestinationShort()
+    {
+        await Assert.ThrowsExceptionAsync<ArgumentException>(async () =>
+        {
+            await AesCmac.HashDataAsync(TestKey.AsMemory(), TestStream, TestDestinationShort.AsMemory());
         });
     }
 }
