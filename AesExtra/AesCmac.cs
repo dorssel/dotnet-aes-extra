@@ -4,7 +4,6 @@
 // SPDX-License-Identifier: MIT
 
 using System.Buffers;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
@@ -289,7 +288,7 @@ public sealed class AesCmac
 
     #region Modern_KeyedHashAlgorithm
     // Helper with a byte[] as key, which is required since we need to pass it as such.
-    static void OneShot(byte[] key, ReadOnlySpan<byte> source, Span<byte> destination)
+    static void UncheckedOneShot(byte[] key, ReadOnlySpan<byte> source, Span<byte> destination)
     {
         using var cmac = new AesCmac(key);
         cmac.UncheckedHashCore(source);
@@ -298,10 +297,8 @@ public sealed class AesCmac
 
     // Helper with a byte[] as key, which is required since we need to pass it as such.
     // see https://github.com/dotnet/runtime/blob/main/src/libraries/System.Security.Cryptography/src/System/Security/Cryptography/LiteHashProvider.cs
-    static void OneShot(byte[] key, Stream source, Span<byte> destination)
+    static void UncheckedOneShot(byte[] key, Stream source, Span<byte> destination)
     {
-        Debug.Assert(destination.Length >= BLOCKSIZE);
-
         using var cmac = new AesCmac(key);
         var maxRead = 0;
         int read;
@@ -324,10 +321,8 @@ public sealed class AesCmac
 
     // Helper with a byte[] as key, which is required since we need to pass it as such.
     // see https://github.com/dotnet/runtime/blob/main/src/libraries/System.Security.Cryptography/src/System/Security/Cryptography/LiteHashProvider.cs
-    static async ValueTask OneShotAsync(byte[] key, Stream source, Memory<byte> destination, CancellationToken cancellationToken)
+    static async ValueTask UncheckedOneShotAsync(byte[] key, Stream source, Memory<byte> destination, CancellationToken cancellationToken)
     {
-        Debug.Assert(destination.Length >= BLOCKSIZE);
-
         using var cmac = new AesCmac(key);
         var maxRead = 0;
         int read;
@@ -348,16 +343,63 @@ public sealed class AesCmac
         }
     }
 
+    static void ThrowIfInvalidKey(ReadOnlySpan<byte> key)
+    {
+        if (key.Length is not (16 or 24 or 32))
+        {
+            throw new CryptographicException("Specified key is not a valid size for this algorithm.", nameof(key));
+        }
+    }
+
+    static void ThrowIfInvalidKey(byte[] key)
+    {
+        if (key is null)
+        {
+            throw new ArgumentNullException(nameof(key));
+        }
+        ThrowIfInvalidKey(key.AsSpan());
+    }
+
+    static void ThrowIfInvalidSource(byte[] source)
+    {
+        if (source is null)
+        {
+            throw new ArgumentNullException(nameof(source));
+        }
+    }
+
+    static void ThrowIfInvalidSource(Stream source)
+    {
+        if (source is null)
+        {
+            throw new ArgumentNullException(nameof(source));
+        }
+        if (!source.CanRead)
+        {
+            throw new ArgumentException("Source does not support reading.", nameof(source));
+        }
+    }
+
+    static void ThrowIfInvalidDestination(Span<byte> destination)
+    {
+        if (destination.Length < BLOCKSIZE)
+        {
+            throw new ArgumentException("Destination is too short.", nameof(destination));
+        }
+    }
+
     /// <summary>
-    /// TODO
+    /// Attempts to compute the CMAC of data using the AES-CMAC algorithm.
     /// </summary>
-    /// <param name="key">TODO</param>
-    /// <param name="source">TODO</param>
-    /// <param name="destination">TODO</param>
-    /// <param name="bytesWritten">TODO</param>
-    /// <returns>TODO</returns>
+    /// <param name="key">The CMAC key.</param>
+    /// <param name="source">The data to CMAC.</param>
+    /// <param name="destination">The buffer to receive the CMAC value.</param>
+    /// <param name="bytesWritten">When this method returns, the total number of bytes written into <paramref name="destination"/>.</param>
+    /// <returns><see langword="false"/> if <paramref name="destination"/> is too small to hold the calculated CMAC, <see langword="true"/> otherwise.</returns>
+    /// <exception cref="CryptographicException">The <paramref name="key"/> length is other than 16, 24, or 32 bytes (128, 192, or 256 bits).</exception>
     public static bool TryHashData(ReadOnlySpan<byte> key, ReadOnlySpan<byte> source, Span<byte> destination, out int bytesWritten)
     {
+        ThrowIfInvalidKey(key);
         if (destination.Length < BLOCKSIZE)
         {
             bytesWritten = 0;
@@ -365,179 +407,217 @@ public sealed class AesCmac
         }
 
         using var keyCopy = new SecureByteArray(key);
-        OneShot(keyCopy, source, destination);
+        UncheckedOneShot(keyCopy, source, destination);
         bytesWritten = BLOCKSIZE;
         return true;
     }
 
     /// <summary>
-    /// TODO
+    /// Computes the CMAC of data using the AES-CMAC algorithm.
     /// </summary>
-    /// <param name="key">TODO</param>
-    /// <param name="source">TODO</param>
-    /// <returns>TODO</returns>
+    /// <param name="key">The CMAC key.</param>
+    /// <param name="source">The data to CMAC.</param>
+    /// <returns>The CMAC of the data.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="key"/> or <paramref name="source"/> is <see langword="null"/>.</exception>
+    /// <exception cref="CryptographicException">The <paramref name="key"/> length is other than 16, 24, or 32 bytes (128, 192, or 256 bits).</exception>
     public static byte[] HashData(byte[] key, byte[] source)
     {
+        ThrowIfInvalidKey(key);
+        ThrowIfInvalidSource(source);
+
         var destination = new byte[BLOCKSIZE];
-        OneShot(key, source, destination);
+        UncheckedOneShot(key, source, destination);
         return destination;
     }
 
     /// <summary>
-    /// TODO
+    /// Computes the CMAC of data using the AES-CMAC algorithm.
     /// </summary>
-    /// <param name="key">TODO</param>
-    /// <param name="source">TODO</param>
-    /// <returns>TODO</returns>
+    /// <param name="key">The CMAC key.</param>
+    /// <param name="source">The data to CMAC.</param>
+    /// <returns>The CMAC of the data.</returns>
+    /// <exception cref="CryptographicException">The <paramref name="key"/> length is other than 16, 24, or 32 bytes (128, 192, or 256 bits).</exception>
     public static byte[] HashData(ReadOnlySpan<byte> key, ReadOnlySpan<byte> source)
     {
+        ThrowIfInvalidKey(key);
+
         using var keyCopy = new SecureByteArray(key);
         var destination = new byte[BLOCKSIZE];
-        OneShot(keyCopy, source, destination);
+        UncheckedOneShot(keyCopy, source, destination);
         return destination;
     }
 
     /// <summary>
-    /// TODO
+    /// Computes the CMAC of data using the AES-CMAC algorithm.
     /// </summary>
-    /// <param name="key">TODO</param>
-    /// <param name="source">TODO</param>
-    /// <param name="destination">TODO</param>
-    /// <returns>TODO</returns>
+    /// <param name="key">The CMAC key.</param>
+    /// <param name="source">The data to CMAC.</param>
+    /// <param name="destination">The buffer to receive the CMAC value.</param>
+    /// <returns>The total number of bytes written to <paramref name="destination"/>.</returns>
+    /// <exception cref="ArgumentException">
+    /// The buffer in <paramref name="destination"/> is too small to hold the calculated CMAC.
+    /// The AES-CMAC algorithm always produces a 256-bit CMAC, or 32 bytes.
+    /// </exception>
+    /// <exception cref="CryptographicException">The <paramref name="key"/> length is other than 16, 24, or 32 bytes (128, 192, or 256 bits).</exception>
     public static int HashData(ReadOnlySpan<byte> key, ReadOnlySpan<byte> source, Span<byte> destination)
     {
-        if (destination.Length < BLOCKSIZE)
-        {
-            throw new ArgumentException("Destination is too short.", nameof(destination));
-        }
+        ThrowIfInvalidKey(key);
+        ThrowIfInvalidDestination(destination);
 
         using var keyCopy = new SecureByteArray(key);
-        OneShot(keyCopy, source, destination);
+        UncheckedOneShot(keyCopy, source, destination);
         return BLOCKSIZE;
     }
 
     /// <summary>
-    /// TODO
+    /// Computes the CMAC of a stream using the AES-CMAC algorithm.
     /// </summary>
-    /// <param name="key">TODO</param>
-    /// <param name="source">TODO</param>
-    /// <returns>TODO</returns>
+    /// <param name="key">The CMAC key.</param>
+    /// <param name="source">The stream to CMAC.</param>
+    /// <returns>The CMAC of the data.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="key"/> or <paramref name="source"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentException"><paramref name="source"/> does not support reading.</exception>
+    /// <exception cref="CryptographicException">The <paramref name="key"/> length is other than 16, 24, or 32 bytes (128, 192, or 256 bits).</exception>
     public static byte[] HashData(byte[] key, Stream source)
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        ThrowIfInvalidKey(key);
+        ThrowIfInvalidSource(source);
 
         var destination = new byte[BLOCKSIZE];
-        OneShot(key, source, destination);
+        UncheckedOneShot(key, source, destination);
         return destination;
     }
 
     /// <summary>
-    /// TODO
+    /// Computes the CMAC of a stream using the AES-CMAC algorithm.
     /// </summary>
-    /// <param name="key">TODO</param>
-    /// <param name="source">TODO</param>
-    /// <returns>TODO</returns>
+    /// <param name="key">The CMAC key.</param>
+    /// <param name="source">The stream to CMAC.</param>
+    /// <returns>The CMAC of the data.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentException"><paramref name="source"/> does not support reading.</exception>
+    /// <exception cref="CryptographicException">The <paramref name="key"/> length is other than 16, 24, or 32 bytes (128, 192, or 256 bits).</exception>
     public static byte[] HashData(ReadOnlySpan<byte> key, Stream source)
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        ThrowIfInvalidKey(key);
+        ThrowIfInvalidSource(source);
 
         using var keyCopy = new SecureByteArray(key);
         var destination = new byte[BLOCKSIZE];
-        OneShot(keyCopy, source, destination);
+        UncheckedOneShot(keyCopy, source, destination);
         return destination;
     }
 
     /// <summary>
-    /// TODO
+    /// Computes the CMAC of a stream using the AES-CMAC algorithm.
     /// </summary>
-    /// <param name="key">TODO</param>
-    /// <param name="source">TODO</param>
-    /// <param name="destination">TODO</param>
-    /// <returns>TODO</returns>
+    /// <param name="key">The CMAC key.</param>
+    /// <param name="source">The stream to CMAC.</param>
+    /// <param name="destination">The buffer to receive the CMAC value.</param>
+    /// <returns>The total number of bytes written to <paramref name="destination"/>.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentException">
+    /// The buffer in <paramref name="destination"/> is too small to hold the calculated CMAC.
+    /// The AES-CMAC algorithm always produces a 256-bit CMAC, or 32 bytes.
+    ///
+    /// -or-
+    ///
+    /// <paramref name="source"/> does not support reading.
+    /// </exception>
+    /// <exception cref="CryptographicException">The <paramref name="key"/> length is other than 16, 24, or 32 bytes (128, 192, or 256 bits).</exception>
     public static int HashData(ReadOnlySpan<byte> key, Stream source, Span<byte> destination)
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-        if (destination.Length < BLOCKSIZE)
-        {
-            throw new ArgumentException("Destination is too short.", nameof(destination));
-        }
+        ThrowIfInvalidKey(key);
+        ThrowIfInvalidSource(source);
+        ThrowIfInvalidDestination(destination);
 
         using var keyCopy = new SecureByteArray(key);
-        OneShot(keyCopy, source, destination);
+        UncheckedOneShot(keyCopy, source, destination);
         return BLOCKSIZE;
     }
 
     /// <summary>
-    /// TODO
+    /// Asynchronously computes the CMAC of a stream using the AES-CMAC algorithm.
     /// </summary>
-    /// <param name="key">TODO</param>
-    /// <param name="source">TODO</param>
-    /// <param name="cancellationToken">TODO</param>
-    /// <returns>TODO</returns>
-    /// <exception cref="ArgumentNullException">TODO</exception>
+    /// <param name="key">The CMAC key.</param>
+    /// <param name="source">The stream to CMAC.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
+    /// <returns>The HMAC of the data.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="key"/> or <paramref name="source"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentException"><paramref name="source"/> does not support reading.</exception>
+    /// <exception cref="OperationCanceledException">The cancellation token was canceled. This exception is stored into the returned task.</exception>
+    /// <remarks>
+    /// This method stores in the task it returns all non-usage exceptions that the method's synchronous counterpart can throw.
+    /// If an exception is stored into the returned task, that exception will be thrown when the task is awaited.
+    /// Usage exceptions, such as <see cref="ArgumentException"/>, are still thrown synchronously.
+    /// For the stored exceptions, see the exceptions thrown by <see cref="HashData(byte[], Stream)"/>.
+    /// </remarks>
+    /// <exception cref="CryptographicException">The <paramref name="key"/> length is other than 16, 24, or 32 bytes (128, 192, or 256 bits).</exception>
     public static async ValueTask<byte[]> HashDataAsync(byte[] key, Stream source, CancellationToken cancellationToken = default)
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        ThrowIfInvalidKey(key);
+        ThrowIfInvalidSource(source);
 
         var destination = new byte[BLOCKSIZE];
-        await OneShotAsync(key, source, destination, cancellationToken).ConfigureAwait(false);
+        await UncheckedOneShotAsync(key, source, destination, cancellationToken).ConfigureAwait(false);
         return destination;
     }
 
     /// <summary>
-    /// TODO
+    /// Asynchronously computes the CMAC of a stream using the AES-CMAC algorithm.
     /// </summary>
-    /// <param name="key">TODO</param>
-    /// <param name="source">TODO</param>
-    /// <param name="cancellationToken">TODO</param>
-    /// <returns>TODO</returns>
+    /// <param name="key">The CMAC key.</param>
+    /// <param name="source">The stream to CMAC.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
+    /// <returns>The HMAC of the data.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentException"><paramref name="source"/> does not support reading.</exception>
+    /// <exception cref="OperationCanceledException">The cancellation token was canceled. This exception is stored into the returned task.</exception>
+    /// <remarks>
+    /// This method stores in the task it returns all non-usage exceptions that the method's synchronous counterpart can throw.
+    /// If an exception is stored into the returned task, that exception will be thrown when the task is awaited.
+    /// Usage exceptions, such as <see cref="ArgumentException"/>, are still thrown synchronously.
+    /// For the stored exceptions, see the exceptions thrown by <see cref="HashData(ReadOnlySpan{byte}, Stream)"/>.
+    /// </remarks>
+    /// <exception cref="CryptographicException">The <paramref name="key"/> length is other than 16, 24, or 32 bytes (128, 192, or 256 bits).</exception>
     public static async ValueTask<byte[]> HashDataAsync(ReadOnlyMemory<byte> key, Stream source, CancellationToken cancellationToken = default)
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
+        ThrowIfInvalidKey(key.Span);
+        ThrowIfInvalidSource(source);
 
         using var keyCopy = new SecureByteArray(key);
         var destination = new byte[BLOCKSIZE];
-        await OneShotAsync(keyCopy, source, destination, cancellationToken).ConfigureAwait(false);
+        await UncheckedOneShotAsync(keyCopy, source, destination, cancellationToken).ConfigureAwait(false);
         return destination;
     }
 
     /// <summary>
-    /// TODO
+    /// Asynchronously computes the CMAC of a stream using the AES-CMAC algorithm.
     /// </summary>
-    /// <param name="key">TODO</param>
-    /// <param name="source">TODO</param>
-    /// <param name="destination">TODO</param>
-    /// <param name="cancellationToken">TODO</param>
-    /// <returns>TODO</returns>
+    /// <param name="key">The CMAC key.</param>
+    /// <param name="source">The stream to CMAC.</param>
+    /// <param name="destination">The buffer to receive the CMAC value.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
+    /// <returns>The total number of bytes written to <paramref name="destination"/>.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentException"><paramref name="source"/> does not support reading.</exception>
+    /// <exception cref="OperationCanceledException">The cancellation token was canceled. This exception is stored into the returned task.</exception>
+    /// <remarks>
+    /// This method stores in the task it returns all non-usage exceptions that the method's synchronous counterpart can throw.
+    /// If an exception is stored into the returned task, that exception will be thrown when the task is awaited.
+    /// Usage exceptions, such as <see cref="ArgumentException"/>, are still thrown synchronously.
+    /// For the stored exceptions, see the exceptions thrown by <see cref="HashData(ReadOnlySpan{byte}, ReadOnlySpan{byte}, Span{byte})"/>.
+    /// </remarks>
+    /// <exception cref="CryptographicException">The <paramref name="key"/> length is other than 16, 24, or 32 bytes (128, 192, or 256 bits).</exception>
     public static async ValueTask<int> HashDataAsync(ReadOnlyMemory<byte> key, Stream source, Memory<byte> destination,
         CancellationToken cancellationToken = default)
     {
-        if (source is null)
-        {
-            throw new ArgumentNullException(nameof(source));
-        }
-        if (destination.Length < BLOCKSIZE)
-        {
-            throw new ArgumentException("Destination is too short.", nameof(destination));
-        }
+        ThrowIfInvalidKey(key.Span);
+        ThrowIfInvalidSource(source);
+        ThrowIfInvalidDestination(destination.Span);
 
         using var keyCopy = new SecureByteArray(key);
-        await OneShotAsync(keyCopy, source, destination, cancellationToken).ConfigureAwait(false);
+        await UncheckedOneShotAsync(keyCopy, source, destination, cancellationToken).ConfigureAwait(false);
         return BLOCKSIZE;
     }
 #endregion
