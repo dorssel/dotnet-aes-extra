@@ -13,6 +13,8 @@ namespace Dorssel.Security.Cryptography;
 /// <summary>
 /// Computes a Cipher-based Message Authentication Code (CMAC) by using the symmetric key AES block cipher.
 /// </summary>
+/// <seealso href="https://csrc.nist.gov/publications/detail/sp/800-38b/final"/>
+/// <seealso href="https://www.rfc-editor.org/rfc/rfc4493.html"/>
 public sealed class AesCmac
     : KeyedHashAlgorithm
 {
@@ -343,6 +345,7 @@ public sealed class AesCmac
         }
     }
 
+    /// <exception cref="CryptographicException">The <paramref name="key"/> length is other than 16, 24, or 32 bytes (128, 192, or 256 bits).</exception>
     static void ThrowIfInvalidKey(ReadOnlySpan<byte> key)
     {
         if (key.Length is not (16 or 24 or 32))
@@ -351,6 +354,8 @@ public sealed class AesCmac
         }
     }
 
+    /// <exception cref="ArgumentNullException"><paramref name="key"/> is <see langword="null"/>.</exception>
+    /// <inheritdoc cref="ThrowIfInvalidKey(ReadOnlySpan{byte})"/>
     static void ThrowIfInvalidKey(byte[] key)
     {
         if (key is null)
@@ -360,6 +365,7 @@ public sealed class AesCmac
         ThrowIfInvalidKey(key.AsSpan());
     }
 
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
     static void ThrowIfInvalidSource(byte[] source)
     {
         if (source is null)
@@ -368,6 +374,8 @@ public sealed class AesCmac
         }
     }
 
+    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentException"><paramref name="source"/> does not support reading.</exception>
     static void ThrowIfInvalidSource(Stream source)
     {
         if (source is null)
@@ -380,6 +388,10 @@ public sealed class AesCmac
         }
     }
 
+    /// <exception cref="ArgumentException">
+    /// The buffer in <paramref name="destination"/> is too small to hold the calculated CMAC.
+    /// The AES-CMAC algorithm always produces a 128-bit CMAC, or 16 bytes.
+    /// </exception>
     static void ThrowIfInvalidDestination(Span<byte> destination)
     {
         if (destination.Length < BLOCKSIZE)
@@ -395,11 +407,14 @@ public sealed class AesCmac
     /// <param name="source">The data to CMAC.</param>
     /// <param name="destination">The buffer to receive the CMAC value.</param>
     /// <param name="bytesWritten">When this method returns, the total number of bytes written into <paramref name="destination"/>.</param>
-    /// <returns><see langword="false"/> if <paramref name="destination"/> is too small to hold the calculated CMAC, <see langword="true"/> otherwise.</returns>
-    /// <exception cref="CryptographicException">The <paramref name="key"/> length is other than 16, 24, or 32 bytes (128, 192, or 256 bits).</exception>
+    /// <returns>
+    /// <see langword="true"/> if <paramref name="destination"/> was large enough to receive the calculated CMAC; otherwise, <see langword="false"/>.
+    /// </returns>
+    /// <inheritdoc cref="ThrowIfInvalidKey(ReadOnlySpan{byte})"/>
     public static bool TryHashData(ReadOnlySpan<byte> key, ReadOnlySpan<byte> source, Span<byte> destination, out int bytesWritten)
     {
         ThrowIfInvalidKey(key);
+
         if (destination.Length < BLOCKSIZE)
         {
             bytesWritten = 0;
@@ -418,8 +433,8 @@ public sealed class AesCmac
     /// <param name="key">The CMAC key.</param>
     /// <param name="source">The data to CMAC.</param>
     /// <returns>The CMAC of the data.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="key"/> or <paramref name="source"/> is <see langword="null"/>.</exception>
-    /// <exception cref="CryptographicException">The <paramref name="key"/> length is other than 16, 24, or 32 bytes (128, 192, or 256 bits).</exception>
+    /// <inheritdoc cref="ThrowIfInvalidKey(byte[])"/>
+    /// <inheritdoc cref="ThrowIfInvalidSource(byte[])"/>
     public static byte[] HashData(byte[] key, byte[] source)
     {
         ThrowIfInvalidKey(key);
@@ -436,7 +451,7 @@ public sealed class AesCmac
     /// <param name="key">The CMAC key.</param>
     /// <param name="source">The data to CMAC.</param>
     /// <returns>The CMAC of the data.</returns>
-    /// <exception cref="CryptographicException">The <paramref name="key"/> length is other than 16, 24, or 32 bytes (128, 192, or 256 bits).</exception>
+    /// <inheritdoc cref="ThrowIfInvalidKey(ReadOnlySpan{byte})"/>
     public static byte[] HashData(ReadOnlySpan<byte> key, ReadOnlySpan<byte> source)
     {
         ThrowIfInvalidKey(key);
@@ -454,11 +469,8 @@ public sealed class AesCmac
     /// <param name="source">The data to CMAC.</param>
     /// <param name="destination">The buffer to receive the CMAC value.</param>
     /// <returns>The total number of bytes written to <paramref name="destination"/>.</returns>
-    /// <exception cref="ArgumentException">
-    /// The buffer in <paramref name="destination"/> is too small to hold the calculated CMAC.
-    /// The AES-CMAC algorithm always produces a 256-bit CMAC, or 32 bytes.
-    /// </exception>
-    /// <exception cref="CryptographicException">The <paramref name="key"/> length is other than 16, 24, or 32 bytes (128, 192, or 256 bits).</exception>
+    /// <inheritdoc cref="ThrowIfInvalidKey(ReadOnlySpan{byte})"/>
+    /// <inheritdoc cref="ThrowIfInvalidDestination(Span{byte})"/>
     public static int HashData(ReadOnlySpan<byte> key, ReadOnlySpan<byte> source, Span<byte> destination)
     {
         ThrowIfInvalidKey(key);
@@ -475,9 +487,8 @@ public sealed class AesCmac
     /// <param name="key">The CMAC key.</param>
     /// <param name="source">The stream to CMAC.</param>
     /// <returns>The CMAC of the data.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="key"/> or <paramref name="source"/> is <see langword="null"/>.</exception>
-    /// <exception cref="ArgumentException"><paramref name="source"/> does not support reading.</exception>
-    /// <exception cref="CryptographicException">The <paramref name="key"/> length is other than 16, 24, or 32 bytes (128, 192, or 256 bits).</exception>
+    /// <inheritdoc cref="ThrowIfInvalidKey(byte[])"/>
+    /// <inheritdoc cref="ThrowIfInvalidSource(Stream)"/>
     public static byte[] HashData(byte[] key, Stream source)
     {
         ThrowIfInvalidKey(key);
@@ -494,9 +505,8 @@ public sealed class AesCmac
     /// <param name="key">The CMAC key.</param>
     /// <param name="source">The stream to CMAC.</param>
     /// <returns>The CMAC of the data.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
-    /// <exception cref="ArgumentException"><paramref name="source"/> does not support reading.</exception>
-    /// <exception cref="CryptographicException">The <paramref name="key"/> length is other than 16, 24, or 32 bytes (128, 192, or 256 bits).</exception>
+    /// <inheritdoc cref="ThrowIfInvalidKey(ReadOnlySpan{byte})"/>
+    /// <inheritdoc cref="ThrowIfInvalidSource(Stream)"/>
     public static byte[] HashData(ReadOnlySpan<byte> key, Stream source)
     {
         ThrowIfInvalidKey(key);
@@ -515,16 +525,9 @@ public sealed class AesCmac
     /// <param name="source">The stream to CMAC.</param>
     /// <param name="destination">The buffer to receive the CMAC value.</param>
     /// <returns>The total number of bytes written to <paramref name="destination"/>.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
-    /// <exception cref="ArgumentException">
-    /// The buffer in <paramref name="destination"/> is too small to hold the calculated CMAC.
-    /// The AES-CMAC algorithm always produces a 256-bit CMAC, or 32 bytes.
-    ///
-    /// -or-
-    ///
-    /// <paramref name="source"/> does not support reading.
-    /// </exception>
-    /// <exception cref="CryptographicException">The <paramref name="key"/> length is other than 16, 24, or 32 bytes (128, 192, or 256 bits).</exception>
+    /// <inheritdoc cref="ThrowIfInvalidKey(ReadOnlySpan{byte})"/>
+    /// <inheritdoc cref="ThrowIfInvalidSource(Stream)"/>
+    /// <inheritdoc cref="ThrowIfInvalidDestination(Span{byte})"/>
     public static int HashData(ReadOnlySpan<byte> key, Stream source, Span<byte> destination)
     {
         ThrowIfInvalidKey(key);
@@ -543,8 +546,8 @@ public sealed class AesCmac
     /// <param name="source">The stream to CMAC.</param>
     /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
     /// <returns>The HMAC of the data.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="key"/> or <paramref name="source"/> is <see langword="null"/>.</exception>
-    /// <exception cref="ArgumentException"><paramref name="source"/> does not support reading.</exception>
+    /// <inheritdoc cref="ThrowIfInvalidKey(byte[])"/>
+    /// <inheritdoc cref="ThrowIfInvalidSource(Stream)"/>
     /// <exception cref="OperationCanceledException">The cancellation token was canceled. This exception is stored into the returned task.</exception>
     /// <remarks>
     /// This method stores in the task it returns all non-usage exceptions that the method's synchronous counterpart can throw.
@@ -552,7 +555,6 @@ public sealed class AesCmac
     /// Usage exceptions, such as <see cref="ArgumentException"/>, are still thrown synchronously.
     /// For the stored exceptions, see the exceptions thrown by <see cref="HashData(byte[], Stream)"/>.
     /// </remarks>
-    /// <exception cref="CryptographicException">The <paramref name="key"/> length is other than 16, 24, or 32 bytes (128, 192, or 256 bits).</exception>
     public static async ValueTask<byte[]> HashDataAsync(byte[] key, Stream source, CancellationToken cancellationToken = default)
     {
         ThrowIfInvalidKey(key);
@@ -570,8 +572,8 @@ public sealed class AesCmac
     /// <param name="source">The stream to CMAC.</param>
     /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
     /// <returns>The HMAC of the data.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
-    /// <exception cref="ArgumentException"><paramref name="source"/> does not support reading.</exception>
+    /// <inheritdoc cref="ThrowIfInvalidKey(ReadOnlySpan{byte})"/>
+    /// <inheritdoc cref="ThrowIfInvalidSource(Stream)"/>
     /// <exception cref="OperationCanceledException">The cancellation token was canceled. This exception is stored into the returned task.</exception>
     /// <remarks>
     /// This method stores in the task it returns all non-usage exceptions that the method's synchronous counterpart can throw.
@@ -579,7 +581,6 @@ public sealed class AesCmac
     /// Usage exceptions, such as <see cref="ArgumentException"/>, are still thrown synchronously.
     /// For the stored exceptions, see the exceptions thrown by <see cref="HashData(ReadOnlySpan{byte}, Stream)"/>.
     /// </remarks>
-    /// <exception cref="CryptographicException">The <paramref name="key"/> length is other than 16, 24, or 32 bytes (128, 192, or 256 bits).</exception>
     public static async ValueTask<byte[]> HashDataAsync(ReadOnlyMemory<byte> key, Stream source, CancellationToken cancellationToken = default)
     {
         ThrowIfInvalidKey(key.Span);
@@ -599,8 +600,9 @@ public sealed class AesCmac
     /// <param name="destination">The buffer to receive the CMAC value.</param>
     /// <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="CancellationToken.None"/>.</param>
     /// <returns>The total number of bytes written to <paramref name="destination"/>.</returns>
-    /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>
-    /// <exception cref="ArgumentException"><paramref name="source"/> does not support reading.</exception>
+    /// <inheritdoc cref="ThrowIfInvalidKey(ReadOnlySpan{byte})"/>
+    /// <inheritdoc cref="ThrowIfInvalidSource(Stream)"/>
+    /// <inheritdoc cref="ThrowIfInvalidDestination(Span{byte})"/>
     /// <exception cref="OperationCanceledException">The cancellation token was canceled. This exception is stored into the returned task.</exception>
     /// <remarks>
     /// This method stores in the task it returns all non-usage exceptions that the method's synchronous counterpart can throw.
@@ -608,7 +610,6 @@ public sealed class AesCmac
     /// Usage exceptions, such as <see cref="ArgumentException"/>, are still thrown synchronously.
     /// For the stored exceptions, see the exceptions thrown by <see cref="HashData(ReadOnlySpan{byte}, ReadOnlySpan{byte}, Span{byte})"/>.
     /// </remarks>
-    /// <exception cref="CryptographicException">The <paramref name="key"/> length is other than 16, 24, or 32 bytes (128, 192, or 256 bits).</exception>
     public static async ValueTask<int> HashDataAsync(ReadOnlyMemory<byte> key, Stream source, Memory<byte> destination,
         CancellationToken cancellationToken = default)
     {
