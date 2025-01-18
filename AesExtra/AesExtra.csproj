@@ -7,11 +7,12 @@ SPDX-License-Identifier: MIT
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;net8.0</TargetFrameworks>
+    <TargetFrameworks Condition=" '$(DocFx)' != 'true' ">netstandard2.0;net8.0</TargetFrameworks>
     <RootNamespace>Dorssel.Security.Cryptography</RootNamespace>
     <AssemblyName>Dorssel.Security.Cryptography.AesExtra</AssemblyName>
 
     <!-- Fixup for docfx -->
+    <TargetFramework Condition=" '$(DocFx)' == 'true' ">net8.0</TargetFramework>
     <LangVersion Condition=" '$(DocFx)' == 'true' ">preview</LangVersion>
 
     <IsPackable>true</IsPackable>

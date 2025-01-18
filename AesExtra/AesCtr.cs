@@ -11,6 +11,7 @@ namespace Dorssel.Security.Cryptography;
 /// <summary>
 /// Provides an implementation of the Advanced Encryption Standard (AES) symmetric algorithm in CTR mode.
 /// </summary>
+/// <seealso href="https://csrc.nist.gov/publications/detail/sp/800-38a/final"/>
 public sealed class AesCtr
     : Aes
 {
@@ -139,69 +140,97 @@ public sealed class AesCtr
     }
 
     #region Modern_SymmetricAlgorithm
-    /// <summary>
-    /// TODO
-    /// </summary>
-    /// <param name="input">TODO</param>
-    /// <param name="iv">TODO</param>
-    /// <returns>TODO</returns>
-    public byte[] TransformCtr(byte[] input, byte[] iv)
+    /// <exception cref="ArgumentNullException"><paramref name="input"/> is <see langword="null"/>.</exception>
+    static void ThrowIfInvalidInput(byte[] input)
     {
         if (input is null)
         {
             throw new ArgumentNullException(nameof(input));
         }
+    }
+
+    /// <exception cref="ArgumentNullException"><paramref name="iv"/> is <see langword="null"/>.</exception>
+    /// <inheritdoc cref="ThrowIfInvalidIV(ReadOnlySpan{byte})"/>
+    static void ThrowIfInvalidIV(byte[] iv)
+    {
         if (iv is null)
         {
-            throw new ArgumentNullException(nameof(input));
+            throw new ArgumentNullException(nameof(iv));
         }
-        if (iv.Length != BLOCKSIZE)
-        {
-            throw new ArgumentException("Specified initial counter (IV) does not match the block size for this algorithm.", nameof(iv));
-        }
-
-        var output = new byte[input.Length];
-        using var transform = new AesCtrTransform(Key, iv);
-        transform.UncheckedTransform(input, output);
-        return output;
+        ThrowIfInvalidIV(iv.AsSpan());
     }
 
-    /// <summary>
-    /// TODO
-    /// </summary>
-    /// <param name="input">TODO</param>
-    /// <param name="iv">TODO</param>
-    /// <returns>TODO</returns>
-    public byte[] TransformCtr(ReadOnlySpan<byte> input, ReadOnlySpan<byte> iv)
+    /// <exception cref="ArgumentException">
+    /// <paramref name="iv"/> is the incorrect length.
+    /// Callers are expected to pass an initialization vector that is exactly <see cref="SymmetricAlgorithm.BlockSize"/> in length,
+    /// converted to bytes (`BlockSize / 8`).
+    /// </exception>
+    static void ThrowIfInvalidIV(ReadOnlySpan<byte> iv)
     {
         if (iv.Length != BLOCKSIZE)
         {
             throw new ArgumentException("Specified initial counter (IV) does not match the block size for this algorithm.", nameof(iv));
         }
-
-        var output = new byte[input.Length];
-        using var transform = new AesCtrTransform(Key, iv);
-        transform.UncheckedTransform(input, output);
-        return output;
     }
 
-    /// <summary>
-    /// TODO
-    /// </summary>
-    /// <param name="input">TODO</param>
-    /// <param name="iv">TODO</param>
-    /// <param name="destination">TODO</param>
-    /// <returns>TODO</returns>
-    public int TransformCtr(ReadOnlySpan<byte> input, ReadOnlySpan<byte> iv, Span<byte> destination)
+    /// <exception cref="ArgumentException">The buffer in <paramref name="destination"/> is too small to hold the transformed data.</exception>
+    static void ThrowIfInvalidDestination(Span<byte> destination, int requiredLength)
     {
-        if (iv.Length != BLOCKSIZE)
-        {
-            throw new ArgumentException("Specified initial counter (IV) does not match the block size for this algorithm.", nameof(iv));
-        }
-        if (destination.Length < input.Length)
+        if (destination.Length < requiredLength)
         {
             throw new ArgumentException("Destination is too short.", nameof(destination));
         }
+    }
+
+    /// <summary>
+    /// Transforms data using CTR mode.
+    /// </summary>
+    /// <param name="input">The data to transform.</param>
+    /// <param name="iv">The initialization vector (initial counter).</param>
+    /// <returns>The transformed data.</returns>
+    /// <inheritdoc cref="ThrowIfInvalidInput(byte[])"/>
+    /// <inheritdoc cref="ThrowIfInvalidIV(byte[])"/>
+    public byte[] TransformCtr(byte[] input, byte[] iv)
+    {
+        ThrowIfInvalidInput(input);
+        ThrowIfInvalidIV(iv);
+
+        var output = new byte[input.Length];
+        using var transform = new AesCtrTransform(Key, iv);
+        transform.UncheckedTransform(input, output);
+        return output;
+    }
+
+    /// <summary>
+    /// Transforms data using CTR mode.
+    /// </summary>
+    /// <param name="input">The data to transform.</param>
+    /// <param name="iv">The initialization vector (initial counter).</param>
+    /// <returns>The transformed data.</returns>
+    /// <inheritdoc cref="ThrowIfInvalidIV(ReadOnlySpan{byte})"/>
+    public byte[] TransformCtr(ReadOnlySpan<byte> input, ReadOnlySpan<byte> iv)
+    {
+        ThrowIfInvalidIV(iv);
+
+        var output = new byte[input.Length];
+        using var transform = new AesCtrTransform(Key, iv);
+        transform.UncheckedTransform(input, output);
+        return output;
+    }
+
+    /// <summary>
+    /// Transforms data into the specified buffer, using CTR mode.
+    /// </summary>
+    /// <param name="input">The data to transform.</param>
+    /// <param name="iv">The initialization vector (initial counter).</param>
+    /// <param name="destination">The buffer to receive the transformed data.</param>
+    /// <returns>The total number of bytes written to <paramref name="destination"/>.</returns>
+    /// <inheritdoc cref="ThrowIfInvalidIV(ReadOnlySpan{byte})"/>
+    /// <inheritdoc cref="ThrowIfInvalidDestination(Span{byte}, int)"/>
+    public int TransformCtr(ReadOnlySpan<byte> input, ReadOnlySpan<byte> iv, Span<byte> destination)
+    {
+        ThrowIfInvalidIV(iv);
+        ThrowIfInvalidDestination(destination, input.Length);
 
         using var transform = new AesCtrTransform(Key, iv);
         transform.UncheckedTransform(input, destination);
@@ -209,19 +238,19 @@ public sealed class AesCtr
     }
 
     /// <summary>
-    /// TODO
+    /// Attempts to transform data into the specified buffer, using CTR mode.
     /// </summary>
-    /// <param name="input">TODO</param>
-    /// <param name="iv">TODO</param>
-    /// <param name="destination">TODO</param>
-    /// <param name="bytesWritten">TODO</param>
-    /// <returns>TODO</returns>
+    /// <param name="input">The data to transform.</param>
+    /// <param name="iv">The initialization vector (initial counter).</param>
+    /// <param name="destination">The buffer to receive the transformed data.</param>
+    /// <param name="bytesWritten">When this method returns, contains the total number of bytes written to <paramref name="destination"/>.</param>
+    /// <returns>
+    /// <see langword="true"/> if <paramref name="destination"/> was large enough to receive the transformed data; otherwise, <see langword="false"/>.
+    /// </returns>
+    /// <inheritdoc cref="ThrowIfInvalidIV(ReadOnlySpan{byte})"/>
     public bool TryTransformCtr(ReadOnlySpan<byte> input, ReadOnlySpan<byte> iv, Span<byte> destination, out int bytesWritten)
     {
-        if (iv.Length != BLOCKSIZE)
-        {
-            throw new ArgumentException("Specified initial counter (IV) does not match the block size for this algorithm.", nameof(iv));
-        }
+        ThrowIfInvalidIV(iv);
 
         if (destination.Length < input.Length)
         {
