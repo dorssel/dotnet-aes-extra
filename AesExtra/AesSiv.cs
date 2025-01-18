@@ -9,6 +9,7 @@ namespace Dorssel.Security.Cryptography;
 /// <summary>
 /// Represents an Advanced Encryption Standard (AES) key to be used with the Synthetic Initialization Vector (SIV) mode of operation.
 /// </summary>
+/// <seealso href="https://www.rfc-editor.org/rfc/rfc5297.html"/>
 public sealed class AesSiv
     : IDisposable
 {
@@ -125,30 +126,63 @@ public sealed class AesSiv
         // V is now final
     }
 
-    /// <summary>
-    /// Encrypts the plaintext into the ciphertext destination buffer, prepending the synthetic IV.
-    /// </summary>
-    /// <param name="plaintext">The content to encrypt.</param>
-    /// <param name="ciphertext">The byte array to receive the encrypted contents, prepended with the synthetic IV.</param>
-    /// <param name="associatedData">Extra data associated with this message, which must also be provided during decryption.</param>
-    /// <exception cref="ArgumentNullException" />
-    /// <exception cref="ArgumentException" />
-    public void Encrypt(byte[] plaintext, byte[] ciphertext, params byte[][] associatedData)
+    /// <exception cref="ArgumentNullException"><paramref name="plaintext"/> is <see langword="null"/>.</exception>
+    static void ThrowIfInvalidPlaintext(byte[] plaintext)
     {
-        // Input validation
-
         if (plaintext is null)
         {
             throw new ArgumentNullException(nameof(plaintext));
         }
+    }
+
+    /// <exception cref="ArgumentException"><paramref name="plaintext"/> is not exactly one block smaller than <paramref name="ciphertext"/>.</exception>
+    static void ThrowIfInvalidPlaintext(Span<byte> plaintext, ReadOnlySpan<byte> ciphertext)
+    {
+        if (plaintext.Length != ciphertext.Length - BLOCKSIZE)
+        {
+            throw new ArgumentException("Plaintext must be exactly one block smaller than ciphertext.", nameof(plaintext));
+        }
+    }
+
+    /// <exception cref="ArgumentNullException"><paramref name="ciphertext"/> is <see langword="null"/>.</exception>
+    /// <inheritdoc cref="ThrowIfInvalidCiphertext(ReadOnlySpan{byte})"/>
+    static void ThrowIfInvalidCiphertext(byte[] ciphertext)
+    {
         if (ciphertext is null)
         {
             throw new ArgumentNullException(nameof(ciphertext));
         }
-        if (ciphertext.Length != BLOCKSIZE + plaintext.Length)
+        ThrowIfInvalidCiphertext(ciphertext.AsSpan());
+    }
+
+    /// <exception cref="ArgumentException"><paramref name="ciphertext"/> is too short.</exception>
+    static void ThrowIfInvalidCiphertext(ReadOnlySpan<byte> ciphertext)
+    {
+        if (ciphertext.Length < BLOCKSIZE)
+        {
+            throw new ArgumentException("Ciphertext is too short.", nameof(ciphertext));
+        }
+    }
+
+    /// <exception cref="ArgumentException"><paramref name="ciphertext"/> is not exactly one block larger than <paramref name="plaintext"/>.</exception>
+    static void ThrowIfInvalidCiphertext(Span<byte> ciphertext, ReadOnlySpan<byte> plaintext)
+    {
+        if (ciphertext.Length < BLOCKSIZE || (ciphertext.Length - BLOCKSIZE) != plaintext.Length)
         {
             throw new ArgumentException("Ciphertext must be exactly one block larger than plaintext.", nameof(ciphertext));
         }
+    }
+
+    /// <exception cref="ArgumentNullException"><paramref name="associatedData"/> is <see langword="null"/>.</exception>
+    /// <exception cref="ArgumentException">
+    /// <paramref name="associatedData"/> has too many items.
+    ///
+    /// -or-
+    ///
+    /// <paramref name="associatedData"/> contains an item that is <see langword="null"/>.
+    /// </exception>
+    static void ThrowIfInvalidAssociatedData(byte[][] associatedData)
+    {
         if (associatedData is null)
         {
             throw new ArgumentNullException(nameof(associatedData));
@@ -164,6 +198,35 @@ public sealed class AesSiv
                 throw new ArgumentException("Associated data items must not be null.", nameof(associatedData));
             }
         }
+    }
+
+    /// <exception cref="ArgumentException"><paramref name="associatedData"/> has too many items.</exception>
+    static void ThrowIfInvalidAssociatedData(ReadOnlySpan<ReadOnlyMemory<byte>> associatedData)
+    {
+        if (associatedData.Length > MaximumAssociatedDataCount)
+        {
+            throw new ArgumentException("Too many associated data items.", nameof(associatedData));
+        }
+    }
+
+    /// <summary>
+    /// Encrypts the plaintext into the ciphertext destination buffer, prepending the synthetic IV.
+    /// </summary>
+    /// <param name="plaintext">The content to encrypt.</param>
+    /// <param name="ciphertext">The byte array to receive the encrypted contents, prepended with the synthetic IV.</param>
+    /// <param name="associatedData">Extra data associated with this message, which must also be provided during decryption.</param>
+    /// <inheritdoc cref="ThrowIfInvalidPlaintext(byte[])"/>
+    /// <inheritdoc cref="ThrowIfInvalidCiphertext(byte[])"/>
+    /// <inheritdoc cref="ThrowIfInvalidCiphertext(Span{byte}, ReadOnlySpan{byte})"/>
+    /// <inheritdoc cref="ThrowIfInvalidAssociatedData(byte[][])"/>
+    public void Encrypt(byte[] plaintext, byte[] ciphertext, params byte[][] associatedData)
+    {
+        // Input validation
+
+        ThrowIfInvalidPlaintext(plaintext);
+        ThrowIfInvalidCiphertext(ciphertext);
+        ThrowIfInvalidCiphertext(ciphertext, plaintext);
+        ThrowIfInvalidAssociatedData(associatedData);
 
         // State validation
 
@@ -194,16 +257,12 @@ public sealed class AesSiv
     /// <param name="plaintext">The content to encrypt.</param>
     /// <param name="ciphertext">The byte array to receive the encrypted contents, prepended with the synthetic IV.</param>
     /// <param name="associatedData">Extra data associated with this message, which must also be provided during decryption.</param>
-    /// <exception cref="ArgumentNullException" />
-    /// <exception cref="ArgumentException" />
+    /// <inheritdoc cref="ThrowIfInvalidCiphertext(Span{byte}, ReadOnlySpan{byte})"/>
     public void Encrypt(ReadOnlySpan<byte> plaintext, Span<byte> ciphertext, ReadOnlySpan<byte> associatedData)
     {
         // Input validation
 
-        if (ciphertext.Length != BLOCKSIZE + plaintext.Length)
-        {
-            throw new ArgumentException("Ciphertext must be exactly one block larger than plaintext.", nameof(ciphertext));
-        }
+        ThrowIfInvalidCiphertext(ciphertext, plaintext);
 
         // State validation
 
@@ -228,20 +287,14 @@ public sealed class AesSiv
     /// <param name="plaintext">The content to encrypt.</param>
     /// <param name="ciphertext">The byte array to receive the encrypted contents, prepended with the synthetic IV.</param>
     /// <param name="associatedData">Extra data associated with this message, which must also be provided during decryption.</param>
-    /// <exception cref="ArgumentNullException" />
-    /// <exception cref="ArgumentException" />
+    /// <inheritdoc cref="ThrowIfInvalidCiphertext(Span{byte}, ReadOnlySpan{byte})"/>
+    /// <inheritdoc cref="ThrowIfInvalidAssociatedData(ReadOnlySpan{ReadOnlyMemory{byte}})"/>
     public void Encrypt(ReadOnlySpan<byte> plaintext, Span<byte> ciphertext, params ReadOnlySpan<ReadOnlyMemory<byte>> associatedData)
     {
         // Input validation
 
-        if (ciphertext.Length != BLOCKSIZE + plaintext.Length)
-        {
-            throw new ArgumentException("Ciphertext must be exactly one block larger than plaintext.", nameof(ciphertext));
-        }
-        if (associatedData.Length > MaximumAssociatedDataCount)
-        {
-            throw new ArgumentException("Too many associated data items.", nameof(associatedData));
-        }
+        ThrowIfInvalidCiphertext(ciphertext, plaintext);
+        ThrowIfInvalidAssociatedData(associatedData);
 
         // State validation
 
@@ -269,44 +322,19 @@ public sealed class AesSiv
     /// <param name="ciphertext">The encrypted content to decrypt, including the prepended IV.</param>
     /// <param name="plaintext">The byte array to receive the decrypted contents.</param>
     /// <param name="associatedData">Extra data associated with this message, which must match the value provided during encryption.</param>
-    /// <exception cref="ArgumentNullException" />
-    /// <exception cref="ArgumentException" />
-    /// <exception cref="CryptographicException" />
+    /// <inheritdoc cref="ThrowIfInvalidCiphertext(byte[])"/>
+    /// <inheritdoc cref="ThrowIfInvalidPlaintext(byte[])"/>
+    /// <inheritdoc cref="ThrowIfInvalidPlaintext(Span{byte}, ReadOnlySpan{byte})"/>
+    /// <inheritdoc cref="ThrowIfInvalidAssociatedData(byte[][])"/>
+    /// <exception cref="CryptographicException">The tag value could not be verified.</exception>
     public void Decrypt(byte[] ciphertext, byte[] plaintext, params byte[][] associatedData)
     {
         // Input validation
 
-        if (ciphertext is null)
-        {
-            throw new ArgumentNullException(nameof(ciphertext));
-        }
-        if (ciphertext.Length < BLOCKSIZE)
-        {
-            throw new ArgumentException("Ciphertext is too short.", nameof(ciphertext));
-        }
-        if (plaintext is null)
-        {
-            throw new ArgumentNullException(nameof(plaintext));
-        }
-        if (plaintext.Length != ciphertext.Length - BLOCKSIZE)
-        {
-            throw new ArgumentException("Plaintext must be exactly one block smaller than ciphertext.", nameof(plaintext));
-        }
-        if (associatedData is null)
-        {
-            throw new ArgumentNullException(nameof(associatedData));
-        }
-        if (associatedData.Length > MaximumAssociatedDataCount)
-        {
-            throw new ArgumentException("Too many associated data items.", nameof(associatedData));
-        }
-        foreach (var associatedDataItem in associatedData)
-        {
-            if (associatedDataItem is null)
-            {
-                throw new ArgumentException("Associated data items must not be null.", nameof(associatedData));
-            }
-        }
+        ThrowIfInvalidCiphertext(ciphertext);
+        ThrowIfInvalidPlaintext(plaintext);
+        ThrowIfInvalidPlaintext(plaintext, ciphertext);
+        ThrowIfInvalidAssociatedData(associatedData);
 
         // State validation
 
@@ -343,21 +371,15 @@ public sealed class AesSiv
     /// <param name="ciphertext">The encrypted content to decrypt, including the prepended IV.</param>
     /// <param name="plaintext">The byte array to receive the decrypted contents.</param>
     /// <param name="associatedData">Extra data associated with this message, which must match the value provided during encryption.</param>
-    /// <exception cref="ArgumentNullException" />
-    /// <exception cref="ArgumentException" />
-    /// <exception cref="CryptographicException" />
+    /// <inheritdoc cref="ThrowIfInvalidCiphertext(ReadOnlySpan{byte})"/>
+    /// <inheritdoc cref="ThrowIfInvalidPlaintext(Span{byte}, ReadOnlySpan{byte})"/>
+    /// <exception cref="CryptographicException">The tag value could not be verified.</exception>
     public void Decrypt(ReadOnlySpan<byte> ciphertext, Span<byte> plaintext, ReadOnlySpan<byte> associatedData)
     {
         // Input validation
 
-        if (ciphertext.Length < BLOCKSIZE)
-        {
-            throw new ArgumentException("Ciphertext is too short.", nameof(ciphertext));
-        }
-        if (plaintext.Length != ciphertext.Length - BLOCKSIZE)
-        {
-            throw new ArgumentException("Plaintext must be exactly one block smaller than ciphertext.", nameof(plaintext));
-        }
+        ThrowIfInvalidCiphertext(ciphertext);
+        ThrowIfInvalidPlaintext(plaintext, ciphertext);
 
         // State validation
 
@@ -388,25 +410,17 @@ public sealed class AesSiv
     /// <param name="ciphertext">The encrypted content to decrypt, including the prepended IV.</param>
     /// <param name="plaintext">The byte array to receive the decrypted contents.</param>
     /// <param name="associatedData">Extra data associated with this message, which must match the value provided during encryption.</param>
-    /// <exception cref="ArgumentNullException" />
-    /// <exception cref="ArgumentException" />
-    /// <exception cref="CryptographicException" />
+    /// <inheritdoc cref="ThrowIfInvalidCiphertext(ReadOnlySpan{byte})"/>
+    /// <inheritdoc cref="ThrowIfInvalidPlaintext(Span{byte}, ReadOnlySpan{byte})"/>
+    /// <inheritdoc cref="ThrowIfInvalidAssociatedData(ReadOnlySpan{ReadOnlyMemory{byte}})"/>
+    /// <exception cref="CryptographicException">The tag value could not be verified.</exception>
     public void Decrypt(ReadOnlySpan<byte> ciphertext, Span<byte> plaintext, params ReadOnlySpan<ReadOnlyMemory<byte>> associatedData)
     {
         // Input validation
 
-        if (ciphertext.Length < BLOCKSIZE)
-        {
-            throw new ArgumentException("Ciphertext is too short.", nameof(ciphertext));
-        }
-        if (plaintext.Length != ciphertext.Length - BLOCKSIZE)
-        {
-            throw new ArgumentException("Plaintext must be exactly one block smaller than ciphertext.", nameof(plaintext));
-        }
-        if (associatedData.Length > MaximumAssociatedDataCount)
-        {
-            throw new ArgumentException("Too many associated data items.", nameof(associatedData));
-        }
+        ThrowIfInvalidCiphertext(ciphertext);
+        ThrowIfInvalidPlaintext(plaintext, ciphertext);
+        ThrowIfInvalidAssociatedData(associatedData);
 
         // State validation
 
