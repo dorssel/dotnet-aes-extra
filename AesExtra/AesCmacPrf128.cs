@@ -180,13 +180,8 @@ public static class AesCmacPrf128
     /// <param name="outputLength">The size of key to derive.</param>
     /// <returns>A byte array of length <paramref name="outputLength"/> that is filled with pseudo-random key bytes.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="password"/> or <paramref name="salt"/> is <see langword="null"/>.</exception>
-    /// <exception cref="ArgumentOutOfRangeException">
-    /// <paramref name="outputLength"/> is not zero or a positive value.
-    ///
-    /// -or-
-    ///
-    /// <paramref name="iterations"/> is not a positive value.
-    /// </exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="outputLength"/> is not zero or a positive value.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="iterations"/> is not a positive value.</exception>
     public static byte[] Pbkdf2(byte[] password, byte[] salt, int iterations, int outputLength)
     {
         if (password == null)
@@ -225,13 +220,8 @@ public static class AesCmacPrf128
     /// <param name="iterations">The number of iterations for the operation.</param>
     /// <param name="outputLength">The size of key to derive.</param>
     /// <returns>A byte array of length <paramref name="outputLength"/> that is filled with pseudo-random key bytes.</returns>
-    /// <exception cref="ArgumentOutOfRangeException">
-    /// <paramref name="outputLength"/> is not zero or a positive value.
-    ///
-    /// -or-
-    ///
-    /// <paramref name="iterations"/> is not a positive value.
-    /// </exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="outputLength"/> is not zero or a positive value.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="iterations"/> is not a positive value.</exception>
     public static byte[] Pbkdf2(ReadOnlySpan<byte> password, ReadOnlySpan<byte> salt, int iterations, int outputLength)
     {
         if (iterations <= 0)
@@ -316,14 +306,9 @@ public static class AesCmacPrf128
     /// <param name="outputLength">The size of key to derive.</param>
     /// <returns>A byte array of length <paramref name="outputLength"/> that is filled with pseudo-random key bytes.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="password"/> or <paramref name="salt"/> is <see langword="null"/>.</exception>
-    /// <exception cref="ArgumentOutOfRangeException">
-    /// <paramref name="outputLength"/> is not zero or a positive value.
-    ///
-    /// -or-
-    ///
-    /// <paramref name="iterations"/> is not a positive value.
-    /// </exception>
     /// <exception cref="EncoderFallbackException"><paramref name="password"/> contains text that cannot be converted to UTF8.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="outputLength"/> is not zero or a positive value.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="iterations"/> is not a positive value.</exception>
     /// <remarks>
     /// The <paramref name="password"/> will be converted to bytes using the UTF8 encoding. For other encodings, convert
     /// the password string to bytes using the appropriate <see cref="Encoding"/> and use <see cref="Pbkdf2(byte[], byte[], int, int)"/>.
@@ -367,14 +352,9 @@ public static class AesCmacPrf128
     /// <param name="iterations">The number of iterations for the operation.</param>
     /// <param name="outputLength">The size of key to derive.</param>
     /// <returns>A byte array of length <paramref name="outputLength"/> that is filled with pseudo-random key bytes.</returns>
-    /// <exception cref="ArgumentOutOfRangeException">
-    /// <paramref name="outputLength"/> is not zero or a positive value.
-    ///
-    /// -or-
-    ///
-    /// <paramref name="iterations"/> is not a positive value.
-    /// </exception>
     /// <exception cref="EncoderFallbackException"><paramref name="password"/> contains text that cannot be converted to UTF8.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="outputLength"/> is not zero or a positive value.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="iterations"/> is not a positive value.</exception>
     /// <remarks>
     /// The <paramref name="password"/> will be converted to bytes using the UTF8 encoding. For other encodings, convert
     /// the password string to bytes using the appropriate <see cref="Encoding"/> and use
@@ -410,8 +390,8 @@ public static class AesCmacPrf128
     /// <param name="salt">The key salt used to derive the key.</param>
     /// <param name="destination">The buffer to fill with a derived key.</param>
     /// <param name="iterations">The number of iterations for the operation.</param>
-    /// <exception cref="ArgumentOutOfRangeException"><paramref name="iterations"/> is not a positive value.</exception>
     /// <exception cref="EncoderFallbackException"><paramref name="password"/> contains text that cannot be converted to UTF8.</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="iterations"/> is not a positive value.</exception>
     /// <remarks>
     /// The <paramref name="password"/> will be converted to bytes using the UTF8 encoding. For other encodings, convert
     /// the password string to bytes using the appropriate <see cref="Encoding"/> and use

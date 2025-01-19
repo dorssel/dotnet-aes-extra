@@ -13,11 +13,21 @@ namespace Dorssel.Security.Cryptography;
 public sealed class AesSiv
     : IDisposable
 {
+    /// <exception cref="CryptographicException">The <paramref name="key"/> length is other than 32, 48, or 64 bytes (256, 384, or 512 bits).</exception>
+    static void ThrowIfInvalidKey(ReadOnlySpan<byte> key)
+    {
+        if (key.Length is not (32 or 48 or 64))
+        {
+            throw new CryptographicException("Specified key is not a valid size for this algorithm.");
+        }
+    }
+
     /// <summary>
     /// Initializes a new instance of the <see cref="AesSiv"/> class with a provided key.
     /// </summary>
     /// <param name="key">The secret key to use for this instance.</param>
     /// <exception cref="ArgumentNullException"><paramref name="key"/> is <see langword="null"/>.</exception>
+    /// <inheritdoc cref="AesSiv(ReadOnlySpan{byte})" path="/exception"/>
     public AesSiv(byte[] key)
         : this(new ReadOnlySpan<byte>(key ?? throw new ArgumentNullException(nameof(key))))
     {
@@ -27,12 +37,10 @@ public sealed class AesSiv
     /// Initializes a new instance of the <see cref="AesSiv"/> class with a provided key.
     /// </summary>
     /// <param name="key">The secret key to use for this instance.</param>
+    /// <inheritdoc cref="ThrowIfInvalidKey(ReadOnlySpan{byte})"/>
     public AesSiv(ReadOnlySpan<byte> key)
     {
-        if (key.Length is not (32 or 48 or 64))
-        {
-            throw new CryptographicException("Specified key is not a valid size for this algorithm.");
-        }
+        ThrowIfInvalidKey(key);
 
         using var cmacKey = new SecureByteArray(key[..(key.Length / 2)]);
         using var ctrKey = new SecureByteArray(key[(key.Length / 2)..]);
@@ -175,13 +183,8 @@ public sealed class AesSiv
     }
 
     /// <exception cref="ArgumentNullException"><paramref name="associatedData"/> is <see langword="null"/>.</exception>
-    /// <exception cref="ArgumentException">
-    /// <paramref name="associatedData"/> has too many items.
-    ///
-    /// -or-
-    ///
-    /// <paramref name="associatedData"/> contains an item that is <see langword="null"/>.
-    /// </exception>
+    /// <exception cref="ArgumentException"><paramref name="associatedData"/> has too many items.</exception>
+    /// <exception cref="ArgumentException"><paramref name="associatedData"/> contains an item that is <see langword="null"/>.</exception>
     static void ThrowIfInvalidAssociatedData(byte[][] associatedData)
     {
         if (associatedData is null)

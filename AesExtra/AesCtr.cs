@@ -90,22 +90,22 @@ public sealed class AesCtr
 
     /// <exception cref="ArgumentNullException"><paramref name="key"/> is <see langword="null"/>.</exception>
     /// <inheritdoc cref="ThrowIfInvalidKey(ReadOnlySpan{byte})"/>
-    static void ThrowIfInvalidKey(byte[] key, string argumentName = "key")
+    static void ThrowIfInvalidKey(byte[] key)
     {
         if (key is null)
         {
-            throw new ArgumentNullException(argumentName);
+            throw new ArgumentNullException(nameof(key));
         }
         ThrowIfInvalidKey(key.AsSpan());
     }
 
     /// <exception cref="ArgumentNullException"><paramref name="iv"/> is <see langword="null"/>.</exception>
-    /// <inheritdoc cref="ThrowIfInvalidIV(ReadOnlySpan{byte},string)"/>
-    static void ThrowIfInvalidIV(byte[] iv, string argumentName = "iv")
+    /// <inheritdoc cref="ThrowIfInvalidIV(ReadOnlySpan{byte})"/>
+    static void ThrowIfInvalidIV(byte[] iv)
     {
         if (iv is null)
         {
-            throw new ArgumentNullException(argumentName);
+            throw new ArgumentNullException(nameof(iv));
         }
         ThrowIfInvalidIV(iv.AsSpan());
     }
@@ -115,11 +115,11 @@ public sealed class AesCtr
     /// Callers are expected to pass an initialization vector that is exactly <see cref="SymmetricAlgorithm.BlockSize"/> in length,
     /// converted to bytes (`BlockSize / 8`).
     /// </exception>
-    static void ThrowIfInvalidIV(ReadOnlySpan<byte> iv, string argumentName = "iv")
+    static void ThrowIfInvalidIV(ReadOnlySpan<byte> iv)
     {
         if (iv.Length != BLOCKSIZE)
         {
-            throw new ArgumentException("Specified initial counter (IV) does not match the block size for this algorithm.", argumentName);
+            throw new ArgumentException("Specified initial counter (IV) does not match the block size for this algorithm.", nameof(iv));
         }
     }
 
@@ -171,6 +171,7 @@ public sealed class AesCtr
     /// Initializes a new instance of the <see cref="AesCtr" /> class with the specified key data and a randomly generated initial counter.
     /// </summary>
     /// <param name="key">The secret key for the AES-CTR algorithm.</param>
+    /// <inheritdoc cref="ThrowIfInvalidKey(ReadOnlySpan{byte})"/>
     public AesCtr(ReadOnlySpan<byte> key)
     {
         ThrowIfInvalidKey(key);
@@ -201,7 +202,7 @@ public sealed class AesCtr
     /// <param name="key">The secret key for the AES-CTR algorithm.</param>
     /// <param name="iv">The initialization vector (initial counter).</param>
     /// <inheritdoc cref="ThrowIfInvalidKey(ReadOnlySpan{byte})"/>
-    /// <inheritdoc cref="ThrowIfInvalidIV(ReadOnlySpan{byte},string)"/>
+    /// <inheritdoc cref="ThrowIfInvalidIV(ReadOnlySpan{byte})"/>
     public AesCtr(ReadOnlySpan<byte> key, ReadOnlySpan<byte> iv)
     {
         ThrowIfInvalidKey(key);
@@ -284,7 +285,7 @@ public sealed class AesCtr
 
     /// <inheritdoc path="/summary"/>
     /// <inheritdoc path="/returns"/>
-    /// <inheritdoc cref="ThrowIfInvalidKey(byte[], string)"/>
+    /// <inheritdoc cref="ThrowIfInvalidKey(byte[])"/>
     /// <inheritdoc cref="ThrowIfDisposed"/>
     public override byte[] Key
     {
@@ -298,7 +299,7 @@ public sealed class AesCtr
 
         set
         {
-            ThrowIfInvalidKey(value, nameof(Key));
+            ThrowIfInvalidKey(value);
 
             ThrowIfDisposed();
 
@@ -314,7 +315,7 @@ public sealed class AesCtr
     /// <remarks>
     /// For AES-CTR, the initialization vector (IV) is the initial counter.
     /// </remarks>
-    /// <inheritdoc cref="ThrowIfInvalidIV(byte[], string)"/>
+    /// <inheritdoc cref="ThrowIfInvalidIV(byte[])"/>
     /// <inheritdoc cref="ThrowIfDisposed"/>
     public override byte[] IV
     {
@@ -328,7 +329,7 @@ public sealed class AesCtr
 
         set
         {
-            ThrowIfInvalidIV(value, nameof(IV));
+            ThrowIfInvalidIV(value);
 
             ThrowIfDisposed();
 
@@ -398,15 +399,15 @@ public sealed class AesCtr
     /// <param name="rgbIV">The initialization vector (initial counter).</param>
     /// <returns>A symmetric decryptor object.</returns>
     /// <inheritdoc cref="ThrowIfDisposed"/>
-    /// <inheritdoc cref="ThrowIfInvalidKey(byte[],string)"/>
-    /// <inheritdoc cref="ThrowIfInvalidIV(ReadOnlySpan{byte},string)"/>
+    /// <inheritdoc cref="ThrowIfInvalidKey(byte[])"/>
+    /// <exception cref="CryptographicException"><paramref name="rgbIV"/> is <see langword="null"/>.</exception>
+    /// <inheritdoc cref="ThrowIfInvalidIV(ReadOnlySpan{byte})"/>
     public override ICryptoTransform CreateDecryptor(byte[] rgbKey, byte[]? rgbIV)
     {
         ThrowIfDisposed();
 
-        ThrowIfInvalidKey(rgbKey, nameof(rgbKey));
-        ThrowIfInvalidIV(rgbIV ?? throw new CryptographicException("The cipher mode specified requires that an initialization vector (IV) be used."),
-            nameof(rgbIV));
+        ThrowIfInvalidKey(rgbKey);
+        ThrowIfInvalidIV(rgbIV ?? throw new CryptographicException("The cipher mode specified requires that an initialization vector (IV) be used."));
 
         return new AesCtrTransform(rgbKey, rgbIV);
     }
@@ -429,15 +430,15 @@ public sealed class AesCtr
     /// <param name="rgbIV">The initialization vector (initial counter).</param>
     /// <returns>A symmetric encryptor object.</returns>
     /// <inheritdoc cref="ThrowIfDisposed"/>
-    /// <inheritdoc cref="ThrowIfInvalidKey(byte[],string)"/>
-    /// <inheritdoc cref="ThrowIfInvalidIV(ReadOnlySpan{byte},string)"/>
+    /// <inheritdoc cref="ThrowIfInvalidKey(byte[])"/>
+    /// <exception cref="CryptographicException"><paramref name="rgbIV"/> is <see langword="null"/>.</exception>
+    /// <inheritdoc cref="ThrowIfInvalidIV(ReadOnlySpan{byte})"/>
     public override ICryptoTransform CreateEncryptor(byte[] rgbKey, byte[]? rgbIV)
     {
         ThrowIfDisposed();
 
-        ThrowIfInvalidKey(rgbKey, nameof(rgbKey));
-        ThrowIfInvalidIV(rgbIV ?? throw new CryptographicException("The cipher mode specified requires that an initialization vector (IV) be used."),
-            nameof(rgbIV));
+        ThrowIfInvalidKey(rgbKey);
+        ThrowIfInvalidIV(rgbIV ?? throw new CryptographicException("The cipher mode specified requires that an initialization vector (IV) be used."));
 
         return new AesCtrTransform(rgbKey, rgbIV);
     }
@@ -508,7 +509,7 @@ public sealed class AesCtr
     /// <param name="iv">The initialization vector (initial counter).</param>
     /// <returns>The transformed data.</returns>
     /// <inheritdoc cref="ThrowIfInvalidInput(byte[])"/>
-    /// <inheritdoc cref="ThrowIfInvalidIV(byte[],string)"/>
+    /// <inheritdoc cref="ThrowIfInvalidIV(byte[])"/>
     public byte[] TransformCtr(byte[] input, byte[] iv)
     {
         ThrowIfInvalidInput(input);
@@ -529,7 +530,7 @@ public sealed class AesCtr
     /// <param name="input">The data to transform.</param>
     /// <param name="iv">The initialization vector (initial counter).</param>
     /// <returns>The transformed data.</returns>
-    /// <inheritdoc cref="ThrowIfInvalidIV(ReadOnlySpan{byte},string)"/>
+    /// <inheritdoc cref="ThrowIfInvalidIV(ReadOnlySpan{byte})"/>
     public byte[] TransformCtr(ReadOnlySpan<byte> input, ReadOnlySpan<byte> iv)
     {
         ThrowIfInvalidIV(iv);
@@ -550,7 +551,7 @@ public sealed class AesCtr
     /// <param name="iv">The initialization vector (initial counter).</param>
     /// <param name="destination">The buffer to receive the transformed data.</param>
     /// <returns>The total number of bytes written to <paramref name="destination"/>.</returns>
-    /// <inheritdoc cref="ThrowIfInvalidIV(ReadOnlySpan{byte},string)"/>
+    /// <inheritdoc cref="ThrowIfInvalidIV(ReadOnlySpan{byte})"/>
     /// <inheritdoc cref="ThrowIfInvalidDestination(Span{byte}, int)"/>
     public int TransformCtr(ReadOnlySpan<byte> input, ReadOnlySpan<byte> iv, Span<byte> destination)
     {
@@ -575,7 +576,7 @@ public sealed class AesCtr
     /// <returns>
     /// <see langword="true"/> if <paramref name="destination"/> was large enough to receive the transformed data; otherwise, <see langword="false"/>.
     /// </returns>
-    /// <inheritdoc cref="ThrowIfInvalidIV(ReadOnlySpan{byte},string)"/>
+    /// <inheritdoc cref="ThrowIfInvalidIV(ReadOnlySpan{byte})"/>
     public bool TryTransformCtr(ReadOnlySpan<byte> input, ReadOnlySpan<byte> iv, Span<byte> destination, out int bytesWritten)
     {
         ThrowIfInvalidIV(iv);
