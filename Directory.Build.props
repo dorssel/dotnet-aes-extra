@@ -48,7 +48,9 @@ SPDX-License-Identifier: MIT
     <!-- NuGet metadata -->
     <Title>$(Product)</Title>
     <Authors>$(Company)</Authors>
-    <Description>Provides types for additional cryptographic algorithms: AES-CTR, AES-CMAC, and SIV-AES.</Description>
+    <Description>Provides types for additional cryptographic algorithms: AES-CTR, AES-CMAC, SIV-AES, AES-CMAC-PRF-128, and PBKDF-AES-CMAC-PRF-128.</Description>
+    <PackageProjectUrl>https://dorssel.github.io/dotnet-aes-extra/</PackageProjectUrl>
+    <PackageTags>cryptography aes-ctr aes-cmac siv-aes aes-siv aes-cmac-prf-128 pbkdf2-aes-cmac-prf-128 nist-sp-800-38a nist-sp-800-38b rfc-4493 rfc-5297 rfc-4615 rfc-8018</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <UseFullSemVerForNuGet>false</UseFullSemVerForNuGet>
