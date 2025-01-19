@@ -6,6 +6,7 @@
 using System.Buffers;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using System.Runtime.Versioning;
 using System.Security.Cryptography;
 
 namespace Dorssel.Security.Cryptography;
@@ -21,8 +22,35 @@ public sealed class AesCmac
     const int BLOCKSIZE = 16; // bytes
     const int BitsPerByte = 8;
 
+    #region CryptoConfig
+    static readonly object RegistrationLock = new();
+    static bool TriedRegisterOnce;
+
+    /// <summary>
+    /// Registers the <see cref="AesCmac"/> class with <see cref="CryptoConfig"/>, such that it can be created by name.
+    /// </summary>
+    /// <seealso cref="CryptoConfig.CreateFromName(string)"/>
+    /// <remarks>
+    /// <see cref="CryptoConfig"/> is not supported in browsers.
+    /// </remarks>
+#if !NETSTANDARD2_0
+    [UnsupportedOSPlatform("browser")]
+#endif
+    public static void RegisterWithCryptoConfig()
+    {
+        lock (RegistrationLock)
+        {
+            if (!TriedRegisterOnce)
+            {
+                TriedRegisterOnce = true;
+                CryptoConfig.AddAlgorithm(typeof(AesCmac), nameof(AesCmac), typeof(AesCmac).FullName!);
+            }
+        }
+    }
+
     /// <inheritdoc cref="KeyedHashAlgorithm.Create()" path="/summary" />
     /// <returns>A new <see cref="AesCmac" /> instance.</returns>
+    [Obsolete("Use one of the constructors instead.")]
     public static new AesCmac Create()
     {
         return new AesCmac();
@@ -33,86 +61,196 @@ public sealed class AesCmac
 #if !NETSTANDARD2_0
     [RequiresUnreferencedCode("The default algorithm implementations might be removed, use strong type references like 'RSA.Create()' instead.")]
 #endif
-    public static new KeyedHashAlgorithm? Create(string algorithmName)
+    public static new AesCmac? Create(string algorithmName)
     {
-        return algorithmName == nameof(AesCmac) ? Create() : KeyedHashAlgorithm.Create(algorithmName);
+        if (algorithmName is null)
+        {
+            throw new ArgumentNullException(nameof(algorithmName));
+        }
+        // Our class is sealed, so there definitely is no other implementation.
+        return algorithmName == nameof(AesCmac) || algorithmName == typeof(AesCmac).FullName! ? new AesCmac() : null;
+    }
+    #endregion
+
+    /// <exception cref="CryptographicException"><paramref name="keySize"/> is other than 128, 192, or 256 bits.</exception>
+    static void ThrowIfInvalidKeySize(int keySize)
+    {
+        if (keySize is not (128 or 192 or 256))
+        {
+            throw new CryptographicException("Specified key size is valid for this algorithm.");
+        }
+    }
+
+    /// <exception cref="CryptographicException">The <paramref name="key"/> length is other than 16, 24, or 32 bytes (128, 192, or 256 bits).</exception>
+    static void ThrowIfInvalidKey(ReadOnlySpan<byte> key)
+    {
+        if (key.Length is not (16 or 24 or 32))
+        {
+            throw new CryptographicException("Specified key is not a valid size for this algorithm.");
+        }
+    }
+
+    /// <exception cref="ArgumentNullException"><paramref name="key"/> is <see langword="null"/>.</exception>
+    /// <inheritdoc cref="ThrowIfInvalidKey(ReadOnlySpan{byte})"/>
+    static void ThrowIfInvalidKey(byte[] key)
+    {
+        if (key is null)
+        {
+            throw new ArgumentNullException(nameof(key));
+        }
+        ThrowIfInvalidKey(key.AsSpan());
+    }
+
+    void InitializeFixedValues()
+    {
+        HashSizeValue = BLOCKSIZE * 8;
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AesCmac" /> class with a randomly generated 256-bit key.
+    /// </summary>
+    public AesCmac()
+        : this(256)
+    {
     }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AesCmac" /> class with a randomly generated key.
     /// </summary>
     /// <param name="keySize">The size, in bits, of the randomly generated key.</param>
-    public AesCmac(int keySize = 256)
+    /// <inheritdoc cref="ThrowIfInvalidKeySize(int)"/>
+    public AesCmac(int keySize)
     {
-        AesEcb = Aes.Create();
-        AesEcb.Mode = CipherMode.ECB;  // DevSkim: ignore DS187371
-        AesEcb.BlockSize = BLOCKSIZE * BitsPerByte;
-        AesEcb.KeySize = keySize;
-        HashSizeValue = BLOCKSIZE * 8;
+        ThrowIfInvalidKeySize(keySize);
+
+        InitializeFixedValues();
+
+        KeyValue = new byte[keySize / BitsPerByte];
+        using var rng = RandomNumberGenerator.Create();
+        rng.GetBytes(KeyValue);
     }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AesCmac" /> class with the specified key data.
     /// </summary>
     /// <param name="key">The secret key for AES-CMAC algorithm.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="key"/> is <see langword="null"/>.</exception>
+    /// <inheritdoc cref="AesCmac(ReadOnlySpan{byte})" path="/exception"/>
     public AesCmac(byte[] key)
-        : this()
+        : this(new ReadOnlySpan<byte>(key ?? throw new ArgumentNullException(nameof(key))))
     {
-        Key = key;
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AesCmac" /> class with the specified key data.
+    /// </summary>
+    /// <param name="key">The secret key for AES-CMAC algorithm.</param>
+    /// <inheritdoc cref="ThrowIfInvalidKey(ReadOnlySpan{byte})"/>
+    public AesCmac(ReadOnlySpan<byte> key)
+    {
+        ThrowIfInvalidKey(key);
+
+        InitializeFixedValues();
+
+        KeyValue = key.ToArray();
     }
 
     #region IDisposable
+    bool IsDisposed;
+
     /// <inheritdoc cref="KeyedHashAlgorithm.Dispose(bool)" />
     protected override void Dispose(bool disposing)
     {
+        if (IsDisposed)
+        {
+            return;
+        }
+
         if (disposing)
         {
-            CryptographicOperations.ZeroMemory(KeyValue);
-            CryptographicOperations.ZeroMemory(K1Value);
-            CryptographicOperations.ZeroMemory(K2Value);
-            CryptographicOperations.ZeroMemory(C);
-            CryptographicOperations.ZeroMemory(Partial);
-            AesEcb.Dispose();
-            CryptoTransformValue?.Dispose();
-            CryptoTransformValue = null;
-            K1Value = null;
-            K2Value = null;
-            PartialLength = 0;
-            State = 0;
+            AesEcbTransformValue?.Dispose();
         }
+
+        CryptographicOperations.ZeroMemory(KeyValue);
+        CryptographicOperations.ZeroMemory(K1Value);
+        CryptographicOperations.ZeroMemory(K2Value);
+        CryptographicOperations.ZeroMemory(C);
+        CryptographicOperations.ZeroMemory(Partial);
+        K1Value = null;
+        K2Value = null;
+        PartialLength = 0;
+        State = 0;
+        AesEcbTransformValue = null;
+        IsDisposed = true;
+
         base.Dispose(disposing);
     }
     #endregion
 
+    /// <exception cref="ObjectDisposedException">The <see cref="AesCmac"/> instance has been disposed.</exception>
+    void ThrowIfDisposed()
+    {
+        if (IsDisposed)
+        {
+            throw new ObjectDisposedException(nameof(AesCmac));
+        }
+    }
+
     /// <inheritdoc />
+    /// <inheritdoc cref="ThrowIfInvalidKey(byte[])"/>
+    /// <inheritdoc cref="ThrowIfDisposed"/>
+    /// <exception cref="InvalidOperationException">An attempt was made to change the <see cref="Key"/> during a computation.</exception>
     public override byte[] Key
     {
-        get => AesEcb.Key;
+        get
+        {
+            ThrowIfDisposed();
+
+            return (byte[])KeyValue.Clone();
+        }
         set
         {
+            // Input validation
+
+            ThrowIfInvalidKey(value);
+
+            // State validation
+
+            ThrowIfDisposed();
+
             if (State != 0)
             {
                 throw new InvalidOperationException("Key cannot be changed during a computation.");
             }
-            AesEcb.Key = value;
+
+            // Side effects
+
+            CryptographicOperations.ZeroMemory(KeyValue);
             CryptographicOperations.ZeroMemory(K1Value);
             CryptographicOperations.ZeroMemory(K2Value);
-            CryptoTransformValue?.Dispose();
-            CryptoTransformValue = null;
+            AesEcbTransformValue?.Dispose();
+            AesEcbTransformValue = null;
             K1Value = null;
             K2Value = null;
+
+            KeyValue = (byte[])value.Clone();
         }
     }
 
-    readonly Aes AesEcb;
-    ICryptoTransform? CryptoTransformValue;
+    ICryptoTransform? AesEcbTransformValue;
 
-    ICryptoTransform CryptoTransform
+    ICryptoTransform AesEcbTransform
     {
         get
         {
-            CryptoTransformValue ??= AesEcb.CreateEncryptor();
-            return CryptoTransformValue;
+            if (AesEcbTransformValue is null)
+            {
+                using var aes = Aes.Create();
+                aes.Mode = CipherMode.ECB;  // DevSkim: ignore DS187371
+                aes.BlockSize = BLOCKSIZE * BitsPerByte;
+                AesEcbTransformValue = aes.CreateEncryptor(KeyValue, null);
+            }
+            return AesEcbTransformValue;
         }
     }
 
@@ -161,12 +299,15 @@ public sealed class AesCmac
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     void CIPH_K_InPlace(byte[] X)
     {
-        _ = CryptoTransform.TransformBlock(X, 0, BLOCKSIZE, X, 0);
+        _ = AesEcbTransform.TransformBlock(X, 0, BLOCKSIZE, X, 0);
     }
 
     /// <inheritdoc cref="HashAlgorithm.Initialize" />
+    /// <inheritdoc cref="ThrowIfDisposed"/>
     public override void Initialize()
     {
+        ThrowIfDisposed();
+
         // See: NIST SP 800-38B, Section 6.2, Step 5
         C.AsSpan().Clear();
         PartialLength = 0;
@@ -187,6 +328,9 @@ public sealed class AesCmac
     /// <inheritdoc />
     protected override void HashCore(byte[] array, int ibStart, int cbSize)
     {
+        // This is only called by HashAlgorithm, which is known to behave well.
+        // We skip input validation for performance reasons; there is no unsafe code.
+
         UncheckedHashCore(array.AsSpan(ibStart, cbSize));
     }
 
@@ -196,6 +340,9 @@ public sealed class AesCmac
 #endif
     void HashCore(ReadOnlySpan<byte> source)
     {
+        // This is only called by HashAlgorithm, which is known to behave well.
+        // We skip input validation for performance reasons; there is no unsafe code.
+
         UncheckedHashCore(source);
     }
 
@@ -258,6 +405,9 @@ public sealed class AesCmac
 #endif
     bool TryHashFinal(Span<byte> destination, out int bytesWritten)
     {
+        // This is only called by HashAlgorithm, which promises to never call us with a destination that is too short.
+        // We skip input validation for performance reasons; there is no unsafe code.
+
         UncheckedHashFinal(destination);
         bytesWritten = BLOCKSIZE;
         return true;
@@ -343,26 +493,6 @@ public sealed class AesCmac
             CryptographicOperations.ZeroMemory(rented.AsSpan(0, maxRead));
             ArrayPool<byte>.Shared.Return(rented, false);
         }
-    }
-
-    /// <exception cref="CryptographicException">The <paramref name="key"/> length is other than 16, 24, or 32 bytes (128, 192, or 256 bits).</exception>
-    static void ThrowIfInvalidKey(ReadOnlySpan<byte> key)
-    {
-        if (key.Length is not (16 or 24 or 32))
-        {
-            throw new CryptographicException("Specified key is not a valid size for this algorithm.", nameof(key));
-        }
-    }
-
-    /// <exception cref="ArgumentNullException"><paramref name="key"/> is <see langword="null"/>.</exception>
-    /// <inheritdoc cref="ThrowIfInvalidKey(ReadOnlySpan{byte})"/>
-    static void ThrowIfInvalidKey(byte[] key)
-    {
-        if (key is null)
-        {
-            throw new ArgumentNullException(nameof(key));
-        }
-        ThrowIfInvalidKey(key.AsSpan());
     }
 
     /// <exception cref="ArgumentNullException"><paramref name="source"/> is <see langword="null"/>.</exception>

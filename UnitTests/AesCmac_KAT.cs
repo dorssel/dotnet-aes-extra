@@ -12,8 +12,7 @@ sealed class AesCmac_KAT
     [NistAesCmacSampleDataSource]
     public void NistExample_ComputeHash(NistAesCmacSampleTestVector testVector)
     {
-        using var aesCmac = AesCmac.Create();
-        aesCmac.Key = testVector.Key.ToArray();
+        using var aesCmac = new AesCmac(testVector.Key.Span);
         var tag = aesCmac.ComputeHash(testVector.PT.ToArray());
         CollectionAssert.AreEqual(testVector.Tag.ToArray(), tag);
     }

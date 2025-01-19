@@ -93,79 +93,79 @@ sealed partial record NistAesCtrSampleTestVector
         var testVectors = new List<NistAesCtrSampleTestVector>
         {
             new("F.5.1", "CTR-AES128.Encrypt", @"
-                    Key             2b7e151628aed2a6abf7158809cf4f3c
-                    Init. Counter   f0f1f2f3f4f5f6f7f8f9fafbfcfdfeff
+                    Key             2B7E151628AED2A6ABF7158809CF4F3C
+                    Init. Counter   F0F1F2F3F4F5F6F7F8F9FAFBFCFDFEFF
                     Block #1
-                    Input Block     f0f1f2f3f4f5f6f7f8f9fafbfcfdfeff
-                    Output Block    ec8cdf7398607cb0f2d21675ea9ea1e4
-                    Plaintext       6bc1bee22e409f96e93d7e117393172a
-                    Ciphertext      874d6191b620e3261bef6864990db6ce
+                    Input Block     F0F1F2F3F4F5F6F7F8F9FAFBFCFDFEFF
+                    Output Block    EC8CDF7398607CB0F2D21675EA9EA1E4
+                    Plaintext       6BC1BEE22E409F96E93D7E117393172A
+                    Ciphertext      874D6191B620E3261BEF6864990DB6CE
                     Block #2
-                    Input Block     f0f1f2f3f4f5f6f7f8f9fafbfcfdff00
-                    Output Block    362b7c3c6773516318a077d7fc5073ae
-                    Plaintext       ae2d8a571e03ac9c9eb76fac45af8e51
-                    Ciphertext      9806f66b7970fdff8617187bb9fffdff
+                    Input Block     F0F1F2F3F4F5F6F7F8F9FAFBFCFDFF00
+                    Output Block    362B7C3C6773516318A077D7FC5073AE
+                    Plaintext       AE2D8A571E03AC9C9EB76FAC45AF8E51
+                    Ciphertext      9806F66B7970FDFF8617187BB9FFFDFF
                     Block #3
-                    Input Block     f0f1f2f3f4f5f6f7f8f9fafbfcfdff01
-                    Output Block    6a2cc3787889374fbeb4c81b17ba6c44
-                    Plaintext       30c81c46a35ce411e5fbc1191a0a52ef
-                    Ciphertext      5ae4df3edbd5d35e5b4f09020db03eab
+                    Input Block     F0F1F2F3F4F5F6F7F8F9FAFBFCFDFF01
+                    Output Block    6A2CC3787889374FBEB4C81B17BA6C44
+                    Plaintext       30C81C46A35CE411E5FBC1191A0A52EF
+                    Ciphertext      5AE4DF3EDBD5D35E5B4F09020DB03EAB
                     Block #4
-                    Input Block     f0f1f2f3f4f5f6f7f8f9fafbfcfdff02
-                    Output Block    e89c399ff0f198c6d40a31db156cabfe
-                    Plaintext       f69f2445df4f9b17ad2b417be66c3710
-                    Ciphertext      1e031dda2fbe03d1792170a0f3009cee
+                    Input Block     F0F1F2F3F4F5F6F7F8F9FAFBFCFDFF02
+                    Output Block    E89C399FF0F198C6D40A31DB156CABFE
+                    Plaintext       F69F2445DF4F9B17AD2B417BE66C3710
+                    Ciphertext      1E031DDA2FBE03D1792170A0F3009CEE
                 "),
 
             new("F.5.3", "CTR-AES192.Encrypt", @"
-                    Key             8e73b0f7da0e6452c810f32b809079e562f8ead2522c6b7b
-                    Init. Counter   f0f1f2f3f4f5f6f7f8f9fafbfcfdfeff
+                    Key             8E73B0F7DA0E6452C810F32B809079E562F8EAD2522C6B7B
+                    Init. Counter   F0F1F2F3F4F5F6F7F8F9FAFBFCFDFEFF
                     Block #1
-                    Input Block     f0f1f2f3f4f5f6f7f8f9fafbfcfdfeff
-                    Output Block    717d2dc639128334a6167a488ded7921
-                    Plaintext       6bc1bee22e409f96e93d7e117393172a
-                    Ciphertext      1abc932417521ca24f2b0459fe7e6e0b
+                    Input Block     F0F1F2F3F4F5F6F7F8F9FAFBFCFDFEFF
+                    Output Block    717D2DC639128334A6167A488DED7921
+                    Plaintext       6BC1BEE22E409F96E93D7E117393172A
+                    Ciphertext      1ABC932417521CA24F2B0459FE7E6E0B
                     Block #2
-                    Input Block     f0f1f2f3f4f5f6f7f8f9fafbfcfdff00
-                    Output Block    a72eb3bb14a556734b7bad6ab16100c5
-                    Plaintext       ae2d8a571e03ac9c9eb76fac45af8e51
-                    Ciphertext      090339ec0aa6faefd5ccc2c6f4ce8e94
+                    Input Block     F0F1F2F3F4F5F6F7F8F9FAFBFCFDFF00
+                    Output Block    A72EB3BB14A556734B7BAD6AB16100C5
+                    Plaintext       AE2D8A571E03AC9C9EB76FAC45AF8E51
+                    Ciphertext      090339EC0AA6FAEFD5CCC2C6F4CE8E94
                     Block #3
-                    Input Block     f0f1f2f3f4f5f6f7f8f9fafbfcfdff01
-                    Output Block    2efeae2d72b722613446dc7f4c2af918
-                    Plaintext       30c81c46a35ce411e5fbc1191a0a52ef
-                    Ciphertext      1e36b26bd1ebc670d1bd1d665620abf7
+                    Input Block     F0F1F2F3F4F5F6F7F8F9FAFBFCFDFF01
+                    Output Block    2EFEAE2D72B722613446DC7F4C2AF918
+                    Plaintext       30C81C46A35CE411E5FBC1191A0A52EF
+                    Ciphertext      1E36B26BD1EBC670D1BD1D665620ABF7
                     Block #4
-                    Input Block     f0f1f2f3f4f5f6f7f8f9fafbfcfdff02
-                    Output Block    b9e783b30dd7924ff7bc9b97beaa8740
-                    Plaintext       f69f2445df4f9b17ad2b417be66c3710
-                    Ciphertext      4f78a7f6d29809585a97daec58c6b050
+                    Input Block     F0F1F2F3F4F5F6F7F8F9FAFBFCFDFF02
+                    Output Block    B9E783B30DD7924FF7BC9B97BEAA8740
+                    Plaintext       F69F2445DF4F9B17AD2B417BE66C3710
+                    Ciphertext      4F78A7F6D29809585A97DAEC58C6B050
             "),
 
             new("F.5.5", "CTR-AES256.Encrypt", @"
-                    Key             603deb1015ca71be2b73aef0857d7781
-                                    1f352c073b6108d72d9810a30914dff4
-                    Init. Counter   f0f1f2f3f4f5f6f7f8f9fafbfcfdfeff
+                    Key             603DEB1015CA71BE2B73AEF0857D7781
+                                    1F352C073B6108D72D9810A30914DFF4
+                    Init. Counter   F0F1F2F3F4F5F6F7F8F9FAFBFCFDFEFF
                     Block #1
-                    Input Block     f0f1f2f3f4f5f6f7f8f9fafbfcfdfeff
-                    Output Block    0bdf7df1591716335e9a8b15c860c502
-                    Plaintext       6bc1bee22e409f96e93d7e117393172a
-                    Ciphertext      601ec313775789a5b7a7f504bbf3d228
+                    Input Block     F0F1F2F3F4F5F6F7F8F9FAFBFCFDFEFF
+                    Output Block    0BDF7DF1591716335E9A8B15C860C502
+                    Plaintext       6BC1BEE22E409F96E93D7E117393172A
+                    Ciphertext      601EC313775789A5B7A7F504BBF3D228
                     Block #2
-                    Input Block     f0f1f2f3f4f5f6f7f8f9fafbfcfdff00
-                    Output Block    5a6e699d536119065433863c8f657b94
-                    Plaintext       ae2d8a571e03ac9c9eb76fac45af8e51
-                    Ciphertext      f443e3ca4d62b59aca84e990cacaf5c5
+                    Input Block     F0F1F2F3F4F5F6F7F8F9FAFBFCFDFF00
+                    Output Block    5A6E699D536119065433863C8F657B94
+                    Plaintext       AE2D8A571E03AC9C9EB76FAC45AF8E51
+                    Ciphertext      F443E3CA4D62B59ACA84E990CACAF5C5
                     Block #3
-                    Input Block     f0f1f2f3f4f5f6f7f8f9fafbfcfdff01
-                    Output Block    1bc12c9c01610d5d0d8bd6a3378eca62
-                    Plaintext       30c81c46a35ce411e5fbc1191a0a52ef
-                    Ciphertext      2b0930daa23de94ce87017ba2d84988d
+                    Input Block     F0F1F2F3F4F5F6F7F8F9FAFBFCFDFF01
+                    Output Block    1BC12C9C01610D5D0D8BD6A3378ECA62
+                    Plaintext       30C81C46A35CE411E5FBC1191A0A52EF
+                    Ciphertext      2B0930DAA23DE94CE87017BA2D84988D
                     Block #4
-                    Input Block     f0f1f2f3f4f5f6f7f8f9fafbfcfdff02
-                    Output Block    2956e1c8693536b1bee99c73a31576b6
-                    Plaintext       f69f2445df4f9b17ad2b417be66c3710
-                    Ciphertext      dfc9c58db67aada613c2dd08457941a6
+                    Input Block     F0F1F2F3F4F5F6F7F8F9FAFBFCFDFF02
+                    Output Block    2956E1C8693536B1BEE99C73A31576B6
+                    Plaintext       F69F2445DF4F9B17AD2B417BE66C3710
+                    Ciphertext      DFC9C58DB67AADA613C2DD08457941A6
             "),
 
         };

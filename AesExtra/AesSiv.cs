@@ -17,7 +17,7 @@ public sealed class AesSiv
     /// Initializes a new instance of the <see cref="AesSiv"/> class with a provided key.
     /// </summary>
     /// <param name="key">The secret key to use for this instance.</param>
-    /// <exception cref="ArgumentNullException" />
+    /// <exception cref="ArgumentNullException"><paramref name="key"/> is <see langword="null"/>.</exception>
     public AesSiv(byte[] key)
         : this(new ReadOnlySpan<byte>(key ?? throw new ArgumentNullException(nameof(key))))
     {
@@ -31,7 +31,7 @@ public sealed class AesSiv
     {
         if (key.Length is not (32 or 48 or 64))
         {
-            throw new CryptographicException("Specified key is not a valid size for this algorithm.", nameof(key));
+            throw new CryptographicException("Specified key is not a valid size for this algorithm.");
         }
 
         using var cmacKey = new SecureByteArray(key[..(key.Length / 2)]);
@@ -64,6 +64,7 @@ public sealed class AesSiv
     }
     #endregion
 
+    /// <exception cref="ObjectDisposedException">The <see cref="AesSiv"/> instance has been disposed.</exception>
     void ThrowIfDisposed()
     {
         if (IsDisposed)
@@ -219,6 +220,7 @@ public sealed class AesSiv
     /// <inheritdoc cref="ThrowIfInvalidCiphertext(byte[])"/>
     /// <inheritdoc cref="ThrowIfInvalidCiphertext(Span{byte}, ReadOnlySpan{byte})"/>
     /// <inheritdoc cref="ThrowIfInvalidAssociatedData(byte[][])"/>
+    /// <inheritdoc cref="ThrowIfDisposed"/>
     public void Encrypt(byte[] plaintext, byte[] ciphertext, params byte[][] associatedData)
     {
         // Input validation
@@ -258,6 +260,7 @@ public sealed class AesSiv
     /// <param name="ciphertext">The byte array to receive the encrypted contents, prepended with the synthetic IV.</param>
     /// <param name="associatedData">Extra data associated with this message, which must also be provided during decryption.</param>
     /// <inheritdoc cref="ThrowIfInvalidCiphertext(Span{byte}, ReadOnlySpan{byte})"/>
+    /// <inheritdoc cref="ThrowIfDisposed"/>
     public void Encrypt(ReadOnlySpan<byte> plaintext, Span<byte> ciphertext, ReadOnlySpan<byte> associatedData)
     {
         // Input validation
@@ -289,6 +292,7 @@ public sealed class AesSiv
     /// <param name="associatedData">Extra data associated with this message, which must also be provided during decryption.</param>
     /// <inheritdoc cref="ThrowIfInvalidCiphertext(Span{byte}, ReadOnlySpan{byte})"/>
     /// <inheritdoc cref="ThrowIfInvalidAssociatedData(ReadOnlySpan{ReadOnlyMemory{byte}})"/>
+    /// <inheritdoc cref="ThrowIfDisposed"/>
     public void Encrypt(ReadOnlySpan<byte> plaintext, Span<byte> ciphertext, params ReadOnlySpan<ReadOnlyMemory<byte>> associatedData)
     {
         // Input validation
@@ -326,6 +330,7 @@ public sealed class AesSiv
     /// <inheritdoc cref="ThrowIfInvalidPlaintext(byte[])"/>
     /// <inheritdoc cref="ThrowIfInvalidPlaintext(Span{byte}, ReadOnlySpan{byte})"/>
     /// <inheritdoc cref="ThrowIfInvalidAssociatedData(byte[][])"/>
+    /// <inheritdoc cref="ThrowIfDisposed"/>
     /// <exception cref="CryptographicException">The tag value could not be verified.</exception>
     public void Decrypt(byte[] ciphertext, byte[] plaintext, params byte[][] associatedData)
     {
@@ -373,6 +378,7 @@ public sealed class AesSiv
     /// <param name="associatedData">Extra data associated with this message, which must match the value provided during encryption.</param>
     /// <inheritdoc cref="ThrowIfInvalidCiphertext(ReadOnlySpan{byte})"/>
     /// <inheritdoc cref="ThrowIfInvalidPlaintext(Span{byte}, ReadOnlySpan{byte})"/>
+    /// <inheritdoc cref="ThrowIfDisposed"/>
     /// <exception cref="CryptographicException">The tag value could not be verified.</exception>
     public void Decrypt(ReadOnlySpan<byte> ciphertext, Span<byte> plaintext, ReadOnlySpan<byte> associatedData)
     {
@@ -413,6 +419,7 @@ public sealed class AesSiv
     /// <inheritdoc cref="ThrowIfInvalidCiphertext(ReadOnlySpan{byte})"/>
     /// <inheritdoc cref="ThrowIfInvalidPlaintext(Span{byte}, ReadOnlySpan{byte})"/>
     /// <inheritdoc cref="ThrowIfInvalidAssociatedData(ReadOnlySpan{ReadOnlyMemory{byte}})"/>
+    /// <inheritdoc cref="ThrowIfDisposed"/>
     /// <exception cref="CryptographicException">The tag value could not be verified.</exception>
     public void Decrypt(ReadOnlySpan<byte> ciphertext, Span<byte> plaintext, params ReadOnlySpan<ReadOnlyMemory<byte>> associatedData)
     {
