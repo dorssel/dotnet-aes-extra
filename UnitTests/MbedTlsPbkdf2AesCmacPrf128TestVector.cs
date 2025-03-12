@@ -46,7 +46,7 @@ sealed record MbedTlsPbkdf2AesCmacPrf128TestVector
     {
         var testVectors = new List<MbedTlsPbkdf2AesCmacPrf128TestVector>();
         var name = string.Empty;
-        foreach(var line in MbedTlsTestVectorData.Split('\n', '\r'))
+        foreach (var line in MbedTlsTestVectorData.Split('\n', '\r'))
         {
             if (line.StartsWith("PSA key derivation: PBKDF2-AES-CMAC-PRF-128, "))
             {
@@ -63,7 +63,7 @@ sealed record MbedTlsPbkdf2AesCmacPrf128TestVector
             var cost = string.Empty;
             for (var i = 0; i < parts.Length; i++)
             {
-                switch(parts[i])
+                switch (parts[i])
                 {
                     case "PSA_KEY_DERIVATION_INPUT_PASSWORD":
                         password += parts[i + 1].Trim('"');

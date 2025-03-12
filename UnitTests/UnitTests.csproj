@@ -13,10 +13,6 @@ SPDX-License-Identifier: MIT
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Moq" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\AesExtra\AesExtra.csproj" AdditionalProperties="TargetFramework=netstandard2.0" />
   </ItemGroup>
 

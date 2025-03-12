@@ -261,7 +261,8 @@ public sealed class AesCmac
     byte[]? K2Value;
 
     // See: NIST SP 800-38B, Section 6.1
-    byte[] K1 {
+    byte[] K1
+    {
         get
         {
             if (K1Value is null)
@@ -751,5 +752,5 @@ public sealed class AesCmac
         await UncheckedOneShotAsync(keyCopy, source, destination, cancellationToken).ConfigureAwait(false);
         return BLOCKSIZE;
     }
-#endregion
+    #endregion
 }

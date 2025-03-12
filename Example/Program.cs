@@ -2,8 +2,8 @@
 //
 // SPDX-License-Identifier: MIT
 
-using Dorssel.Security.Cryptography;
 using System.Security.Cryptography;
+using Dorssel.Security.Cryptography;
 
 // example data
 const int AesBlockSizeInBytes = 16;
