@@ -20,7 +20,7 @@ namespace Dorssel.Security.Cryptography;
 public static class AesCmacPrf128
 {
     const int BLOCKSIZE = 16;  // bytes
-    readonly static byte[] BlockOfZeros = new byte[BLOCKSIZE];
+    static readonly byte[] BlockOfZeros = new byte[BLOCKSIZE];
 
     static AesCmac UncheckedCreateKeyedPrf(byte[] key)
     {
