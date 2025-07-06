@@ -32,7 +32,7 @@ SPDX-License-Identifier: MIT
 
 The implementation is for AnyCPU, and works on all platforms.
 
-# Usage
+## Usage
 
 The released [NuGet package](https://www.nuget.org/packages/Dorssel.Security.Cryptography.AesExtra)
 and the .NET assemblies contained therein have the following properties:
