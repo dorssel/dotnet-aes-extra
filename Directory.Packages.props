@@ -9,7 +9,7 @@ SPDX-License-Identifier: MIT
     <!-- all -->
     <PackageVersion Include="Dorssel.GitVersion.MsBuild" Version="1.1.1" />
     <!-- netstandard2.0 -->
-    <PackageVersion Include="Microsoft.Bcl.AsyncInterfaces" Version="9.0.6" />
-    <PackageVersion Include="Microsoft.Bcl.Memory" Version="9.0.6" />
+    <PackageVersion Include="Microsoft.Bcl.AsyncInterfaces" Version="9.0.7" />
+    <PackageVersion Include="Microsoft.Bcl.Memory" Version="9.0.7" />
   </ItemGroup>
 </Project>
