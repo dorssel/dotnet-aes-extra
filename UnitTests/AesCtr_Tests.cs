@@ -78,7 +78,7 @@ sealed class AesCtr_Tests
     [TestMethod]
     public void Create_NullNameFails()
     {
-        Assert.ThrowsException<ArgumentNullException>(() =>
+        Assert.ThrowsExactly<ArgumentNullException>(() =>
         {
 #pragma warning disable CS0618 // Type or member is obsolete
             using var aes = AesCtr.Create(null!);
@@ -128,7 +128,7 @@ sealed class AesCtr_Tests
     [DataRow(32)]
     public void Constructor_Int_Invalid(int keySize)
     {
-        Assert.ThrowsException<CryptographicException>(() =>
+        Assert.ThrowsExactly<CryptographicException>(() =>
         {
             using var aes = new AesCtr(keySize);
         });
@@ -154,7 +154,7 @@ sealed class AesCtr_Tests
     [DataRow(32)]
     public void Constructor_Array_Invalid(int keySize)
     {
-        Assert.ThrowsException<CryptographicException>(() =>
+        Assert.ThrowsExactly<CryptographicException>(() =>
         {
             using var aes = new AesCtr(new byte[keySize / 8]);
         });
@@ -163,7 +163,7 @@ sealed class AesCtr_Tests
     [TestMethod]
     public void Constructor_Array_Null()
     {
-        Assert.ThrowsException<ArgumentNullException>(() =>
+        Assert.ThrowsExactly<ArgumentNullException>(() =>
         {
             using var aes = new AesCtr(TestKeyNull);
         });
@@ -189,7 +189,7 @@ sealed class AesCtr_Tests
     [DataRow(32)]
     public void Constructor_ReadOnlySpan_Invalid(int keySize)
     {
-        Assert.ThrowsException<CryptographicException>(() =>
+        Assert.ThrowsExactly<CryptographicException>(() =>
         {
             using var aes = new AesCtr(new byte[keySize / 8].AsSpan());
         });
@@ -215,7 +215,7 @@ sealed class AesCtr_Tests
     [DataRow(32)]
     public void Constructor_Array_Array_KeyInvalid(int keySize)
     {
-        Assert.ThrowsException<CryptographicException>(() =>
+        Assert.ThrowsExactly<CryptographicException>(() =>
         {
             using var aes = new AesCtr(new byte[keySize / 8], TestIV);
         });
@@ -224,7 +224,7 @@ sealed class AesCtr_Tests
     [TestMethod]
     public void Constructor_Array_Array_KeyNull()
     {
-        Assert.ThrowsException<ArgumentNullException>(() =>
+        Assert.ThrowsExactly<ArgumentNullException>(() =>
         {
             using var aes = new AesCtr(TestKeyNull, TestIV);
         });
@@ -233,7 +233,7 @@ sealed class AesCtr_Tests
     [TestMethod]
     public void Constructor_Array_Array_IVInvalid()
     {
-        Assert.ThrowsException<ArgumentException>(() =>
+        Assert.ThrowsExactly<ArgumentException>(() =>
         {
             using var aes = new AesCtr(TestKey, TestIVInvalid);
         });
@@ -242,7 +242,7 @@ sealed class AesCtr_Tests
     [TestMethod]
     public void Constructor_Array_Array_IVNull()
     {
-        Assert.ThrowsException<ArgumentNullException>(() =>
+        Assert.ThrowsExactly<ArgumentNullException>(() =>
         {
             using var aes = new AesCtr(TestKey, TestIVNull);
         });
@@ -268,7 +268,7 @@ sealed class AesCtr_Tests
     [DataRow(32)]
     public void Constructor_ReadOnlySpan_ReadOnlySpan_KeyInvalid(int keySize)
     {
-        Assert.ThrowsException<CryptographicException>(() =>
+        Assert.ThrowsExactly<CryptographicException>(() =>
         {
             using var aes = new AesCtr(new byte[keySize / 8].AsSpan(), TestIV.AsSpan());
         });
@@ -277,7 +277,7 @@ sealed class AesCtr_Tests
     [TestMethod]
     public void Constructor_ReadOnlySpan_ReadOnlySpan_IVInvalid()
     {
-        Assert.ThrowsException<ArgumentException>(() =>
+        Assert.ThrowsExactly<ArgumentException>(() =>
         {
             using var aes = new AesCtr(TestKey.AsSpan(), TestIVInvalid.AsSpan());
         });
@@ -312,7 +312,7 @@ sealed class AesCtr_Tests
     {
         using var aes = new AesCtr();
         Assert.AreEqual(CipherMode.CTS, aes.Mode);  // DevSkim: ignore DS187371
-        Assert.ThrowsException<CryptographicException>(() =>
+        Assert.ThrowsExactly<CryptographicException>(() =>
         {
             aes.Mode = CipherMode.CBC;
         });
@@ -334,7 +334,7 @@ sealed class AesCtr_Tests
         using var aes = new AesCtr();
         var padding = aes.Padding;
         Assert.AreEqual(PaddingMode.None, padding);
-        Assert.ThrowsException<CryptographicException>(() =>
+        Assert.ThrowsExactly<CryptographicException>(() =>
         {
             aes.Padding = PaddingMode.PKCS7;
         });
@@ -355,7 +355,7 @@ sealed class AesCtr_Tests
     {
         using var aes = new AesCtr();
         Assert.AreEqual(aes.BlockSize, aes.FeedbackSize);
-        Assert.ThrowsException<CryptographicException>(() =>
+        Assert.ThrowsExactly<CryptographicException>(() =>
         {
             aes.FeedbackSize = 8;
         });
@@ -397,7 +397,7 @@ sealed class AesCtr_Tests
     {
         using var aes = new AesCtr();
 
-        Assert.ThrowsException<ArgumentNullException>(() =>
+        Assert.ThrowsExactly<ArgumentNullException>(() =>
         {
             aes.Key = TestKeyNull;
         });
@@ -409,7 +409,7 @@ sealed class AesCtr_Tests
         using var aes = new AesCtr();
         aes.Dispose();
 
-        Assert.ThrowsException<ObjectDisposedException>(() =>
+        Assert.ThrowsExactly<ObjectDisposedException>(() =>
         {
             aes.Key = TestKey;
         });
@@ -429,7 +429,7 @@ sealed class AesCtr_Tests
     {
         using var aes = new AesCtr();
 
-        Assert.ThrowsException<ArgumentNullException>(() =>
+        Assert.ThrowsExactly<ArgumentNullException>(() =>
         {
             aes.IV = TestIVNull;
         });
@@ -441,7 +441,7 @@ sealed class AesCtr_Tests
         using var aes = new AesCtr();
         aes.Dispose();
 
-        Assert.ThrowsException<ObjectDisposedException>(() =>
+        Assert.ThrowsExactly<ObjectDisposedException>(() =>
         {
             aes.IV = TestIV;
         });
@@ -503,7 +503,7 @@ sealed class AesCtr_Tests
     public void CreateEncryptor_Array_Array_KeyNull()
     {
         using var aes = new AesCtr();
-        Assert.ThrowsException<ArgumentNullException>(() =>
+        Assert.ThrowsExactly<ArgumentNullException>(() =>
         {
             using var _ = aes.CreateEncryptor(TestKeyNull, TestIV);
         });
@@ -513,7 +513,7 @@ sealed class AesCtr_Tests
     public void CreateEncryptor_Array_Array_IVNull()
     {
         using var aes = new AesCtr();
-        Assert.ThrowsException<CryptographicException>(() =>
+        Assert.ThrowsExactly<CryptographicException>(() =>
         {
             using var _ = aes.CreateEncryptor(TestKey, TestIVNull);
         });
@@ -537,7 +537,7 @@ sealed class AesCtr_Tests
     public void CreateDecryptor_Array_Array_KeyNull()
     {
         using var aes = new AesCtr();
-        Assert.ThrowsException<ArgumentNullException>(() =>
+        Assert.ThrowsExactly<ArgumentNullException>(() =>
         {
             using var _ = aes.CreateDecryptor(TestKeyNull, TestIV);
         });
@@ -547,7 +547,7 @@ sealed class AesCtr_Tests
     public void CreateDecryptor_Array_Array_IVNull()
     {
         using var aes = new AesCtr();
-        Assert.ThrowsException<CryptographicException>(() =>
+        Assert.ThrowsExactly<CryptographicException>(() =>
         {
             using var _ = aes.CreateDecryptor(TestKey, TestIVNull);
         });
@@ -566,7 +566,7 @@ sealed class AesCtr_Tests
     {
         using var aes = new AesCtr();
 
-        Assert.ThrowsException<ArgumentNullException>(() =>
+        Assert.ThrowsExactly<ArgumentNullException>(() =>
         {
             aes.TransformCtr(TestKeyNull, TestIV);
         });
@@ -577,7 +577,7 @@ sealed class AesCtr_Tests
     {
         using var aes = new AesCtr();
 
-        Assert.ThrowsException<ArgumentNullException>(() =>
+        Assert.ThrowsExactly<ArgumentNullException>(() =>
         {
             aes.TransformCtr(TestMessage, TestIVNull);
         });
@@ -588,7 +588,7 @@ sealed class AesCtr_Tests
     {
         using var aes = new AesCtr();
 
-        Assert.ThrowsException<ArgumentException>(() =>
+        Assert.ThrowsExactly<ArgumentException>(() =>
         {
             aes.TransformCtr(TestMessage, TestIVInvalid);
         });
@@ -607,7 +607,7 @@ sealed class AesCtr_Tests
     {
         using var aes = new AesCtr();
 
-        Assert.ThrowsException<ArgumentException>(() =>
+        Assert.ThrowsExactly<ArgumentException>(() =>
         {
             aes.TransformCtr(TestMessage.AsSpan(), TestIVInvalid.AsSpan());
         });
@@ -628,7 +628,7 @@ sealed class AesCtr_Tests
         using var aes = new AesCtr();
         var destination = new byte[TestMessage.Length];
 
-        Assert.ThrowsException<ArgumentException>(() =>
+        Assert.ThrowsExactly<ArgumentException>(() =>
         {
             aes.TransformCtr(TestMessage, TestIVInvalid, destination);
         });
@@ -640,7 +640,7 @@ sealed class AesCtr_Tests
         using var aes = new AesCtr();
         var destination = new byte[TestMessage.Length - 1];
 
-        Assert.ThrowsException<ArgumentException>(() =>
+        Assert.ThrowsExactly<ArgumentException>(() =>
         {
             aes.TransformCtr(TestMessage, TestIV, destination);
         });
@@ -661,7 +661,7 @@ sealed class AesCtr_Tests
         using var aes = new AesCtr();
         var destination = new byte[TestMessage.Length];
 
-        Assert.ThrowsException<ArgumentException>(() =>
+        Assert.ThrowsExactly<ArgumentException>(() =>
         {
             aes.TryTransformCtr(TestMessage.AsSpan(), TestIVInvalid, destination, out _);
         });

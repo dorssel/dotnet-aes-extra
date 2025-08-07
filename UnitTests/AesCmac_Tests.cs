@@ -115,7 +115,7 @@ sealed class AesCmac_Tests
     [TestMethod]
     public void Create_NullNameFails()
     {
-        Assert.ThrowsException<ArgumentNullException>(() =>
+        Assert.ThrowsExactly<ArgumentNullException>(() =>
         {
 #pragma warning disable CS0618 // Type or member is obsolete
             using var aesCmac = AesCmac.Create(null!);
@@ -161,7 +161,7 @@ sealed class AesCmac_Tests
     [DataRow(32)]
     public void Constructor_Int_Invalid(int keySize)
     {
-        Assert.ThrowsException<CryptographicException>(() =>
+        Assert.ThrowsExactly<CryptographicException>(() =>
         {
             using var aesCmac = new AesCmac(keySize);
         });
@@ -183,7 +183,7 @@ sealed class AesCmac_Tests
     [DataRow(32)]
     public void Constructor_Array_Invalid(int keySize)
     {
-        Assert.ThrowsException<CryptographicException>(() =>
+        Assert.ThrowsExactly<CryptographicException>(() =>
         {
             using var aesCmac = new AesCmac(new byte[keySize / 8]);
         });
@@ -192,7 +192,7 @@ sealed class AesCmac_Tests
     [TestMethod]
     public void Constructor_Array_Null()
     {
-        Assert.ThrowsException<ArgumentNullException>(() =>
+        Assert.ThrowsExactly<ArgumentNullException>(() =>
         {
             using var aesCmac = new AesCmac(TestKeyNull);
         });
@@ -214,7 +214,7 @@ sealed class AesCmac_Tests
     [DataRow(32)]
     public void Constructor_ReadOnlySpan_Invalid(int keySize)
     {
-        Assert.ThrowsException<CryptographicException>(() =>
+        Assert.ThrowsExactly<CryptographicException>(() =>
         {
             using var aesCmac = new AesCmac(new byte[keySize / 8].AsSpan());
         });
@@ -256,7 +256,7 @@ sealed class AesCmac_Tests
         using var aesCmac = new AesCmac();
         aesCmac.TransformBlock(new byte[1], 0, 0, null, 0);
 
-        Assert.ThrowsException<InvalidOperationException>(() =>
+        Assert.ThrowsExactly<InvalidOperationException>(() =>
         {
             aesCmac.Key = new byte[aesCmac.Key.Length];
         });
@@ -268,7 +268,7 @@ sealed class AesCmac_Tests
         using var aesCmac = new AesCmac();
         aesCmac.Dispose();
 
-        Assert.ThrowsException<ObjectDisposedException>(() =>
+        Assert.ThrowsExactly<ObjectDisposedException>(() =>
         {
             aesCmac.Key = TestKey;
         });
@@ -350,7 +350,7 @@ sealed class AesCmac_Tests
     [TestMethod]
     public void TryHashData_KeyInvalid()
     {
-        Assert.ThrowsException<CryptographicException>(() =>
+        Assert.ThrowsExactly<CryptographicException>(() =>
         {
             AesCmac.TryHashData(TestKeyInvalid, TestMessage, TestDestination, out var bytesWritten);
         });
@@ -367,7 +367,7 @@ sealed class AesCmac_Tests
     [TestMethod]
     public void HashData_Array_Array_KeyNull()
     {
-        Assert.ThrowsException<ArgumentNullException>(() =>
+        Assert.ThrowsExactly<ArgumentNullException>(() =>
         {
             AesCmac.HashData(TestKeyNull, TestMessage);
         });
@@ -376,7 +376,7 @@ sealed class AesCmac_Tests
     [TestMethod]
     public void HashData_Array_Array_KeyInvalid()
     {
-        Assert.ThrowsException<CryptographicException>(() =>
+        Assert.ThrowsExactly<CryptographicException>(() =>
         {
             AesCmac.HashData(TestKeyInvalid, TestMessage);
         });
@@ -385,7 +385,7 @@ sealed class AesCmac_Tests
     [TestMethod]
     public void HashData_Array_Array_MessageNull()
     {
-        Assert.ThrowsException<ArgumentNullException>(() =>
+        Assert.ThrowsExactly<ArgumentNullException>(() =>
         {
             AesCmac.HashData(TestKey, TestMessageNull);
         });
@@ -402,7 +402,7 @@ sealed class AesCmac_Tests
     [TestMethod]
     public void HashData_ReadOnlySpan_ReadOnlySpan_KeyInvalid()
     {
-        Assert.ThrowsException<CryptographicException>(() =>
+        Assert.ThrowsExactly<CryptographicException>(() =>
         {
             AesCmac.HashData(TestKeyInvalid.AsSpan(), TestMessage.AsSpan());
         });
@@ -420,7 +420,7 @@ sealed class AesCmac_Tests
     [TestMethod]
     public void HashData_ReadOnlySpan_ReadOnlySpan_Span_KeyInvalid()
     {
-        Assert.ThrowsException<CryptographicException>(() =>
+        Assert.ThrowsExactly<CryptographicException>(() =>
         {
             AesCmac.HashData(TestKeyInvalid.AsSpan(), TestMessage.AsSpan(), TestDestination.AsSpan());
         });
@@ -429,7 +429,7 @@ sealed class AesCmac_Tests
     [TestMethod]
     public void HashData_ReadOnlySpan_ReadOnlySpan_Span_DestinationShort()
     {
-        Assert.ThrowsException<ArgumentException>(() =>
+        Assert.ThrowsExactly<ArgumentException>(() =>
         {
             AesCmac.HashData(TestKey.AsSpan(), TestMessage.AsSpan(), TestDestinationShort.AsSpan());
         });
@@ -446,7 +446,7 @@ sealed class AesCmac_Tests
     [TestMethod]
     public void HashData_Array_Stream_KeyNull()
     {
-        Assert.ThrowsException<ArgumentNullException>(() =>
+        Assert.ThrowsExactly<ArgumentNullException>(() =>
         {
             AesCmac.HashData(TestKeyNull, TestStream);
         });
@@ -455,7 +455,7 @@ sealed class AesCmac_Tests
     [TestMethod]
     public void HashData_Array_Stream_KeyInvalid()
     {
-        Assert.ThrowsException<CryptographicException>(() =>
+        Assert.ThrowsExactly<CryptographicException>(() =>
         {
             AesCmac.HashData(TestKeyInvalid, TestStream);
         });
@@ -464,7 +464,7 @@ sealed class AesCmac_Tests
     [TestMethod]
     public void HashData_Array_Stream_StreamNull()
     {
-        Assert.ThrowsException<ArgumentNullException>(() =>
+        Assert.ThrowsExactly<ArgumentNullException>(() =>
         {
             AesCmac.HashData(TestKey, TestStreamNull);
         });
@@ -473,7 +473,7 @@ sealed class AesCmac_Tests
     [TestMethod]
     public void HashData_Array_Stream_StreamInvalid()
     {
-        Assert.ThrowsException<ArgumentException>(() =>
+        Assert.ThrowsExactly<ArgumentException>(() =>
         {
             AesCmac.HashData(TestKey, TestStreamInvalid);
         });
@@ -490,7 +490,7 @@ sealed class AesCmac_Tests
     [TestMethod]
     public void HashData_ReadOnlySpan_Stream_KeyInvalid()
     {
-        Assert.ThrowsException<CryptographicException>(() =>
+        Assert.ThrowsExactly<CryptographicException>(() =>
         {
             AesCmac.HashData(TestKeyInvalid.AsSpan(), TestStream);
         });
@@ -499,7 +499,7 @@ sealed class AesCmac_Tests
     [TestMethod]
     public void HashData_ReadOnlySpan_Stream_StreamNull()
     {
-        Assert.ThrowsException<ArgumentNullException>(() =>
+        Assert.ThrowsExactly<ArgumentNullException>(() =>
         {
             AesCmac.HashData(TestKey.AsSpan(), TestStreamNull);
         });
@@ -508,7 +508,7 @@ sealed class AesCmac_Tests
     [TestMethod]
     public void HashData_ReadOnlySpan_Stream_StreamInvalid()
     {
-        Assert.ThrowsException<ArgumentException>(() =>
+        Assert.ThrowsExactly<ArgumentException>(() =>
         {
             AesCmac.HashData(TestKey.AsSpan(), TestStreamInvalid);
         });
@@ -526,7 +526,7 @@ sealed class AesCmac_Tests
     [TestMethod]
     public void HashData_ReadOnlySpan_Stream_Span_KeyInvalid()
     {
-        Assert.ThrowsException<CryptographicException>(() =>
+        Assert.ThrowsExactly<CryptographicException>(() =>
         {
             AesCmac.HashData(TestKeyInvalid.AsSpan(), TestStream, TestDestination.AsSpan());
         });
@@ -535,7 +535,7 @@ sealed class AesCmac_Tests
     [TestMethod]
     public void HashData_ReadOnlySpan_Stream_Span_StreamNull()
     {
-        Assert.ThrowsException<ArgumentNullException>(() =>
+        Assert.ThrowsExactly<ArgumentNullException>(() =>
         {
             AesCmac.HashData(TestKey.AsSpan(), TestStreamNull, TestDestination.AsSpan());
         });
@@ -544,7 +544,7 @@ sealed class AesCmac_Tests
     [TestMethod]
     public void HashData_ReadOnlySpan_Stream_Span_DestinationShort()
     {
-        Assert.ThrowsException<ArgumentException>(() =>
+        Assert.ThrowsExactly<ArgumentException>(() =>
         {
             AesCmac.HashData(TestKey.AsSpan(), TestStream, TestDestinationShort.AsSpan());
         });
@@ -553,7 +553,7 @@ sealed class AesCmac_Tests
     [TestMethod]
     public async Task HashDataAsync_Array_Stream()
     {
-        var destination = await AesCmac.HashDataAsync(TestKey, TestStream);
+        var destination = await AesCmac.HashDataAsync(TestKey, TestStream, CancellationToken.None);
 
         CollectionAssert.AreEqual(TestTag, destination);
     }
@@ -561,43 +561,43 @@ sealed class AesCmac_Tests
     [TestMethod]
     public async Task HashDataAsync_Array_Stream_KeyNull()
     {
-        await Assert.ThrowsExceptionAsync<ArgumentNullException>(async () =>
+        await Assert.ThrowsExactlyAsync<ArgumentNullException>(async () =>
         {
-            await AesCmac.HashDataAsync(TestKeyNull, TestStream);
+            await AesCmac.HashDataAsync(TestKeyNull, TestStream, CancellationToken.None);
         });
     }
 
     [TestMethod]
     public async Task HashDataAsync_Array_Stream_KeyInvalid()
     {
-        await Assert.ThrowsExceptionAsync<CryptographicException>(async () =>
+        await Assert.ThrowsExactlyAsync<CryptographicException>(async () =>
         {
-            await AesCmac.HashDataAsync(TestKeyInvalid, TestStream);
+            await AesCmac.HashDataAsync(TestKeyInvalid, TestStream, CancellationToken.None);
         });
     }
 
     [TestMethod]
     public async Task HashDataAsync_Array_Stream_StreamNull()
     {
-        await Assert.ThrowsExceptionAsync<ArgumentNullException>(async () =>
+        await Assert.ThrowsExactlyAsync<ArgumentNullException>(async () =>
         {
-            await AesCmac.HashDataAsync(TestKey, TestStreamNull);
+            await AesCmac.HashDataAsync(TestKey, TestStreamNull, CancellationToken.None);
         });
     }
 
     [TestMethod]
     public async Task HashDataAsync_Array_Stream_StreamInvalid()
     {
-        await Assert.ThrowsExceptionAsync<ArgumentException>(async () =>
+        await Assert.ThrowsExactlyAsync<ArgumentException>(async () =>
         {
-            await AesCmac.HashDataAsync(TestKey, TestStreamInvalid);
+            await AesCmac.HashDataAsync(TestKey, TestStreamInvalid, CancellationToken.None);
         });
     }
 
     [TestMethod]
     public async Task HashDataAsync_ReadOnlyMemory_Stream()
     {
-        var destination = await AesCmac.HashDataAsync(TestKey.AsMemory(), TestStream);
+        var destination = await AesCmac.HashDataAsync(TestKey.AsMemory(), TestStream, CancellationToken.None);
 
         CollectionAssert.AreEqual(TestTag, destination);
     }
@@ -605,34 +605,34 @@ sealed class AesCmac_Tests
     [TestMethod]
     public async Task HashDataAsync_ReadOnlyMemory_Stream_KeyInvalid()
     {
-        await Assert.ThrowsExceptionAsync<CryptographicException>(async () =>
+        await Assert.ThrowsExactlyAsync<CryptographicException>(async () =>
         {
-            await AesCmac.HashDataAsync(TestKeyInvalid.AsMemory(), TestStream);
+            await AesCmac.HashDataAsync(TestKeyInvalid.AsMemory(), TestStream, CancellationToken.None);
         });
     }
 
     [TestMethod]
     public async Task HashDataAsync_ReadOnlyMemory_Stream_StreamNull()
     {
-        await Assert.ThrowsExceptionAsync<ArgumentNullException>(async () =>
+        await Assert.ThrowsExactlyAsync<ArgumentNullException>(async () =>
         {
-            await AesCmac.HashDataAsync(TestKey.AsMemory(), TestStreamNull);
+            await AesCmac.HashDataAsync(TestKey.AsMemory(), TestStreamNull, CancellationToken.None);
         });
     }
 
     [TestMethod]
     public async Task HashDataAsync_ReadOnlyMemory_Stream_StreamInvalid()
     {
-        await Assert.ThrowsExceptionAsync<ArgumentException>(async () =>
+        await Assert.ThrowsExactlyAsync<ArgumentException>(async () =>
         {
-            await AesCmac.HashDataAsync(TestKey.AsMemory(), TestStreamInvalid);
+            await AesCmac.HashDataAsync(TestKey.AsMemory(), TestStreamInvalid, CancellationToken.None);
         });
     }
 
     [TestMethod]
     public async Task HashDataAsync_ReadOnlyMemory_Stream_Memory()
     {
-        var bytesWritten = await AesCmac.HashDataAsync(TestKey.AsMemory(), TestStream, TestDestination.AsMemory());
+        var bytesWritten = await AesCmac.HashDataAsync(TestKey.AsMemory(), TestStream, TestDestination.AsMemory(), CancellationToken.None);
 
         Assert.AreEqual(BLOCKSIZE, bytesWritten);
         CollectionAssert.AreEqual(TestTag, TestDestination);
@@ -641,36 +641,36 @@ sealed class AesCmac_Tests
     [TestMethod]
     public async Task HashDataAsync_ReadOnlyMemory_Stream_Memory_KeyInvalid()
     {
-        await Assert.ThrowsExceptionAsync<CryptographicException>(async () =>
+        await Assert.ThrowsExactlyAsync<CryptographicException>(async () =>
         {
-            await AesCmac.HashDataAsync(TestKeyInvalid.AsMemory(), TestStream, TestDestination.AsMemory());
+            await AesCmac.HashDataAsync(TestKeyInvalid.AsMemory(), TestStream, TestDestination.AsMemory(), CancellationToken.None);
         });
     }
 
     [TestMethod]
     public async Task HashDataAsync_ReadOnlyMemory_Stream_Memory_StreamNull()
     {
-        await Assert.ThrowsExceptionAsync<ArgumentNullException>(async () =>
+        await Assert.ThrowsExactlyAsync<ArgumentNullException>(async () =>
         {
-            await AesCmac.HashDataAsync(TestKey.AsMemory(), TestStreamNull, TestDestination.AsMemory());
+            await AesCmac.HashDataAsync(TestKey.AsMemory(), TestStreamNull, TestDestination.AsMemory(), CancellationToken.None);
         });
     }
 
     [TestMethod]
     public async Task HashDataAsync_ReadOnlyMemory_Stream_Memory_StreamInvalid()
     {
-        await Assert.ThrowsExceptionAsync<ArgumentException>(async () =>
+        await Assert.ThrowsExactlyAsync<ArgumentException>(async () =>
         {
-            await AesCmac.HashDataAsync(TestKey.AsMemory(), TestStreamInvalid, TestDestination.AsMemory());
+            await AesCmac.HashDataAsync(TestKey.AsMemory(), TestStreamInvalid, TestDestination.AsMemory(), CancellationToken.None);
         });
     }
 
     [TestMethod]
     public async Task HashDataAsync_ReadOnlyMemory_Stream_Memory_DestinationShort()
     {
-        await Assert.ThrowsExceptionAsync<ArgumentException>(async () =>
+        await Assert.ThrowsExactlyAsync<ArgumentException>(async () =>
         {
-            await AesCmac.HashDataAsync(TestKey.AsMemory(), TestStream, TestDestinationShort.AsMemory());
+            await AesCmac.HashDataAsync(TestKey.AsMemory(), TestStream, TestDestinationShort.AsMemory(), CancellationToken.None);
         });
     }
 }
