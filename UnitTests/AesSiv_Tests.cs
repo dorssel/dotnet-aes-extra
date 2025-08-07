@@ -23,7 +23,7 @@ sealed class AesSiv_Tests
     [TestMethod]
     public void Constructor_WithInvalidKeySize()
     {
-        Assert.ThrowsException<CryptographicException>(() =>
+        Assert.ThrowsExactly<CryptographicException>(() =>
         {
             using var aesSiv = new AesSiv(new byte[42]);
         });
@@ -32,7 +32,7 @@ sealed class AesSiv_Tests
     [TestMethod]
     public void Constructor_WithNullKey()
     {
-        Assert.ThrowsException<ArgumentNullException>(() =>
+        Assert.ThrowsExactly<ArgumentNullException>(() =>
         {
             using var aesSiv = new AesSiv(null!);
         });
@@ -66,7 +66,7 @@ sealed class AesSiv_Tests
     public void Encrypt_Array_Array_Array_PlaintextNull()
     {
         using var aesSiv = new AesSiv(TestKey);
-        Assert.ThrowsException<ArgumentNullException>(() =>
+        Assert.ThrowsExactly<ArgumentNullException>(() =>
         {
             aesSiv.Encrypt(null!, new byte[TestCiphertext.Length]);
         });
@@ -76,7 +76,7 @@ sealed class AesSiv_Tests
     public void Encrypt_Array_Array_Array_CiphertextNull()
     {
         using var aesSiv = new AesSiv(TestKey);
-        Assert.ThrowsException<ArgumentNullException>(() =>
+        Assert.ThrowsExactly<ArgumentNullException>(() =>
         {
             aesSiv.Encrypt(TestPlaintext, null!);
         });
@@ -86,7 +86,7 @@ sealed class AesSiv_Tests
     public void Encrypt_Array_Array_Array_CiphertextInvalidLength()
     {
         using var aesSiv = new AesSiv(TestKey);
-        Assert.ThrowsException<ArgumentException>(() =>
+        Assert.ThrowsExactly<ArgumentException>(() =>
         {
             aesSiv.Encrypt(TestPlaintext, new byte[TestCiphertext.Length + 1]);
         });
@@ -96,7 +96,7 @@ sealed class AesSiv_Tests
     public void Encrypt_Array_Array_Array_AssociatedDataNull()
     {
         using var aesSiv = new AesSiv(TestKey);
-        Assert.ThrowsException<ArgumentNullException>(() =>
+        Assert.ThrowsExactly<ArgumentNullException>(() =>
         {
             aesSiv.Encrypt(TestPlaintext, new byte[TestCiphertext.Length], null!);
         });
@@ -106,7 +106,7 @@ sealed class AesSiv_Tests
     public void Encrypt_Array_Array_Array_AssociatedDataItemNull()
     {
         using var aesSiv = new AesSiv(TestKey);
-        Assert.ThrowsException<ArgumentException>(() =>
+        Assert.ThrowsExactly<ArgumentException>(() =>
         {
             aesSiv.Encrypt(TestPlaintext, new byte[TestCiphertext.Length], [null!]);
         });
@@ -118,7 +118,7 @@ sealed class AesSiv_Tests
         var associatedData = Enumerable.Range(1, 127).Select(i => Array.Empty<byte>()).ToArray();
 
         using var aesSiv = new AesSiv(TestKey);
-        Assert.ThrowsException<ArgumentException>(() =>
+        Assert.ThrowsExactly<ArgumentException>(() =>
         {
             aesSiv.Encrypt(TestPlaintext, new byte[TestCiphertext.Length], associatedData);
         });
@@ -129,7 +129,7 @@ sealed class AesSiv_Tests
     {
         using var aesSiv = new AesSiv(TestKey);
         aesSiv.Dispose();
-        Assert.ThrowsException<ObjectDisposedException>(() =>
+        Assert.ThrowsExactly<ObjectDisposedException>(() =>
         {
             aesSiv.Encrypt(TestPlaintext, new byte[TestCiphertext.Length]);
         });
@@ -139,7 +139,7 @@ sealed class AesSiv_Tests
     public void Encrypt_ReadOnlySpan_Span_ReadOnlySpan_CiphertextInvalidLength()
     {
         using var aesSiv = new AesSiv(TestKey);
-        Assert.ThrowsException<ArgumentException>(() =>
+        Assert.ThrowsExactly<ArgumentException>(() =>
         {
             aesSiv.Encrypt(TestPlaintext.AsSpan(), new byte[TestCiphertext.Length + 1].AsSpan(), new Span<byte>());
         });
@@ -150,7 +150,7 @@ sealed class AesSiv_Tests
     {
         using var aesSiv = new AesSiv(TestKey);
         aesSiv.Dispose();
-        Assert.ThrowsException<ObjectDisposedException>(() =>
+        Assert.ThrowsExactly<ObjectDisposedException>(() =>
         {
             aesSiv.Encrypt(TestPlaintext.AsSpan(), new byte[TestCiphertext.Length].AsSpan(), new Span<byte>());
         });
@@ -169,7 +169,7 @@ sealed class AesSiv_Tests
     public void Encrypt_ReadOnlySpan_Span_ReadOnlyMemories_CiphertextInvalidLength()
     {
         using var aesSiv = new AesSiv(TestKey);
-        Assert.ThrowsException<ArgumentException>(() =>
+        Assert.ThrowsExactly<ArgumentException>(() =>
         {
             aesSiv.Encrypt(TestPlaintext.AsSpan(), new byte[TestCiphertext.Length + 1].AsSpan());
         });
@@ -181,7 +181,7 @@ sealed class AesSiv_Tests
         var associatedData = Enumerable.Range(1, 127).Select(i => new ReadOnlyMemory<byte>()).ToArray();
 
         using var aesSiv = new AesSiv(TestKey);
-        Assert.ThrowsException<ArgumentException>(() =>
+        Assert.ThrowsExactly<ArgumentException>(() =>
         {
             aesSiv.Encrypt(TestPlaintext.AsSpan(), new byte[TestCiphertext.Length].AsSpan(), associatedData.AsSpan());
         });
@@ -192,7 +192,7 @@ sealed class AesSiv_Tests
     {
         using var aesSiv = new AesSiv(TestKey);
         aesSiv.Dispose();
-        Assert.ThrowsException<ObjectDisposedException>(() =>
+        Assert.ThrowsExactly<ObjectDisposedException>(() =>
         {
             aesSiv.Encrypt(TestPlaintext.AsSpan(), new byte[TestCiphertext.Length].AsSpan());
         });
@@ -213,7 +213,7 @@ sealed class AesSiv_Tests
     public void Decrypt_Array_Array_Array_CiphertextNull()
     {
         using var aesSiv = new AesSiv(TestKey);
-        Assert.ThrowsException<ArgumentNullException>(() =>
+        Assert.ThrowsExactly<ArgumentNullException>(() =>
         {
             aesSiv.Decrypt(null!, new byte[TestPlaintext.Length]);
         });
@@ -223,7 +223,7 @@ sealed class AesSiv_Tests
     public void Decrypt_Array_Array_Array_CiphertextInvalidLength()
     {
         using var aesSiv = new AesSiv(TestKey);
-        Assert.ThrowsException<ArgumentException>(() =>
+        Assert.ThrowsExactly<ArgumentException>(() =>
         {
             aesSiv.Decrypt(new byte[15], new byte[TestPlaintext.Length]);
         });
@@ -233,7 +233,7 @@ sealed class AesSiv_Tests
     public void Decrypt_Array_Array_Array_PlaintextNull()
     {
         using var aesSiv = new AesSiv(TestKey);
-        Assert.ThrowsException<ArgumentNullException>(() =>
+        Assert.ThrowsExactly<ArgumentNullException>(() =>
         {
             aesSiv.Decrypt(TestCiphertext, null!);
         });
@@ -243,7 +243,7 @@ sealed class AesSiv_Tests
     public void Decrypt_Array_Array_Array_PlaintextInvalidLength()
     {
         using var aesSiv = new AesSiv(TestKey);
-        Assert.ThrowsException<ArgumentException>(() =>
+        Assert.ThrowsExactly<ArgumentException>(() =>
         {
             aesSiv.Decrypt(TestCiphertext, new byte[TestPlaintext.Length + 1]);
         });
@@ -253,7 +253,7 @@ sealed class AesSiv_Tests
     public void Decrypt_Array_Array_Array_AssociatedDataNull()
     {
         using var aesSiv = new AesSiv(TestKey);
-        Assert.ThrowsException<ArgumentNullException>(() =>
+        Assert.ThrowsExactly<ArgumentNullException>(() =>
         {
             aesSiv.Decrypt(TestCiphertext, new byte[TestPlaintext.Length], null!);
         });
@@ -263,7 +263,7 @@ sealed class AesSiv_Tests
     public void Decrypt_Array_Array_Array_AssociatedDataItemNull()
     {
         using var aesSiv = new AesSiv(TestKey);
-        Assert.ThrowsException<ArgumentException>(() =>
+        Assert.ThrowsExactly<ArgumentException>(() =>
         {
             aesSiv.Decrypt(TestCiphertext, new byte[TestPlaintext.Length], [null!]);
         });
@@ -275,7 +275,7 @@ sealed class AesSiv_Tests
         var associatedData = Enumerable.Range(1, 127).Select(i => Array.Empty<byte>()).ToArray();
 
         using var aesSiv = new AesSiv(TestKey);
-        Assert.ThrowsException<ArgumentException>(() =>
+        Assert.ThrowsExactly<ArgumentException>(() =>
         {
             aesSiv.Decrypt(TestCiphertext, new byte[TestPlaintext.Length], associatedData);
         });
@@ -286,7 +286,7 @@ sealed class AesSiv_Tests
     {
         using var aesSiv = new AesSiv(TestKey);
         aesSiv.Encrypt(TestPlaintext, TestCiphertext, new byte[] { 1 });
-        Assert.ThrowsException<CryptographicException>(() =>
+        Assert.ThrowsExactly<CryptographicException>(() =>
         {
             aesSiv.Decrypt(TestCiphertext, new byte[TestPlaintext.Length], new byte[] { 2 });
         });
@@ -297,7 +297,7 @@ sealed class AesSiv_Tests
     {
         using var aesSiv = new AesSiv(TestKey);
         aesSiv.Dispose();
-        Assert.ThrowsException<ObjectDisposedException>(() =>
+        Assert.ThrowsExactly<ObjectDisposedException>(() =>
         {
             aesSiv.Decrypt(TestCiphertext, new byte[TestPlaintext.Length]);
         });
@@ -307,7 +307,7 @@ sealed class AesSiv_Tests
     public void Decrypt_ReadOnlySpan_Span_ReadOnlySpan_CiphertextInvalidLength()
     {
         using var aesSiv = new AesSiv(TestKey);
-        Assert.ThrowsException<ArgumentException>(() =>
+        Assert.ThrowsExactly<ArgumentException>(() =>
         {
             aesSiv.Decrypt(new byte[15].AsSpan(), new byte[TestPlaintext.Length].AsSpan(), new Span<byte>());
         });
@@ -317,7 +317,7 @@ sealed class AesSiv_Tests
     public void Decrypt_ReadOnlySpan_Span_ReadOnlySpan_PlaintextInvalidLength()
     {
         using var aesSiv = new AesSiv(TestKey);
-        Assert.ThrowsException<ArgumentException>(() =>
+        Assert.ThrowsExactly<ArgumentException>(() =>
         {
             aesSiv.Decrypt(TestCiphertext.AsSpan(), new byte[TestPlaintext.Length + 1].AsSpan(), new Span<byte>());
         });
@@ -328,7 +328,7 @@ sealed class AesSiv_Tests
     {
         using var aesSiv = new AesSiv(TestKey);
         aesSiv.Encrypt(TestPlaintext, TestCiphertext, new byte[] { 1 });
-        Assert.ThrowsException<CryptographicException>(() =>
+        Assert.ThrowsExactly<CryptographicException>(() =>
         {
             aesSiv.Decrypt(TestCiphertext.AsSpan(), new byte[TestPlaintext.Length].AsSpan(), new Span<byte>());
         });
@@ -339,7 +339,7 @@ sealed class AesSiv_Tests
     {
         using var aesSiv = new AesSiv(TestKey);
         aesSiv.Dispose();
-        Assert.ThrowsException<ObjectDisposedException>(() =>
+        Assert.ThrowsExactly<ObjectDisposedException>(() =>
         {
             aesSiv.Decrypt(TestCiphertext.AsSpan(), new byte[TestPlaintext.Length].AsSpan(), new Span<byte>());
         });
@@ -360,7 +360,7 @@ sealed class AesSiv_Tests
     public void Decrypt_ReadOnlySpan_Span_ReadOnlyMemories_CiphertextInvalidLength()
     {
         using var aesSiv = new AesSiv(TestKey);
-        Assert.ThrowsException<ArgumentException>(() =>
+        Assert.ThrowsExactly<ArgumentException>(() =>
         {
             aesSiv.Decrypt(new byte[15].AsSpan(), new byte[TestPlaintext.Length].AsSpan());
         });
@@ -370,7 +370,7 @@ sealed class AesSiv_Tests
     public void Decrypt_ReadOnlySpan_Span_ReadOnlyMemories_PlaintextInvalidLength()
     {
         using var aesSiv = new AesSiv(TestKey);
-        Assert.ThrowsException<ArgumentException>(() =>
+        Assert.ThrowsExactly<ArgumentException>(() =>
         {
             aesSiv.Decrypt(TestCiphertext.AsSpan(), new byte[TestPlaintext.Length + 1].AsSpan());
         });
@@ -382,7 +382,7 @@ sealed class AesSiv_Tests
         var associatedData = Enumerable.Range(1, 127).Select(i => new ReadOnlyMemory<byte>()).ToArray();
 
         using var aesSiv = new AesSiv(TestKey);
-        Assert.ThrowsException<ArgumentException>(() =>
+        Assert.ThrowsExactly<ArgumentException>(() =>
         {
             aesSiv.Decrypt(TestCiphertext.AsSpan(), new byte[TestPlaintext.Length].AsSpan(), associatedData.AsSpan());
         });
@@ -393,7 +393,7 @@ sealed class AesSiv_Tests
     {
         using var aesSiv = new AesSiv(TestKey);
         aesSiv.Encrypt(TestPlaintext, TestCiphertext, new byte[] { 1 });
-        Assert.ThrowsException<CryptographicException>(() =>
+        Assert.ThrowsExactly<CryptographicException>(() =>
         {
             aesSiv.Decrypt(TestCiphertext.AsSpan(), TestPlaintext.AsSpan());
         });
@@ -404,7 +404,7 @@ sealed class AesSiv_Tests
     {
         using var aesSiv = new AesSiv(TestKey);
         aesSiv.Dispose();
-        Assert.ThrowsException<ObjectDisposedException>(() =>
+        Assert.ThrowsExactly<ObjectDisposedException>(() =>
         {
             aesSiv.Decrypt(TestCiphertext.AsSpan(), new byte[TestPlaintext.Length].AsSpan());
         });
@@ -423,7 +423,7 @@ sealed class AesSiv_Tests
             using var aesSiv = new AesSiv(TestKey);
             aesSiv.Decrypt(cipherText, Array.Empty<byte>());
         }
-        Assert.ThrowsException<CryptographicException>(() =>
+        Assert.ThrowsExactly<CryptographicException>(() =>
         {
             using var aesSiv = new AesSiv(TestKey);
             aesSiv.Decrypt(cipherText, Array.Empty<byte>(), new byte[] { 2 });

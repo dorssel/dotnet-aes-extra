@@ -15,7 +15,7 @@ sealed class AesCmacPrf128_Tests
     [TestMethod]
     public void DeriveKey_Array_Array_KeyNull()
     {
-        Assert.ThrowsException<ArgumentNullException>(() =>
+        Assert.ThrowsExactly<ArgumentNullException>(() =>
         {
             AesCmacPrf128.DeriveKey(null!, TestMessage);
         });
@@ -24,7 +24,7 @@ sealed class AesCmacPrf128_Tests
     [TestMethod]
     public void DeriveKey_Array_Array_MessageNull()
     {
-        Assert.ThrowsException<ArgumentNullException>(() =>
+        Assert.ThrowsExactly<ArgumentNullException>(() =>
         {
             AesCmacPrf128.DeriveKey(TestKey, null!);
         });
@@ -34,7 +34,7 @@ sealed class AesCmacPrf128_Tests
     public void DeriveKey_ReadOnlySpan_ReadOnlySpan_Span_TooShort()
     {
         var output = new byte[BLOCKSIZE - 1];
-        Assert.ThrowsException<ArgumentException>(() =>
+        Assert.ThrowsExactly<ArgumentException>(() =>
         {
             AesCmacPrf128.DeriveKey(TestKey, TestMessage, output);
         });
@@ -44,7 +44,7 @@ sealed class AesCmacPrf128_Tests
     public void DeriveKey_ReadOnlySpan_ReadOnlySpan_Span_TooLong()
     {
         var output = new byte[BLOCKSIZE + 1];
-        Assert.ThrowsException<ArgumentException>(() =>
+        Assert.ThrowsExactly<ArgumentException>(() =>
         {
             AesCmacPrf128.DeriveKey(TestKey, TestMessage, output);
         });
@@ -53,7 +53,7 @@ sealed class AesCmacPrf128_Tests
     [TestMethod]
     public void Pbkdf2_Array_Array_PasswordNull()
     {
-        Assert.ThrowsException<ArgumentNullException>(() =>
+        Assert.ThrowsExactly<ArgumentNullException>(() =>
         {
             AesCmacPrf128.Pbkdf2((byte[])null!, Array.Empty<byte>(), 1, 1);
         });
@@ -62,7 +62,7 @@ sealed class AesCmacPrf128_Tests
     [TestMethod]
     public void Pbkdf2_Array_Array_SaltNull()
     {
-        Assert.ThrowsException<ArgumentNullException>(() =>
+        Assert.ThrowsExactly<ArgumentNullException>(() =>
         {
             AesCmacPrf128.Pbkdf2(Array.Empty<byte>(), null!, 1, 1);
         });
@@ -71,7 +71,7 @@ sealed class AesCmacPrf128_Tests
     [TestMethod]
     public void Pbkdf2_Array_Array_IterationsNegative()
     {
-        Assert.ThrowsException<ArgumentOutOfRangeException>(() =>
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() =>
         {
             AesCmacPrf128.Pbkdf2(Array.Empty<byte>(), Array.Empty<byte>(), -1, 1);
         });
@@ -80,7 +80,7 @@ sealed class AesCmacPrf128_Tests
     [TestMethod]
     public void Pbkdf2_Array_Array_OutputLengthNegative()
     {
-        Assert.ThrowsException<ArgumentOutOfRangeException>(() =>
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() =>
         {
             AesCmacPrf128.Pbkdf2(Array.Empty<byte>(), Array.Empty<byte>(), 1, -1);
         });
@@ -95,7 +95,7 @@ sealed class AesCmacPrf128_Tests
     [TestMethod]
     public void Pbkdf2_ReadOnlyBytes_ReadOnlySpan_IterationsNegative()
     {
-        Assert.ThrowsException<ArgumentOutOfRangeException>(() =>
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() =>
         {
             AesCmacPrf128.Pbkdf2(new Span<byte>(), new Span<byte>(), -1, 1);
         });
@@ -104,7 +104,7 @@ sealed class AesCmacPrf128_Tests
     [TestMethod]
     public void Pbkdf2_ReadOnlyBytes_ReadOnlySpan_OutputLengthNegative()
     {
-        Assert.ThrowsException<ArgumentOutOfRangeException>(() =>
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() =>
         {
             AesCmacPrf128.Pbkdf2(new Span<byte>(), new Span<byte>(), 1, -1);
         });
@@ -119,7 +119,7 @@ sealed class AesCmacPrf128_Tests
     [TestMethod]
     public void Pbkdf2_ReadOnlyBytes_ReadOnlySpan_Span_IterationsNegative()
     {
-        Assert.ThrowsException<ArgumentOutOfRangeException>(() =>
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() =>
         {
             AesCmacPrf128.Pbkdf2(new Span<byte>(), new Span<byte>(), new Span<byte>(), -1);
         });
@@ -134,7 +134,7 @@ sealed class AesCmacPrf128_Tests
     [TestMethod]
     public void Pbkdf2_String_Array_PasswordNull()
     {
-        Assert.ThrowsException<ArgumentNullException>(() =>
+        Assert.ThrowsExactly<ArgumentNullException>(() =>
         {
             AesCmacPrf128.Pbkdf2((string)null!, Array.Empty<byte>(), 1, 1);
         });
@@ -143,7 +143,7 @@ sealed class AesCmacPrf128_Tests
     [TestMethod]
     public void Pbkdf2_String_Array_SaltNull()
     {
-        Assert.ThrowsException<ArgumentNullException>(() =>
+        Assert.ThrowsExactly<ArgumentNullException>(() =>
         {
             AesCmacPrf128.Pbkdf2(string.Empty, null!, 1, 1);
         });
@@ -152,7 +152,7 @@ sealed class AesCmacPrf128_Tests
     [TestMethod]
     public void Pbkdf2_String_Array_IterationsNegative()
     {
-        Assert.ThrowsException<ArgumentOutOfRangeException>(() =>
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() =>
         {
             AesCmacPrf128.Pbkdf2(string.Empty, Array.Empty<byte>(), -1, 1);
         });
@@ -161,7 +161,7 @@ sealed class AesCmacPrf128_Tests
     [TestMethod]
     public void Pbkdf2_String_Array_OutputLengthNegative()
     {
-        Assert.ThrowsException<ArgumentOutOfRangeException>(() =>
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() =>
         {
             AesCmacPrf128.Pbkdf2(string.Empty, Array.Empty<byte>(), 1, -1);
         });
@@ -176,7 +176,7 @@ sealed class AesCmacPrf128_Tests
     [TestMethod]
     public void Pbkdf2_ReadOnlyChars_ReadOnlySpan_IterationsNegative()
     {
-        Assert.ThrowsException<ArgumentOutOfRangeException>(() =>
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() =>
         {
             AesCmacPrf128.Pbkdf2(new Span<char>(), new Span<byte>(), -1, 1);
         });
@@ -185,7 +185,7 @@ sealed class AesCmacPrf128_Tests
     [TestMethod]
     public void Pbkdf2_ReadOnlyChars_ReadOnlySpan_OutputLengthNegative()
     {
-        Assert.ThrowsException<ArgumentOutOfRangeException>(() =>
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() =>
         {
             AesCmacPrf128.Pbkdf2(new Span<char>(), new Span<byte>(), 1, -1);
         });
@@ -200,7 +200,7 @@ sealed class AesCmacPrf128_Tests
     [TestMethod]
     public void Pbkdf2_ReadOnlyChars_ReadOnlySpan_Span_IterationsNegative()
     {
-        Assert.ThrowsException<ArgumentOutOfRangeException>(() =>
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() =>
         {
             AesCmacPrf128.Pbkdf2(new Span<char>(), new Span<byte>(), new Span<byte>(), -1);
         });

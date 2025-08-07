@@ -39,7 +39,7 @@ sealed class AesCtrTransform_Tests
     [DataRow(BLOCKSIZE * 8)]
     public void Constructor_InvalidIVSize(int ivSize)
     {
-        Assert.ThrowsException<ArgumentException>(() =>
+        Assert.ThrowsExactly<ArgumentException>(() =>
         {
             using var transform = new AesCtrTransform(TestKey, new byte[ivSize]);
         });
@@ -104,7 +104,7 @@ sealed class AesCtrTransform_Tests
     [TestMethod]
     public void TransformBlock_InputBuffer_Null()
     {
-        Assert.ThrowsException<ArgumentNullException>(() =>
+        Assert.ThrowsExactly<ArgumentNullException>(() =>
         {
             using ICryptoTransform transform = new AesCtrTransform(TestKey, TestInitialCounter);
             transform.TransformBlock(null!, 0, 0, [], 0);
@@ -114,7 +114,7 @@ sealed class AesCtrTransform_Tests
     [TestMethod]
     public void TransformBlock_InputOffset_Negative()
     {
-        Assert.ThrowsException<ArgumentOutOfRangeException>(() =>
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() =>
         {
             using ICryptoTransform transform = new AesCtrTransform(TestKey, TestInitialCounter);
             transform.TransformBlock([], -1, 0, [], 0);
@@ -124,7 +124,7 @@ sealed class AesCtrTransform_Tests
     [TestMethod]
     public void TransformBlock_InputOffset_TooBig()
     {
-        Assert.ThrowsException<ArgumentOutOfRangeException>(() =>
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() =>
         {
             using ICryptoTransform transform = new AesCtrTransform(TestKey, TestInitialCounter);
             transform.TransformBlock([], 1, 0, [], 0);
@@ -134,7 +134,7 @@ sealed class AesCtrTransform_Tests
     [TestMethod]
     public void TransformBlock_InputCount_Negative()
     {
-        Assert.ThrowsException<ArgumentOutOfRangeException>(() =>
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() =>
         {
             using ICryptoTransform transform = new AesCtrTransform(TestKey, TestInitialCounter);
             transform.TransformBlock([], 0, -1, [], 0);
@@ -144,7 +144,7 @@ sealed class AesCtrTransform_Tests
     [TestMethod]
     public void TransformBlock_InputCount_TooBig()
     {
-        Assert.ThrowsException<ArgumentOutOfRangeException>(() =>
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() =>
         {
             using ICryptoTransform transform = new AesCtrTransform(TestKey, TestInitialCounter);
             transform.TransformBlock([], 0, 1, [], 0);
@@ -157,7 +157,7 @@ sealed class AesCtrTransform_Tests
     [DataRow(BLOCKSIZE + 1)]
     public void TransformBlock_InputCount_NotMultiple(int inputCount)
     {
-        Assert.ThrowsException<ArgumentException>(() =>
+        Assert.ThrowsExactly<ArgumentException>(() =>
         {
             using ICryptoTransform transform = new AesCtrTransform(TestKey, TestInitialCounter);
             transform.TransformBlock(new byte[inputCount], 0, inputCount, new byte[inputCount], 0);
@@ -167,7 +167,7 @@ sealed class AesCtrTransform_Tests
     [TestMethod]
     public void TransformBlock_OutputBuffer_Null()
     {
-        Assert.ThrowsException<ArgumentNullException>(() =>
+        Assert.ThrowsExactly<ArgumentNullException>(() =>
         {
             using ICryptoTransform transform = new AesCtrTransform(TestKey, TestInitialCounter);
             transform.TransformBlock([], 0, 0, null!, 0);
@@ -177,7 +177,7 @@ sealed class AesCtrTransform_Tests
     [TestMethod]
     public void TransformBlock_OutputOffset_Negative()
     {
-        Assert.ThrowsException<ArgumentOutOfRangeException>(() =>
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() =>
         {
             using ICryptoTransform transform = new AesCtrTransform(TestKey, TestInitialCounter);
             transform.TransformBlock([], 0, 0, [], -1);
@@ -187,7 +187,7 @@ sealed class AesCtrTransform_Tests
     [TestMethod]
     public void TransformBlock_OutputOffset_TooBig()
     {
-        Assert.ThrowsException<ArgumentOutOfRangeException>(() =>
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() =>
         {
             using ICryptoTransform transform = new AesCtrTransform(TestKey, TestInitialCounter);
             transform.TransformBlock([], 0, 0, [], 1);
@@ -197,7 +197,7 @@ sealed class AesCtrTransform_Tests
     [TestMethod]
     public void TransformBlock_OutputBuffer_TooSmall()
     {
-        Assert.ThrowsException<ArgumentException>(() =>
+        Assert.ThrowsExactly<ArgumentException>(() =>
         {
             using ICryptoTransform transform = new AesCtrTransform(TestKey, TestInitialCounter);
             transform.TransformBlock(new byte[2 * BLOCKSIZE], 0, 2 * BLOCKSIZE, new byte[BLOCKSIZE], 0);
@@ -209,7 +209,7 @@ sealed class AesCtrTransform_Tests
     {
         using ICryptoTransform transform = new AesCtrTransform(TestKey, TestInitialCounter);
         transform.TransformFinalBlock([], 0, 0);
-        Assert.ThrowsException<InvalidOperationException>(() =>
+        Assert.ThrowsExactly<InvalidOperationException>(() =>
         {
             transform.TransformBlock(new byte[BLOCKSIZE], 0, BLOCKSIZE, new byte[BLOCKSIZE], 0);
         });
@@ -221,7 +221,7 @@ sealed class AesCtrTransform_Tests
         ICryptoTransform transform = new AesCtrTransform(TestKey, TestInitialCounter);
         transform.TransformBlock(new byte[BLOCKSIZE], 0, BLOCKSIZE, new byte[BLOCKSIZE], 0);
         transform.Dispose();
-        Assert.ThrowsException<ObjectDisposedException>(() =>
+        Assert.ThrowsExactly<ObjectDisposedException>(() =>
         {
             transform.TransformBlock(new byte[BLOCKSIZE], 0, BLOCKSIZE, new byte[BLOCKSIZE], 0);
         });
@@ -245,7 +245,7 @@ sealed class AesCtrTransform_Tests
     [TestMethod]
     public void TransformFinalBlock_InputBuffer_Null()
     {
-        Assert.ThrowsException<ArgumentNullException>(() =>
+        Assert.ThrowsExactly<ArgumentNullException>(() =>
         {
             using ICryptoTransform transform = new AesCtrTransform(TestKey, TestInitialCounter);
             transform.TransformFinalBlock(null!, 0, 0);
@@ -255,7 +255,7 @@ sealed class AesCtrTransform_Tests
     [TestMethod]
     public void TransformFinalBlock_InputOffset_Negative()
     {
-        Assert.ThrowsException<ArgumentOutOfRangeException>(() =>
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() =>
         {
             using ICryptoTransform transform = new AesCtrTransform(TestKey, TestInitialCounter);
             transform.TransformFinalBlock([], -1, 0);
@@ -265,7 +265,7 @@ sealed class AesCtrTransform_Tests
     [TestMethod]
     public void TransformFinalBlock_InputOffset_TooBig()
     {
-        Assert.ThrowsException<ArgumentOutOfRangeException>(() =>
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() =>
         {
             using ICryptoTransform transform = new AesCtrTransform(TestKey, TestInitialCounter);
             transform.TransformFinalBlock([], 1, 0);
@@ -275,7 +275,7 @@ sealed class AesCtrTransform_Tests
     [TestMethod]
     public void TransformFinalBlock_InputCount_Negative()
     {
-        Assert.ThrowsException<ArgumentOutOfRangeException>(() =>
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() =>
         {
             using ICryptoTransform transform = new AesCtrTransform(TestKey, TestInitialCounter);
             transform.TransformFinalBlock([], 0, -1);
@@ -285,7 +285,7 @@ sealed class AesCtrTransform_Tests
     [TestMethod]
     public void TransformFinalBlock_InputCount_TooBig()
     {
-        Assert.ThrowsException<ArgumentOutOfRangeException>(() =>
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() =>
         {
             using ICryptoTransform transform = new AesCtrTransform(TestKey, TestInitialCounter);
             transform.TransformFinalBlock([], 0, 1);
@@ -297,7 +297,7 @@ sealed class AesCtrTransform_Tests
     {
         using ICryptoTransform transform = new AesCtrTransform(TestKey, TestInitialCounter);
         transform.TransformFinalBlock([], 0, 0);
-        Assert.ThrowsException<InvalidOperationException>(() =>
+        Assert.ThrowsExactly<InvalidOperationException>(() =>
         {
             transform.TransformFinalBlock([], 0, 0);
         });
@@ -309,7 +309,7 @@ sealed class AesCtrTransform_Tests
         ICryptoTransform transform = new AesCtrTransform(TestKey, TestInitialCounter);
         transform.TransformBlock(new byte[BLOCKSIZE], 0, BLOCKSIZE, new byte[BLOCKSIZE], 0);
         transform.Dispose();
-        Assert.ThrowsException<ObjectDisposedException>(() =>
+        Assert.ThrowsExactly<ObjectDisposedException>(() =>
         {
             transform.TransformFinalBlock([], 0, 0);
         });
