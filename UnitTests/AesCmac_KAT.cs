@@ -7,6 +7,8 @@ namespace UnitTests;
 [TestClass]
 sealed class AesCmac_KAT
 {
+    public TestContext TestContext { get; set; }
+
     [TestMethod]
     [TestCategory("NIST")]
     [NistAesCmacSampleDataSource]
@@ -109,7 +111,7 @@ sealed class AesCmac_KAT
     {
         using var stream = new MemoryStream(testVector.PT.ToArray());
 
-        var tag = await AesCmac.HashDataAsync(testVector.Key.ToArray(), stream);
+        var tag = await AesCmac.HashDataAsync(testVector.Key.ToArray(), stream, TestContext.CancellationToken);
 
         CollectionAssert.AreEqual(testVector.Tag.ToArray(), tag);
     }
@@ -121,7 +123,7 @@ sealed class AesCmac_KAT
     {
         using var stream = new MemoryStream(testVector.PT.ToArray());
 
-        var tag = await AesCmac.HashDataAsync(testVector.Key, stream);
+        var tag = await AesCmac.HashDataAsync(testVector.Key, stream, TestContext.CancellationToken);
 
         CollectionAssert.AreEqual(testVector.Tag.ToArray(), tag);
     }
@@ -134,7 +136,7 @@ sealed class AesCmac_KAT
         using var stream = new MemoryStream(testVector.PT.ToArray());
         var tag = new byte[testVector.Tag.Length];
 
-        var bytesWritten = await AesCmac.HashDataAsync(testVector.Key, stream, tag);
+        var bytesWritten = await AesCmac.HashDataAsync(testVector.Key, stream, tag, TestContext.CancellationToken);
 
         Assert.AreEqual(testVector.Tag.Length, bytesWritten);
         CollectionAssert.AreEqual(testVector.Tag.ToArray(), tag);

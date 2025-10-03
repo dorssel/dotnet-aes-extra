@@ -40,7 +40,7 @@ sealed partial record RfcAesSivTestVector
 
     public string Name => _Name;
     public ReadOnlyMemory<byte> Key => _Key;
-    public ReadOnlyCollection<ReadOnlyMemory<byte>> AD => new((from item in _AD select (ReadOnlyMemory<byte>)item.AsMemory()).ToList());
+    public ReadOnlyCollection<ReadOnlyMemory<byte>> AD => new([.. from item in _AD select (ReadOnlyMemory<byte>)item.AsMemory()]);
     public ReadOnlyMemory<byte>? Nonce => _Nonce is null ? null : (ReadOnlyMemory<byte>?)_Nonce.AsMemory();
     public ReadOnlyMemory<byte> Plaintext => _Plaintext;
 #pragma warning disable IDE1006 // Naming Styles
