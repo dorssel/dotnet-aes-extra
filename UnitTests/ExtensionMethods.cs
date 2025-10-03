@@ -8,6 +8,6 @@ static class ExtensionMethods
 {
     public static byte[] ToUncheckedByteArray(this IEnumerable<int> integers)
     {
-        return integers.Select(i => unchecked((byte)i)).ToArray();
+        return [.. integers.Select(i => unchecked((byte)i))];
     }
 }

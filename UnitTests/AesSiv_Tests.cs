@@ -423,11 +423,13 @@ sealed class AesSiv_Tests
             using var aesSiv = new AesSiv(TestKey);
             aesSiv.Decrypt(cipherText, Array.Empty<byte>());
         }
-        Assert.ThrowsExactly<CryptographicException>(() =>
         {
             using var aesSiv = new AesSiv(TestKey);
-            aesSiv.Decrypt(cipherText, Array.Empty<byte>(), new byte[] { 2 });
-        });
+            Assert.ThrowsExactly<CryptographicException>(() =>
+            {
+                aesSiv.Decrypt(cipherText, Array.Empty<byte>(), new byte[] { 2 });
+            });
+        }
     }
 
     [TestMethod]
