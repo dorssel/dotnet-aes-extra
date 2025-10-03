@@ -22,11 +22,6 @@
         "exclude": ["_site/**", "obj/**"]
       }
     ],
-    "resource": [
-      {
-        "files": [".nojekyll"]
-      }
-    ],
     "postProcessors": ["ExtractSearchIndex"],
     "globalMetadata": {
       "_appTitle": "dotnet-aes-extra",
