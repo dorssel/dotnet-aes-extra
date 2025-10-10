@@ -41,9 +41,6 @@ SPDX-License-Identifier: MIT
     <OptimizeImplicitlyTriggeredBuild>True</OptimizeImplicitlyTriggeredBuild>
     <DisableRuntimeMarshalling>True</DisableRuntimeMarshalling>
 
-    <!-- Bump MSTest.Sdk "transitive" dependencies (they are actually direct dependencies) -->
-    <MicrosoftNETTestSdkVersion>18.0.0</MicrosoftNETTestSdkVersion>
-
     <!-- Assembly metadata -->
     <Product>dotnet-aes-extra</Product>
     <Company>Frans van Dorsselaer</Company>
