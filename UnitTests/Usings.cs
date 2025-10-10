@@ -4,4 +4,3 @@
 
 global using System.Security.Cryptography;
 global using Dorssel.Security.Cryptography;
-global using Microsoft.VisualStudio.TestTools.UnitTesting;
