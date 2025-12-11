@@ -10,7 +10,7 @@ using System.Runtime.CompilerServices;
 namespace Dorssel.Security.Cryptography;
 
 /// <summary>
-/// This is a backport of .NET 9.
+/// This is a backport of .NET 10.
 /// <para/>
 /// See:
 /// <see href="https://github.com/dotnet/runtime/blob/main/src/libraries/System.Security.Cryptography/src/System/Security/Cryptography/CryptographicOperations.cs"/>
@@ -46,10 +46,7 @@ static class CryptographicOperations
     {
         // NoOptimize to prevent the optimizer from deciding this call is unnecessary
         // NoInlining to prevent the inliner from forgetting that the method was no-optimize
-        for (var i = 0; i < buffer.Length; i++)
-        {
-            buffer[i] = 0;
-        }
+        buffer.Clear();
     }
 }
 
