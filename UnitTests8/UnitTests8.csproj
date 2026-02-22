@@ -16,4 +16,8 @@ SPDX-License-Identifier: MIT
     <ProjectReference Include="..\AesExtra\AesExtra.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="JunitXml.TestLogger" />
+  </ItemGroup>
+
 </Project>
