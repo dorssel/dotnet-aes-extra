@@ -41,6 +41,9 @@ SPDX-License-Identifier: MIT
     <OptimizeImplicitlyTriggeredBuild>True</OptimizeImplicitlyTriggeredBuild>
     <DisableRuntimeMarshalling>True</DisableRuntimeMarshalling>
 
+    <!-- Bump MSTest.Sdk "transitive" dependencies (they are actually direct dependencies) -->
+    <MicrosoftTestingExtensionsCodeCoverageVersion>18.8.0</MicrosoftTestingExtensionsCodeCoverageVersion>
+
     <!-- Deterministic builds -->
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
     <RestoreLockedMode Condition="$(ContinuousIntegrationBuild)">true</RestoreLockedMode>
