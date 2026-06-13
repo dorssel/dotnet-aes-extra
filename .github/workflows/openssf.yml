@@ -1,0 +1,47 @@
+# SPDX-FileCopyrightText: 2026 Frans van Dorsselaer
+#
+# SPDX-License-Identifier: MIT
+
+---
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+
+name: Scorecard
+
+on:
+  push:
+    branches: [master]
+  schedule:
+    - cron: '17 02 * * 3'
+
+permissions: {}
+
+jobs:
+  analyze:
+    name: Analyze (Scorecard)
+    runs-on: ubuntu-latest
+
+    permissions:
+      security-events: write
+      id-token: write
+      contents: read
+      issues: read
+      pull-requests: read
+      checks: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Run Scorecard analysis
+        uses: ossf/scorecard-action@4eaacf0543bb3f2c246792bd56e8cdeffafb205a # v2.4.3
+        with:
+          results_file: scorecard-results.sarif
+          results_format: sarif
+          publish_results: true
+
+      - name: Upload Scorecard scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@7211b7c8077ea37d8641b6271f6a365a22a5fbfa # v4.36.0
+        with:
+          sarif_file: scorecard-results.sarif
