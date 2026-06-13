@@ -6,8 +6,6 @@ SPDX-License-Identifier: MIT
 
 # dotnet-aes-extra
 
-[![Build](https://github.com/dorssel/dotnet-aes-extra/actions/workflows/dotnet.yml/badge.svg?branch=master)](https://github.com/dorssel/dotnet-aes-extra/actions/workflows/dotnet.yml?query=branch%3Amaster)
-[![CodeQL](https://github.com/dorssel/dotnet-aes-extra/actions/workflows/codeql.yml/badge.svg?branch=master)](https://github.com/dorssel/dotnet-aes-extra/actions/workflows/codeql.yml?query=branch%3Amaster)
 [![Codecov](https://codecov.io/gh/dorssel/dotnet-aes-extra/branch/master/graph/badge.svg?token=zsbTiXoisQ)](https://codecov.io/gh/dorssel/dotnet-aes-extra)
 [![REUSE](https://api.reuse.software/badge/github.com/dorssel/dotnet-aes-extra)](https://api.reuse.software/info/github.com/dorssel/dotnet-aes-extra)
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/13188/badge)](https://www.bestpractices.dev/projects/13188)
