@@ -16,8 +16,8 @@ on:
 permissions: {}
 
 jobs:
-  check:
-    name: Compliance (REUSE)
+  analyze:
+    name: Analyze (REUSE)
     runs-on: ubuntu-latest
 
     permissions:
