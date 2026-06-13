@@ -8,7 +8,6 @@ SPDX-License-Identifier: MIT
 
 [![Build](https://github.com/dorssel/dotnet-aes-extra/actions/workflows/dotnet.yml/badge.svg?branch=master)](https://github.com/dorssel/dotnet-aes-extra/actions/workflows/dotnet.yml?query=branch%3Amaster)
 [![CodeQL](https://github.com/dorssel/dotnet-aes-extra/actions/workflows/codeql.yml/badge.svg?branch=master)](https://github.com/dorssel/dotnet-aes-extra/actions/workflows/codeql.yml?query=branch%3Amaster)
-[![Lint](https://github.com/dorssel/dotnet-aes-extra/actions/workflows/mega-linter.yml/badge.svg?branch=master)](https://github.com/dorssel/dotnet-aes-extra/actions/workflows/mega-linter.yml?query=branch%3Amaster)
 [![Codecov](https://codecov.io/gh/dorssel/dotnet-aes-extra/branch/master/graph/badge.svg?token=zsbTiXoisQ)](https://codecov.io/gh/dorssel/dotnet-aes-extra)
 [![REUSE](https://api.reuse.software/badge/github.com/dorssel/dotnet-aes-extra)](https://api.reuse.software/info/github.com/dorssel/dotnet-aes-extra)
 [![NuGet](https://img.shields.io/nuget/v/Dorssel.Security.Cryptography.AesExtra?logo=nuget)](https://www.nuget.org/packages/Dorssel.Security.Cryptography.AesExtra)
