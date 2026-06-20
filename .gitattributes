@@ -28,3 +28,5 @@
 # These are part of the nuget package
 LICENSE.txt   text eol=crlf
 README.md     text eol=crlf
+
+packages.lock.json      text linguist-generated
