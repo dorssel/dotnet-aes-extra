@@ -138,7 +138,7 @@ sealed class AesCmac_Tests
         using var aesCmac = new AesCmac();
 
         Assert.AreEqual(256, aesCmac.Key.Length * 8);
-        CollectionAssert.AreNotEqual(new byte[aesCmac.Key.Length], aesCmac.Key);
+        Assert.AreNotSequenceEqual(new byte[aesCmac.Key.Length], aesCmac.Key);
     }
 
     [TestMethod]
@@ -150,7 +150,7 @@ sealed class AesCmac_Tests
         using var aesCmac = new AesCmac(keySize);
 
         Assert.AreEqual(keySize, aesCmac.Key.Length * 8);
-        CollectionAssert.AreNotEqual(new byte[aesCmac.Key.Length], aesCmac.Key);
+        Assert.AreNotSequenceEqual(new byte[aesCmac.Key.Length], aesCmac.Key);
     }
 
     [TestMethod]
@@ -246,7 +246,7 @@ sealed class AesCmac_Tests
         foreach (var key in keys)
         {
             aesCmac.Key = key;
-            CollectionAssert.AreEqual(key, aesCmac.Key);
+            Assert.AreSequenceEqual(key, aesCmac.Key);
         }
     }
 
@@ -303,7 +303,7 @@ sealed class AesCmac_Tests
 
         aesCmac.TransformFinalBlock([], 0, 0);
 
-        CollectionAssert.AreEqual(testVector.Tag.ToArray(), aesCmac.Hash);
+        Assert.AreSequenceEqual(testVector.Tag.ToArray(), aesCmac.Hash);
     }
 
     [TestMethod]
@@ -314,7 +314,7 @@ sealed class AesCmac_Tests
         {
             aesCmac.Key = testVector.Key.ToArray();
             var tag = aesCmac.ComputeHash(testVector.PT.ToArray());
-            CollectionAssert.AreEqual(testVector.Tag.ToArray(), tag);
+            Assert.AreSequenceEqual(testVector.Tag.ToArray(), tag);
         }
     }
 
@@ -325,7 +325,7 @@ sealed class AesCmac_Tests
 
         Assert.IsTrue(success);
         Assert.AreEqual(BLOCKSIZE, bytesWritten);
-        CollectionAssert.AreEqual(TestTag, TestDestination);
+        Assert.AreSequenceEqual(TestTag, TestDestination);
     }
 
     [TestMethod]
@@ -335,7 +335,7 @@ sealed class AesCmac_Tests
 
         Assert.IsTrue(success);
         Assert.AreEqual(BLOCKSIZE, bytesWritten);
-        CollectionAssert.AreEqual(TestTag, TestDestinationLong[..BLOCKSIZE]);
+        Assert.AreSequenceEqual(TestTag, TestDestinationLong[..BLOCKSIZE]);
     }
 
     [TestMethod]
@@ -361,7 +361,7 @@ sealed class AesCmac_Tests
     {
         var destination = AesCmac.HashData(TestKey, TestMessage);
 
-        CollectionAssert.AreEqual(TestTag, destination);
+        Assert.AreSequenceEqual(TestTag, destination);
     }
 
     [TestMethod]
@@ -396,7 +396,7 @@ sealed class AesCmac_Tests
     {
         var destination = AesCmac.HashData(TestKey.AsSpan(), TestMessage.AsSpan());
 
-        CollectionAssert.AreEqual(TestTag, destination);
+        Assert.AreSequenceEqual(TestTag, destination);
     }
 
     [TestMethod]
@@ -414,7 +414,7 @@ sealed class AesCmac_Tests
         var bytesWritten = AesCmac.HashData(TestKey.AsSpan(), TestMessage.AsSpan(), TestDestination.AsSpan());
 
         Assert.AreEqual(BLOCKSIZE, bytesWritten);
-        CollectionAssert.AreEqual(TestTag, TestDestination);
+        Assert.AreSequenceEqual(TestTag, TestDestination);
     }
 
     [TestMethod]
@@ -440,7 +440,7 @@ sealed class AesCmac_Tests
     {
         var destination = AesCmac.HashData(TestKey, TestStream);
 
-        CollectionAssert.AreEqual(TestTag, destination);
+        Assert.AreSequenceEqual(TestTag, destination);
     }
 
     [TestMethod]
@@ -484,7 +484,7 @@ sealed class AesCmac_Tests
     {
         var destination = AesCmac.HashData(TestKey.AsSpan(), TestStream);
 
-        CollectionAssert.AreEqual(TestTag, destination);
+        Assert.AreSequenceEqual(TestTag, destination);
     }
 
     [TestMethod]
@@ -520,7 +520,7 @@ sealed class AesCmac_Tests
         var bytesWritten = AesCmac.HashData(TestKey.AsSpan(), TestStream, TestDestination.AsSpan());
 
         Assert.AreEqual(BLOCKSIZE, bytesWritten);
-        CollectionAssert.AreEqual(TestTag, TestDestination);
+        Assert.AreSequenceEqual(TestTag, TestDestination);
     }
 
     [TestMethod]
@@ -555,7 +555,7 @@ sealed class AesCmac_Tests
     {
         var destination = await AesCmac.HashDataAsync(TestKey, TestStream, CancellationToken.None);
 
-        CollectionAssert.AreEqual(TestTag, destination);
+        Assert.AreSequenceEqual(TestTag, destination);
     }
 
     [TestMethod]
@@ -599,7 +599,7 @@ sealed class AesCmac_Tests
     {
         var destination = await AesCmac.HashDataAsync(TestKey.AsMemory(), TestStream, CancellationToken.None);
 
-        CollectionAssert.AreEqual(TestTag, destination);
+        Assert.AreSequenceEqual(TestTag, destination);
     }
 
     [TestMethod]
@@ -635,7 +635,7 @@ sealed class AesCmac_Tests
         var bytesWritten = await AesCmac.HashDataAsync(TestKey.AsMemory(), TestStream, TestDestination.AsMemory(), CancellationToken.None);
 
         Assert.AreEqual(BLOCKSIZE, bytesWritten);
-        CollectionAssert.AreEqual(TestTag, TestDestination);
+        Assert.AreSequenceEqual(TestTag, TestDestination);
     }
 
     [TestMethod]

@@ -20,7 +20,7 @@ sealed class AesSiv_KAT
         }
         var ciphertext = new byte[testVector.output.Length];
         aesSiv.Encrypt(testVector.Plaintext.ToArray(), ciphertext, [.. associatedData]);
-        CollectionAssert.AreEqual(testVector.output.ToArray(), ciphertext);
+        Assert.AreSequenceEqual(testVector.output.ToArray(), ciphertext);
     }
 
     [TestMethod]
@@ -32,7 +32,7 @@ sealed class AesSiv_KAT
         var associatedData = testVector.Nonce ?? testVector.AD.Single();
         var ciphertext = new byte[testVector.output.Length];
         aesSiv.Encrypt(testVector.Plaintext.Span, ciphertext.AsSpan(), associatedData.Span);
-        CollectionAssert.AreEqual(testVector.output.ToArray(), ciphertext);
+        Assert.AreSequenceEqual(testVector.output.ToArray(), ciphertext);
     }
 
     [TestMethod]
@@ -48,7 +48,7 @@ sealed class AesSiv_KAT
         }
         var ciphertext = new byte[testVector.output.Length];
         aesSiv.Encrypt(testVector.Plaintext.Span, ciphertext.AsSpan(), associatedData.ToArray().AsSpan());
-        CollectionAssert.AreEqual(testVector.output.ToArray(), ciphertext);
+        Assert.AreSequenceEqual(testVector.output.ToArray(), ciphertext);
     }
 
     [TestMethod]
@@ -64,7 +64,7 @@ sealed class AesSiv_KAT
         }
         var plaintext = new byte[testVector.Plaintext.Length];
         aesSiv.Decrypt(testVector.output.ToArray(), plaintext, [.. associatedData]);
-        CollectionAssert.AreEqual(testVector.Plaintext.ToArray(), plaintext);
+        Assert.AreSequenceEqual(testVector.Plaintext.ToArray(), plaintext);
     }
 
     [TestMethod]
@@ -76,7 +76,7 @@ sealed class AesSiv_KAT
         var associatedData = testVector.Nonce ?? testVector.AD.Single();
         var plaintext = new byte[testVector.Plaintext.Length];
         aesSiv.Decrypt(testVector.output.Span, plaintext.AsSpan(), associatedData.Span);
-        CollectionAssert.AreEqual(testVector.Plaintext.ToArray(), plaintext);
+        Assert.AreSequenceEqual(testVector.Plaintext.ToArray(), plaintext);
     }
 
     [TestMethod]
@@ -92,6 +92,6 @@ sealed class AesSiv_KAT
         }
         var plaintext = new byte[testVector.Plaintext.Length];
         aesSiv.Decrypt(testVector.output.Span, plaintext.AsSpan(), associatedData.ToArray().AsSpan());
-        CollectionAssert.AreEqual(testVector.Plaintext.ToArray(), plaintext);
+        Assert.AreSequenceEqual(testVector.Plaintext.ToArray(), plaintext);
     }
 }

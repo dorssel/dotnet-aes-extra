@@ -20,7 +20,7 @@ sealed class AesCtr_KAT
             using var encryptorStream = new CryptoStream(ciphertextStream, encryptor, CryptoStreamMode.Write);
             plaintextStream.CopyTo(encryptorStream);
         }
-        CollectionAssert.AreEqual(testVector.Ciphertext.ToArray(), ciphertextStream.ToArray());
+        Assert.AreSequenceEqual(testVector.Ciphertext.ToArray(), ciphertextStream.ToArray());
     }
 
     [TestMethod]
@@ -36,7 +36,7 @@ sealed class AesCtr_KAT
             using var encryptorStream = new CryptoStream(plaintextStream, encryptor, CryptoStreamMode.Read);
             encryptorStream.CopyTo(ciphertextStream);
         }
-        CollectionAssert.AreEqual(testVector.Ciphertext.ToArray(), ciphertextStream.ToArray());
+        Assert.AreSequenceEqual(testVector.Ciphertext.ToArray(), ciphertextStream.ToArray());
     }
 
     [TestMethod]
@@ -52,7 +52,7 @@ sealed class AesCtr_KAT
             using var decryptorStream = new CryptoStream(plaintextStream, decryptor, CryptoStreamMode.Write);
             ciphertextStream.CopyTo(decryptorStream);
         }
-        CollectionAssert.AreEqual(testVector.Plaintext.ToArray(), plaintextStream.ToArray());
+        Assert.AreSequenceEqual(testVector.Plaintext.ToArray(), plaintextStream.ToArray());
     }
 
     [TestMethod]
@@ -68,7 +68,7 @@ sealed class AesCtr_KAT
             using var decryptorStream = new CryptoStream(ciphertextStream, decryptor, CryptoStreamMode.Read);
             decryptorStream.CopyTo(plaintextStream);
         }
-        CollectionAssert.AreEqual(testVector.Plaintext.ToArray(), plaintextStream.ToArray());
+        Assert.AreSequenceEqual(testVector.Plaintext.ToArray(), plaintextStream.ToArray());
     }
 
     [TestMethod]
@@ -80,7 +80,7 @@ sealed class AesCtr_KAT
 
         var destination = aes.TransformCtr(testVector.Plaintext.ToArray(), testVector.InitialCounter.ToArray());
 
-        CollectionAssert.AreEqual(testVector.Ciphertext.ToArray(), destination);
+        Assert.AreSequenceEqual(testVector.Ciphertext.ToArray(), destination);
     }
 
     [TestMethod]
@@ -92,7 +92,7 @@ sealed class AesCtr_KAT
 
         var destination = aes.TransformCtr(testVector.Plaintext.Span, testVector.InitialCounter.Span);
 
-        CollectionAssert.AreEqual(testVector.Ciphertext.ToArray(), destination);
+        Assert.AreSequenceEqual(testVector.Ciphertext.ToArray(), destination);
     }
 
     [TestMethod]
@@ -106,7 +106,7 @@ sealed class AesCtr_KAT
         var count = aes.TransformCtr(testVector.Plaintext.Span, testVector.InitialCounter.Span, destination);
 
         Assert.AreEqual(testVector.Ciphertext.Length, count);
-        CollectionAssert.AreEqual(testVector.Ciphertext.ToArray(), destination);
+        Assert.AreSequenceEqual(testVector.Ciphertext.ToArray(), destination);
     }
 
     [TestMethod]
@@ -121,7 +121,7 @@ sealed class AesCtr_KAT
 
         Assert.IsTrue(success);
         Assert.AreEqual(testVector.Ciphertext.Length, bytesWritten);
-        CollectionAssert.AreEqual(testVector.Ciphertext.ToArray(), destination);
+        Assert.AreSequenceEqual(testVector.Ciphertext.ToArray(), destination);
     }
 
     [TestMethod]
@@ -133,7 +133,7 @@ sealed class AesCtr_KAT
 
         var destination = aes.TransformCtr(testVector.Ciphertext.ToArray(), testVector.InitialCounter.ToArray());
 
-        CollectionAssert.AreEqual(testVector.Plaintext.ToArray(), destination);
+        Assert.AreSequenceEqual(testVector.Plaintext.ToArray(), destination);
     }
 
     [TestMethod]
@@ -145,7 +145,7 @@ sealed class AesCtr_KAT
 
         var destination = aes.TransformCtr(testVector.Ciphertext.Span, testVector.InitialCounter.Span);
 
-        CollectionAssert.AreEqual(testVector.Plaintext.ToArray(), destination);
+        Assert.AreSequenceEqual(testVector.Plaintext.ToArray(), destination);
     }
 
     [TestMethod]
@@ -159,7 +159,7 @@ sealed class AesCtr_KAT
         var count = aes.TransformCtr(testVector.Ciphertext.Span, testVector.InitialCounter.Span, destination);
 
         Assert.AreEqual(testVector.Plaintext.Length, count);
-        CollectionAssert.AreEqual(testVector.Plaintext.ToArray(), destination);
+        Assert.AreSequenceEqual(testVector.Plaintext.ToArray(), destination);
     }
 
     [TestMethod]
@@ -174,6 +174,6 @@ sealed class AesCtr_KAT
 
         Assert.IsTrue(success);
         Assert.AreEqual(testVector.Plaintext.Length, bytesWritten);
-        CollectionAssert.AreEqual(testVector.Plaintext.ToArray(), destination);
+        Assert.AreSequenceEqual(testVector.Plaintext.ToArray(), destination);
     }
 }

@@ -417,7 +417,7 @@ sealed class AesSiv_Tests
         {
             using var aesSiv = new AesSiv(TestKey);
             aesSiv.Encrypt(Array.Empty<byte>(), cipherText);
-            CollectionAssert.AreNotEqual(new byte[16], cipherText);
+            Assert.AreNotSequenceEqual(new byte[16], cipherText);
         }
         {
             using var aesSiv = new AesSiv(TestKey);
@@ -481,22 +481,22 @@ sealed class AesSiv_Tests
             {
                 var test = new byte[ciphertext_1.Length];
                 aesSiv.Encrypt(plaintext_1, test, associatedData_1);
-                CollectionAssert.AreEqual(ciphertext_1, test);
+                Assert.AreSequenceEqual(ciphertext_1, test);
             }
             {
                 var test = new byte[ciphertext_2.Length];
                 aesSiv.Encrypt(plaintext_2, test, associatedData_2);
-                CollectionAssert.AreEqual(ciphertext_2, test);
+                Assert.AreSequenceEqual(ciphertext_2, test);
             }
             {
                 var test = new byte[plaintext_1.Length];
                 aesSiv.Decrypt(ciphertext_1, test, associatedData_1);
-                CollectionAssert.AreEqual(plaintext_1, test);
+                Assert.AreSequenceEqual(plaintext_1, test);
             }
             {
                 var test = new byte[plaintext_2.Length];
                 aesSiv.Decrypt(ciphertext_2, test, associatedData_2);
-                CollectionAssert.AreEqual(plaintext_2, test);
+                Assert.AreSequenceEqual(plaintext_2, test);
             }
         }
     }
