@@ -102,7 +102,7 @@ sealed class AesCtr_Tests
 
         Assert.AreEqual(256, aes.KeySize);
         Assert.HasCount(256 / 8, aes.Key);
-        CollectionAssert.AreNotEqual(new byte[aes.Key.Length], aes.Key);
+        Assert.AreNotSequenceEqual(new byte[aes.Key.Length], aes.Key);
         Assert.AreEqual(256, aes.KeySize);
     }
 
@@ -116,7 +116,7 @@ sealed class AesCtr_Tests
 
         Assert.AreEqual(keySize, aes.KeySize);
         Assert.HasCount(keySize / 8, aes.Key);
-        CollectionAssert.AreNotEqual(new byte[aes.Key.Length], aes.Key);
+        Assert.AreNotSequenceEqual(new byte[aes.Key.Length], aes.Key);
         Assert.AreEqual(keySize, aes.KeySize);
     }
 
@@ -421,7 +421,7 @@ sealed class AesCtr_Tests
         using var aes = new AesCtr();
 
         aes.IV = TestIV;
-        CollectionAssert.AreEqual(TestIV, aes.IV);
+        Assert.AreSequenceEqual(TestIV, aes.IV);
     }
 
     [TestMethod]

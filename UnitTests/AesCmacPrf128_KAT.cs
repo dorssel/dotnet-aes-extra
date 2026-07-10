@@ -15,7 +15,7 @@ sealed class AesCmacPrf128_KAT
     public void Rfc_DeriveKey_Array_Array(RfcAesCmacPrf128TestVector testVector)
     {
         var output = AesCmacPrf128.DeriveKey(testVector.Key.ToArray(), testVector.Message.ToArray());
-        CollectionAssert.AreEqual(testVector.Output.ToArray(), output);
+        Assert.AreSequenceEqual(testVector.Output.ToArray(), output);
     }
 
     [TestMethod]
@@ -25,7 +25,7 @@ sealed class AesCmacPrf128_KAT
     {
         var output = new byte[testVector.Output.Length];
         AesCmacPrf128.DeriveKey(testVector.Key.Span, testVector.Message.Span, output);
-        CollectionAssert.AreEqual(testVector.Output.ToArray(), output);
+        Assert.AreSequenceEqual(testVector.Output.ToArray(), output);
     }
 
     [TestMethod]
@@ -35,7 +35,7 @@ sealed class AesCmacPrf128_KAT
     {
         var output = AesCmacPrf128.Pbkdf2(testVector.Password.ToArray(), testVector.Salt.ToArray(), testVector.Iterations, testVector.Output.Length);
 
-        CollectionAssert.AreEqual(testVector.Output.ToArray(), output);
+        Assert.AreSequenceEqual(testVector.Output.ToArray(), output);
     }
 
     [TestMethod]
@@ -45,7 +45,7 @@ sealed class AesCmacPrf128_KAT
     {
         var output = AesCmacPrf128.Pbkdf2(testVector.Password.Span, testVector.Salt.Span, testVector.Iterations, testVector.Output.Length);
 
-        CollectionAssert.AreEqual(testVector.Output.ToArray(), output);
+        Assert.AreSequenceEqual(testVector.Output.ToArray(), output);
     }
 
     [TestMethod]
@@ -56,7 +56,7 @@ sealed class AesCmacPrf128_KAT
         var output = new byte[testVector.Output.Length];
         AesCmacPrf128.Pbkdf2(testVector.Password.Span, testVector.Salt.Span, output, testVector.Iterations);
 
-        CollectionAssert.AreEqual(testVector.Output.ToArray(), output);
+        Assert.AreSequenceEqual(testVector.Output.ToArray(), output);
     }
 
     [TestMethod]
@@ -67,7 +67,7 @@ sealed class AesCmacPrf128_KAT
         var output = AesCmacPrf128.Pbkdf2(Encoding.UTF8.GetString(testVector.Password.Span), testVector.Salt.ToArray(), testVector.Iterations,
             testVector.Output.Length);
 
-        CollectionAssert.AreEqual(testVector.Output.ToArray(), output);
+        Assert.AreSequenceEqual(testVector.Output.ToArray(), output);
     }
 
     [TestMethod]
@@ -78,7 +78,7 @@ sealed class AesCmacPrf128_KAT
         var output = AesCmacPrf128.Pbkdf2(Encoding.UTF8.GetString(testVector.Password.Span).AsSpan(), testVector.Salt.Span, testVector.Iterations,
             testVector.Output.Length);
 
-        CollectionAssert.AreEqual(testVector.Output.ToArray(), output);
+        Assert.AreSequenceEqual(testVector.Output.ToArray(), output);
     }
 
     [TestMethod]
@@ -89,6 +89,6 @@ sealed class AesCmacPrf128_KAT
         var output = new byte[testVector.Output.Length];
         AesCmacPrf128.Pbkdf2(Encoding.UTF8.GetString(testVector.Password.Span).AsSpan(), testVector.Salt.Span, output, testVector.Iterations);
 
-        CollectionAssert.AreEqual(testVector.Output.ToArray(), output);
+        Assert.AreSequenceEqual(testVector.Output.ToArray(), output);
     }
 }
