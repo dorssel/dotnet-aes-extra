@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!--
+SPDX-FileCopyrightText: 2026 Frans van Dorsselaer
+
+SPDX-License-Identifier: MIT
+-->
+<Project Sdk="MSTest.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>$(MainTargetFramework)</TargetFramework>
+    <IsDevelopment>true</IsDevelopment>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\AesExtra\AesExtra.csproj" AdditionalProperties="TargetFramework=netstandard2.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FsCheck" />
+    <PackageReference Include="JunitXml.TestLogger" />
+  </ItemGroup>
+
+</Project>
