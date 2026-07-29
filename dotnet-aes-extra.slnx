@@ -21,6 +21,7 @@ SPDX-License-Identifier: MIT
     <Build Project="false" />
   </Project>
   <Project Path="Example/Example.csproj" />
+  <Project Path="FuzzingTests/FuzzingTests.csproj" />
   <Project Path="UnitTests/UnitTests.csproj" />
   <Project Path="UnitTests8/UnitTests8.csproj" />
 </Solution>

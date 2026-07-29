@@ -13,5 +13,7 @@ SPDX-License-Identifier: MIT
     <PackageVersion Include="Microsoft.Bcl.Memory" Version="10.0.10" />
     <!-- unit tests -->
     <PackageVersion Include="JunitXml.TestLogger" Version="8.0.0" />
+    <!-- fuzzing tests -->
+    <PackageVersion Include="FsCheck" Version="3.3.4" />
   </ItemGroup>
 </Project>
