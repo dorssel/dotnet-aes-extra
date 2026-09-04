@@ -335,7 +335,7 @@ sealed class AesCmac_Tests
 
         Assert.IsTrue(success);
         Assert.AreEqual(BLOCKSIZE, bytesWritten);
-        Assert.AreSequenceEqual(TestTag, TestDestinationLong[..BLOCKSIZE]);
+        Assert.AreSequenceEqual(TestTag.AsSpan(), TestDestinationLong.AsSpan(0, BLOCKSIZE));
     }
 
     [TestMethod]
