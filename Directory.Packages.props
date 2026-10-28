@@ -9,10 +9,10 @@ SPDX-License-Identifier: MIT
     <!-- all -->
     <PackageVersion Include="GitVersion.MsBuild" Version="6.8.2" />
     <!-- netstandard2.0 -->
-    <PackageVersion Include="Microsoft.Bcl.AsyncInterfaces" Version="10.0.13" />
-    <PackageVersion Include="Microsoft.Bcl.Memory" Version="10.0.13" />
+    <PackageVersion Include="Microsoft.Bcl.AsyncInterfaces" Version="10.0.14" />
+    <PackageVersion Include="Microsoft.Bcl.Memory" Version="10.0.14" />
     <!-- unit tests -->
-    <PackageVersion Include="JunitXml.TestLogger" Version="8.0.0" />
+    <PackageVersion Include="JunitXml.TestLogger" Version="8.1.0" />
     <!-- fuzzing tests -->
     <PackageVersion Include="FsCheck" Version="3.6.0" />
   </ItemGroup>
