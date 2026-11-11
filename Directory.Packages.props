@@ -9,8 +9,8 @@ SPDX-License-Identifier: MIT
     <!-- all -->
     <PackageVersion Include="Nerdbank.GitVersioning" Version="3.10.94" />
     <!-- netstandard2.0 -->
-    <PackageVersion Include="Microsoft.Bcl.AsyncInterfaces" Version="10.0.14" />
-    <PackageVersion Include="Microsoft.Bcl.Memory" Version="10.0.14" />
+    <PackageVersion Include="Microsoft.Bcl.AsyncInterfaces" Version="11.0.0" />
+    <PackageVersion Include="Microsoft.Bcl.Memory" Version="11.0.0" />
     <!-- unit tests -->
     <PackageVersion Include="JunitXml.TestLogger" Version="8.1.0" />
     <!-- fuzzing tests -->
